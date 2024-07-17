@@ -8,4 +8,6 @@ $w.onReady(function () {
     // To select an element by ID use: $w('#elementID')
 
     // Click 'Preview' to run your code
+
+    $w('#html1') "Hello World"
 });

@@ -3,11 +3,5 @@
 // I am Testing This
 
 $w.onReady(function () {
-    // Write your JavaScript here
-
-    // To select an element by ID use: $w('#elementID')
-
-    // Click 'Preview' to run your code
-
-    $w('#html1') "Hello World"
+    "Hello World"
 });

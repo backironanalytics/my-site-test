@@ -3,6 +3,6 @@
 // I am Testing This
 
 $w.onReady(function () {
-    $w("#html1").src = "https://rawcdn.githack.com/backironanalytics/my-site-test/c61b87c5c71b6eb0a8cfea5aea76db4656b1cc89/Luka%20Doncic.html";
+    $w("#html1").src = "https://raw.githack.com/backironanalytics/my-site-test/c61b87c5c71b6eb0a8cfea5aea76db4656b1cc89/Luka%20Doncic.html";
 
 });

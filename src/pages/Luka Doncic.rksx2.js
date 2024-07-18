@@ -4,4 +4,5 @@
 
 $w.onReady(function () {
     $w('#html1').text = 'Hello World';
+    $w('#text48').text = 'Hello World';
 });

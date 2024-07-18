@@ -3,6 +3,6 @@
 // I am Testing This
 
 $w.onReady(function () {
-    $w('#html1').text = 'Hello World';
-    $w('#text48').text = 'Hello World';
+    $w("#html1").src = "https://raw.githubusercontent.com/backironanalytics/my-site-test/main/Luka%20Doncic.html?token=GHSAT0AAAAAACUU5CLCDW3XN2WBW44GKB7WZUYU6EA";
+
 });

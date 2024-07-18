@@ -3,5 +3,5 @@
 // I am Testing This
 
 $w.onReady(function () {
-    "Hello World"
+    $w('#html1').text = 'Hello World';
 });

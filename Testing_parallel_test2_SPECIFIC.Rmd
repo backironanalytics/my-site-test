@@ -7,7 +7,7 @@ output: html_document
 
 params:
   team: Warriors
-  player: [Luka Doncic,Steph,Tatum,Anthony Edwards,Embiid,Jalen Brunson,Damian Lillard,Nikola Jokic, Kyrie Irving, Devin Booker, Kevin Durant, Jaylen Brown,
+  player: [Luka Doncic,Steph,Tatum,Anthony Edwards,Embiid,Jalen Brunson,Damian Lillard,Nikola Jokic, Kyrie Irving, Devin Booker, Kevin Durant, Jaylen Brown,  
   Jamal Murray, Shai, Chet, Giannis, Trae Young, Jimmy Butler, Bam Adebayo, Ja Morant,Victor Wembanyama,Dejounte Murray]
   opponent: LAL
   games: 5

@@ -42,6 +42,8 @@ library(cowplot)
 library(fmsb)
 library(shiny)
 library(fontawesome)
+library(dplyr)
+library(flexdashboard)
 
 
 

@@ -11,9 +11,7 @@ output:
 params:
   team: Warriors
   player: Steph
-  opponent: LAL
   games: 5
-  location: H
   
 ---
 
@@ -105,6 +103,9 @@ most_recent = playerdata %>% filter(idPlayer == player_id) %>%
         plusminus,minutes,locationGame, countDaysRestPlayer, isB2B, isB2BFirst, isB2BSecond) %>% slice(which.max(dateGame)) %>% pull(dateGame)
 
 rest = as.integer(Sys.Date() - most_recent - 1)
+
+next_opponent <- "LAL"
+next_location <- "H"
 
 
 
@@ -223,9 +224,9 @@ colnames(error) <- names
 error[, -1] <- sapply(error[, -1], as.numeric)
 season_away_frame <- if(nrow(season_away)==0){error}else{season_away}
 
-#season_opponent <- player_data %>% filter(slugOpponent == params$opponent, typeSeason == "Regular Season") %>% group_by(namePlayer,slugSeason) %>% summarize(n = n(), total_pts = sum(pts), total_reb = sum(treb), total_ast = sum(ast), total_stl = sum(stl), total_blk = sum(blk), total_fgm = sum(fgm), total_fga = sum(fga), total_fg3m = sum(fg3m), total_fg3a = sum(fg3a), total_minutes = sum(minutes), total_tov = sum(tov))  %>% mutate(ppg = round(total_pts/n,1), rpg = round(total_reb/n,1), apg = round(total_ast/n,1), spg = round(total_stl/n,1), bpg = round(total_blk/n,1), fg_percentage = round((total_fgm/total_fga)*100,1), fg3_percentage = round((total_fg3m/total_fg3a)*100,1), min = round(total_minutes/n,1),threepg = round(total_fg3m/n,1), tovpg = round(total_tov/n,1), pts_reb_ast = round((total_reb+total_pts+total_ast)/n,1), pts_ast = round((total_pts+total_ast)/n,1), pts_reb = round((total_pts+total_reb)/n,1), ast_reb = round((total_ast+total_reb)/n,1)) %>% select(n,min,ppg,rpg,apg,spg,bpg,threepg,fg_percentage,fg3_percentage,tovpg,pts_reb_ast,pts_ast,pts_reb,ast_reb) %>%rename(GP = n,`FG` = fg_percentage, `FG_3P` = fg3_percentage)
+#season_opponent <- player_data %>% filter(slugOpponent == next_opponent, typeSeason == "Regular Season") %>% group_by(namePlayer,slugSeason) %>% summarize(n = n(), total_pts = sum(pts), total_reb = sum(treb), total_ast = sum(ast), total_stl = sum(stl), total_blk = sum(blk), total_fgm = sum(fgm), total_fga = sum(fga), total_fg3m = sum(fg3m), total_fg3a = sum(fg3a), total_minutes = sum(minutes), total_tov = sum(tov))  %>% mutate(ppg = round(total_pts/n,1), rpg = round(total_reb/n,1), apg = round(total_ast/n,1), spg = round(total_stl/n,1), bpg = round(total_blk/n,1), fg_percentage = round((total_fgm/total_fga)*100,1), fg3_percentage = round((total_fg3m/total_fg3a)*100,1), min = round(total_minutes/n,1),threepg = round(total_fg3m/n,1), tovpg = round(total_tov/n,1), pts_reb_ast = round((total_reb+total_pts+total_ast)/n,1), pts_ast = round((total_pts+total_ast)/n,1), pts_reb = round((total_pts+total_reb)/n,1), ast_reb = round((total_ast+total_reb)/n,1)) %>% select(n,min,ppg,rpg,apg,spg,bpg,threepg,fg_percentage,fg3_percentage,tovpg,pts_reb_ast,pts_ast,pts_reb,ast_reb) %>%rename(GP = n,`FG` = fg_percentage, `FG_3P` = fg3_percentage)
 
-season_opponent <- player_data %>% left_join(play_play_rebounds %>% filter(numberPeriod == 1) %>% group_by(idGame) %>% summarize(firstqrebounds = n()), by = "idGame") %>% mutate(firstqrebounds = replace_na(firstqrebounds,0)) %>% left_join(play_play_assists %>% filter(numberPeriod == 1) %>% group_by(idGame) %>% summarize(firstqassists = n()), by = "idGame") %>% mutate(firstqassists = replace_na(firstqassists,0)) %>% left_join(play_play_makes %>% filter(numberPeriod == 1) %>% group_by(idGame,namePlayer1,slugScore,scoreHome,scoreAway,score_type) %>% summarize(n = n(),firstqpoints = sum(pts)) %>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason) %>% summarize(n = n()), by = "idGame") %>% group_by(idGame) %>% summarize(firstqpoints = sum(firstqpoints)), by = "idGame") %>% mutate(firstqpoints = replace_na(firstqpoints,0)) %>% left_join(play_play_makes %>% group_by(idGame,namePlayer1,slugScore,scoreHome,scoreAway,score_type) %>% summarize(n = n()) %>% mutate(first = ifelse((scoreHome >0 & scoreAway == 0) | (scoreAway > 0 & scoreHome == 0),1,0))%>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason) %>% summarize(n = n()), by = "idGame") %>% group_by(idGame,first) %>% summarize(n = n()) %>% filter(first == 1), by = "idGame") %>% mutate(first = replace_na((first),0)) %>% filter(slugOpponent == params$opponent, typeSeason == "Regular Season") %>% group_by(namePlayer,slugSeason) %>% summarize(n = n(), total_pts = sum(pts), total_reb = sum(treb), total_ast = sum(ast), total_stl = sum(stl), total_blk = sum(blk), total_fgm = sum(fgm), total_fga = sum(fga), total_fg3m = sum(fg3m), total_fg3a = sum(fg3a), total_minutes = sum(minutes), total_tov = sum(tov), total_first = sum(first), totalfqpts = sum(firstqpoints), totalfqast = sum(firstqassists), totalfqtreb = sum(firstqrebounds))  %>% mutate(ppg = round(total_pts/n,1), rpg = round(total_reb/n,1), apg = round(total_ast/n,1), spg = round(total_stl/n,1), bpg = round(total_blk/n,1), fg_percentage = round((total_fgm/total_fga)*100,1), fg3_percentage = round((total_fg3m/total_fg3a)*100,1), min = round(total_minutes/n,1),threepg = round(total_fg3m/n,1), tovpg = round(total_tov/n,1), pts_reb_ast = round((total_reb+total_pts+total_ast)/n,1), pts_ast = round((total_pts+total_ast)/n,1), pts_reb = round((total_pts+total_reb)/n,1), ast_reb = round((total_ast+total_reb)/n,1),firstqppg = round(totalfqpts/n,1), firstqapg = round(totalfqast/n,1), firstqrpg = round(totalfqtreb/n,1), pts_per_attempt = round(total_pts/total_fga,2)) %>% select(n,min,ppg,rpg,apg,spg,bpg,threepg,fg_percentage,fg3_percentage,tovpg,pts_reb_ast,pts_ast,pts_reb,ast_reb, total_first,firstqppg,firstqapg,firstqrpg,pts_per_attempt) %>%rename(GP = n,`FG` = fg_percentage, `FG_3P` = fg3_percentage)
+season_opponent <- player_data %>% left_join(play_play_rebounds %>% filter(numberPeriod == 1) %>% group_by(idGame) %>% summarize(firstqrebounds = n()), by = "idGame") %>% mutate(firstqrebounds = replace_na(firstqrebounds,0)) %>% left_join(play_play_assists %>% filter(numberPeriod == 1) %>% group_by(idGame) %>% summarize(firstqassists = n()), by = "idGame") %>% mutate(firstqassists = replace_na(firstqassists,0)) %>% left_join(play_play_makes %>% filter(numberPeriod == 1) %>% group_by(idGame,namePlayer1,slugScore,scoreHome,scoreAway,score_type) %>% summarize(n = n(),firstqpoints = sum(pts)) %>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason) %>% summarize(n = n()), by = "idGame") %>% group_by(idGame) %>% summarize(firstqpoints = sum(firstqpoints)), by = "idGame") %>% mutate(firstqpoints = replace_na(firstqpoints,0)) %>% left_join(play_play_makes %>% group_by(idGame,namePlayer1,slugScore,scoreHome,scoreAway,score_type) %>% summarize(n = n()) %>% mutate(first = ifelse((scoreHome >0 & scoreAway == 0) | (scoreAway > 0 & scoreHome == 0),1,0))%>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason) %>% summarize(n = n()), by = "idGame") %>% group_by(idGame,first) %>% summarize(n = n()) %>% filter(first == 1), by = "idGame") %>% mutate(first = replace_na((first),0)) %>% filter(slugOpponent == next_opponent, typeSeason == "Regular Season") %>% group_by(namePlayer,slugSeason) %>% summarize(n = n(), total_pts = sum(pts), total_reb = sum(treb), total_ast = sum(ast), total_stl = sum(stl), total_blk = sum(blk), total_fgm = sum(fgm), total_fga = sum(fga), total_fg3m = sum(fg3m), total_fg3a = sum(fg3a), total_minutes = sum(minutes), total_tov = sum(tov), total_first = sum(first), totalfqpts = sum(firstqpoints), totalfqast = sum(firstqassists), totalfqtreb = sum(firstqrebounds))  %>% mutate(ppg = round(total_pts/n,1), rpg = round(total_reb/n,1), apg = round(total_ast/n,1), spg = round(total_stl/n,1), bpg = round(total_blk/n,1), fg_percentage = round((total_fgm/total_fga)*100,1), fg3_percentage = round((total_fg3m/total_fg3a)*100,1), min = round(total_minutes/n,1),threepg = round(total_fg3m/n,1), tovpg = round(total_tov/n,1), pts_reb_ast = round((total_reb+total_pts+total_ast)/n,1), pts_ast = round((total_pts+total_ast)/n,1), pts_reb = round((total_pts+total_reb)/n,1), ast_reb = round((total_ast+total_reb)/n,1),firstqppg = round(totalfqpts/n,1), firstqapg = round(totalfqast/n,1), firstqrpg = round(totalfqtreb/n,1), pts_per_attempt = round(total_pts/total_fga,2)) %>% select(n,min,ppg,rpg,apg,spg,bpg,threepg,fg_percentage,fg3_percentage,tovpg,pts_reb_ast,pts_ast,pts_reb,ast_reb, total_first,firstqppg,firstqapg,firstqrpg,pts_per_attempt) %>%rename(GP = n,`FG` = fg_percentage, `FG_3P` = fg3_percentage)
 
 names <- colnames(season_opponent)
 error <- as.data.frame(matrix(c(player_name[1], as.integer(seq(1:ncol(season_opponent))*0)), nrow = 1, ncol=ncol(season_opponent)))
@@ -269,7 +270,7 @@ playoff_home_frame <- if(nrow(playoff_home)==0){error}else{playoff_home}
 
 
 
-Type <- c("Regular Season","Last 10 GP","Last 5 GP","Regular Season Home","Regular Season Away",paste("Against",params$opponent,"Regular Season"),"Second Night of Back of Back",paste(playerdata$slugSeason[1],"Playoffs"),paste(playerdata$slugSeason[1],"Playoffs Away"),paste(playerdata$slugSeason[1],"Playoffs Home"))
+Type <- c("Regular Season","Last 10 GP","Last 5 GP","Regular Season Home","Regular Season Away",paste("Against",next_opponent,"Regular Season"),"Second Night of Back of Back",paste(playerdata$slugSeason[1],"Playoffs"),paste(playerdata$slugSeason[1],"Playoffs Away"),paste(playerdata$slugSeason[1],"Playoffs Home"))
 combined <- bind_rows(season_frame,season_last10_frame,season_last5_frame,season_home_frame,season_away_frame,season_opponent_frame,b2b_frame,playoff_frame, playoff_away_frame,playoff_home_frame)
 
 
@@ -389,11 +390,11 @@ valueBox(round(avg_away,1), icon = "fa-solid fa-basketball")
 ```
 
 
-### Points per Game Against Next Opponent: `r params$opponent`
+### Points per Game Against Next Opponent: `r next_opponent`
 
 ```{r}
 
-avg_opp <- mean(player_data %>% filter(typeSeason == "Regular Season", slugOpponent == params$opponent) %>% pull(metric))
+avg_opp <- mean(player_data %>% filter(typeSeason == "Regular Season", slugOpponent == next_opponent) %>% pull(metric))
 
 message <- if(is.na(avg_opp)){
   avg
@@ -414,7 +415,7 @@ opp_weight <- 0.3
 last_5_weight <- 0.1
 
 
-prediction <- if(params$location == "H"){
+prediction <- if(next_location == "H"){
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
 } else{
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
@@ -436,7 +437,7 @@ metric = "pts"
 
 avg <- mean(player_data %>% filter(typeSeason == "Regular Season") %>% pull(metric))
 avg_lastx <- mean(player_data %>% arrange(desc(dateGame)) %>% head(params$games) %>% pull(metric))
-avg_opponent <- mean(player_data %>% filter(typeSeason == "Regular Season",slugOpponent == params$opponent) %>% pull(metric))
+avg_opponent <- mean(player_data %>% filter(typeSeason == "Regular Season",slugOpponent == next_opponent) %>% pull(metric))
 
 consensus <- round((avg *.50) + (avg_lastx *.30) + (avg_opponent * .20),0)
 
@@ -592,11 +593,11 @@ valueBox(round(avg_away,1), icon = "fa-solid fa-basketball")
 ```
 
 
-### Assists per Game Against Next Opponent: `r params$opponent`
+### Assists per Game Against Next Opponent: `r next_opponent`
 
 ```{r}
 
-avg_opp <- mean(player_data %>% filter(typeSeason == "Regular Season", slugOpponent == params$opponent) %>% pull(metric))
+avg_opp <- mean(player_data %>% filter(typeSeason == "Regular Season", slugOpponent == next_opponent) %>% pull(metric))
 
 message <- if(is.na(avg_opp)){
   avg
@@ -617,7 +618,7 @@ opp_weight <- 0.3
 last_5_weight <- 0.1
 
 
-prediction <- if(params$location == "H"){
+prediction <- if(next_location == "H"){
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
 } else{
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
@@ -783,11 +784,11 @@ valueBox(round(avg_away,1), icon = "fa-solid fa-basketball")
 ```
 
 
-### Rebounds per Game Against Next Opponent: `r params$opponent`
+### Rebounds per Game Against Next Opponent: `r next_opponent`
 
 ```{r}
 
-avg_opp <- mean(player_data %>% filter(typeSeason == "Regular Season", slugOpponent == params$opponent) %>% pull(metric))
+avg_opp <- mean(player_data %>% filter(typeSeason == "Regular Season", slugOpponent == next_opponent) %>% pull(metric))
 
 message <- if(is.na(avg_opp)){
   avg
@@ -808,7 +809,7 @@ opp_weight <- 0.3
 last_5_weight <- 0.1
 
 
-prediction <- if(params$location == "H"){
+prediction <- if(next_location == "H"){
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
 } else{
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
@@ -975,11 +976,11 @@ valueBox(round(avg_away,1), icon = "fa-solid fa-basketball")
 ```
 
 
-### Steals per Game Against Next Opponent: `r params$opponent`
+### Steals per Game Against Next Opponent: `r next_opponent`
 
 ```{r}
 
-avg_opp <- mean(player_data %>% filter(typeSeason == "Regular Season", slugOpponent == params$opponent) %>% pull(metric))
+avg_opp <- mean(player_data %>% filter(typeSeason == "Regular Season", slugOpponent == next_opponent) %>% pull(metric))
 
 message <- if(is.na(avg_opp)){
   avg
@@ -1000,7 +1001,7 @@ opp_weight <- 0.3
 last_5_weight <- 0.1
 
 
-prediction <- if(params$location == "H"){
+prediction <- if(next_location == "H"){
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
 } else{
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
@@ -1170,11 +1171,11 @@ valueBox(round(avg_away,1), icon = "fa-solid fa-basketball")
 ```
 
 
-### Three's Made per Game Against Next Opponent: `r params$opponent`
+### Three's Made per Game Against Next Opponent: `r next_opponent`
 
 ```{r}
 
-avg_opp <- mean(player_data %>% filter(typeSeason == "Regular Season", slugOpponent == params$opponent) %>% pull(metric))
+avg_opp <- mean(player_data %>% filter(typeSeason == "Regular Season", slugOpponent == next_opponent) %>% pull(metric))
 
 message <- if(is.na(avg_opp)){
   avg
@@ -1195,7 +1196,7 @@ opp_weight <- 0.3
 last_5_weight <- 0.1
 
 
-prediction <- if(params$location == "H"){
+prediction <- if(next_location == "H"){
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
 } else{
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
@@ -1421,11 +1422,11 @@ valueBox(round(avg_away,1), icon = "fa-solid fa-basketball")
 ```
 
 
-### Turnovers per Game Against Next Opponent: `r params$opponent`
+### Turnovers per Game Against Next Opponent: `r next_opponent`
 
 ```{r}
 
-avg_opp <- mean(player_data %>% filter(typeSeason == "Regular Season", slugOpponent == params$opponent) %>% pull(metric))
+avg_opp <- mean(player_data %>% filter(typeSeason == "Regular Season", slugOpponent == next_opponent) %>% pull(metric))
 
 message <- if(is.na(avg_opp)){
   avg
@@ -1446,7 +1447,7 @@ opp_weight <- 0.3
 last_5_weight <- 0.1
 
 
-prediction <- if(params$location == "H"){
+prediction <- if(next_location == "H"){
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
 } else{
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
@@ -1614,11 +1615,11 @@ valueBox(round(avg_away,1), icon = "fa-solid fa-basketball")
 ```
 
 
-### Blocks per Game Against Next Opponent: `r params$opponent`
+### Blocks per Game Against Next Opponent: `r next_opponent`
 
 ```{r}
 
-avg_opp <- mean(player_data %>% filter(typeSeason == "Regular Season", slugOpponent == params$opponent) %>% pull(metric))
+avg_opp <- mean(player_data %>% filter(typeSeason == "Regular Season", slugOpponent == next_opponent) %>% pull(metric))
 
 message <- if(is.na(avg_opp)){
   avg
@@ -1639,7 +1640,7 @@ opp_weight <- 0.3
 last_5_weight <- 0.1
 
 
-prediction <- if(params$location == "H"){
+prediction <- if(next_location == "H"){
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
 } else{
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
@@ -1814,11 +1815,11 @@ valueBox(round(avg_away,1), icon = "fa-solid fa-basketball")
 ```
 
 
-### Pts+Reb+Ast per Game Against Next Opponent: `r params$opponent`
+### Pts+Reb+Ast per Game Against Next Opponent: `r next_opponent`
 
 ```{r}
 
-avg_opp <- mean(dat %>% filter(typeSeason == "Regular Season", slugOpponent == params$opponent) %>% pull(metric))
+avg_opp <- mean(dat %>% filter(typeSeason == "Regular Season", slugOpponent == next_opponent) %>% pull(metric))
 
 message <- if(is.na(avg_opp)){
   avg
@@ -1839,7 +1840,7 @@ opp_weight <- 0.3
 last_5_weight <- 0.1
 
 
-prediction <- if(params$location == "H"){
+prediction <- if(next_location == "H"){
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
 } else{
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
@@ -2135,11 +2136,11 @@ valueBox(round(avg_away,1), icon = "fa-solid fa-basketball")
 ```
 
 
-### Pts+Ast per Game Against Next Opponent: `r params$opponent`
+### Pts+Ast per Game Against Next Opponent: `r next_opponent`
 
 ```{r}
 
-avg_opp <- mean(dat %>% filter(typeSeason == "Regular Season", slugOpponent == params$opponent) %>% pull(metric))
+avg_opp <- mean(dat %>% filter(typeSeason == "Regular Season", slugOpponent == next_opponent) %>% pull(metric))
 
 message <- if(is.na(avg_opp)){
   avg
@@ -2160,7 +2161,7 @@ opp_weight <- 0.3
 last_5_weight <- 0.1
 
 
-prediction <- if(params$location == "H"){
+prediction <- if(next_location == "H"){
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
 } else{
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
@@ -2331,11 +2332,11 @@ valueBox(round(avg_away,1), icon = "fa-solid fa-basketball")
 ```
 
 
-### Pts+Reb per Game Against Next Opponent: `r params$opponent`
+### Pts+Reb per Game Against Next Opponent: `r next_opponent`
 
 ```{r}
 
-avg_opp <- mean(dat %>% filter(typeSeason == "Regular Season", slugOpponent == params$opponent) %>% pull(metric))
+avg_opp <- mean(dat %>% filter(typeSeason == "Regular Season", slugOpponent == next_opponent) %>% pull(metric))
 
 message <- if(is.na(avg_opp)){
   avg
@@ -2356,7 +2357,7 @@ opp_weight <- 0.3
 last_5_weight <- 0.1
 
 
-prediction <- if(params$location == "H"){
+prediction <- if(next_location == "H"){
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
 } else{
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
@@ -2529,11 +2530,11 @@ valueBox(round(avg_away,1), icon = "fa-solid fa-basketball")
 ```
 
 
-### Reb+Ast per Game Against Next Opponent: `r params$opponent`
+### Reb+Ast per Game Against Next Opponent: `r next_opponent`
 
 ```{r}
 
-avg_opp <- mean(dat %>% filter(typeSeason == "Regular Season", slugOpponent == params$opponent) %>% pull(metric))
+avg_opp <- mean(dat %>% filter(typeSeason == "Regular Season", slugOpponent == next_opponent) %>% pull(metric))
 
 message <- if(is.na(avg_opp)){
   avg
@@ -2554,7 +2555,7 @@ opp_weight <- 0.3
 last_5_weight <- 0.1
 
 
-prediction <- if(params$location == "H"){
+prediction <- if(next_location == "H"){
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
 } else{
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
@@ -2722,11 +2723,11 @@ valueBox(round(avg_away,1), icon = "fa-solid fa-basketball")
 ```
 
 
-### Points per Game Against Next Opponent: `r params$opponent`
+### Points per Game Against Next Opponent: `r next_opponent`
 
 ```{r}
 
-avg_opp <- mean(firstq_makes %>% filter(typeSeason == "Regular Season", slugOpponent == params$opponent) %>% pull(metric))
+avg_opp <- mean(firstq_makes %>% filter(typeSeason == "Regular Season", slugOpponent == next_opponent) %>% pull(metric))
 
 message <- if(is.na(avg_opp)){
   avg
@@ -2747,7 +2748,7 @@ opp_weight <- 0.3
 last_5_weight <- 0.1
 
 
-prediction <- if(params$location == "H"){
+prediction <- if(next_location == "H"){
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
 } else{
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
@@ -2968,11 +2969,11 @@ valueBox(round(avg_away,1), icon = "fa-solid fa-basketball")
 ```
 
 
-### Assists per Game Against Next Opponent: `r params$opponent`
+### Assists per Game Against Next Opponent: `r next_opponent`
 
 ```{r}
 
-avg_opp <- mean(firstq_assists %>% filter(typeSeason == "Regular Season", slugOpponent == params$opponent) %>% pull(metric))
+avg_opp <- mean(firstq_assists %>% filter(typeSeason == "Regular Season", slugOpponent == next_opponent) %>% pull(metric))
 
 message <- if(is.na(avg_opp)){
   avg
@@ -2993,7 +2994,7 @@ opp_weight <- 0.3
 last_5_weight <- 0.1
 
 
-prediction <- if(params$location == "H"){
+prediction <- if(next_location == "H"){
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
 } else{
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
@@ -3179,11 +3180,11 @@ valueBox(round(avg_away,1), icon = "fa-solid fa-basketball")
 ```
 
 
-### Rebounds per Game Against Next Opponent: `r params$opponent`
+### Rebounds per Game Against Next Opponent: `r next_opponent`
 
 ```{r}
 
-avg_opp <- mean(firstq_rebounds %>% filter(typeSeason == "Regular Season", slugOpponent == params$opponent) %>% pull(metric))
+avg_opp <- mean(firstq_rebounds %>% filter(typeSeason == "Regular Season", slugOpponent == next_opponent) %>% pull(metric))
 
 message <- if(is.na(avg_opp)){
   avg
@@ -3204,7 +3205,7 @@ opp_weight <- 0.3
 last_5_weight <- 0.1
 
 
-prediction <- if(params$location == "H"){
+prediction <- if(next_location == "H"){
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
 } else{
   (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
@@ -6351,7 +6352,7 @@ The Low Down {data-navmenu-icon="fa-signal"}
 <center> <h1>The Low Down</center> </h1>
 
 * In the past 10 games played, `r params$player` has averaged **`r season_last10$ppg` points per game**, **`r season_last10$apg` assists per game**, **`r season_last10$rpg` rebounds per game**
-* Against `r params$opponent` in the regular season, `r params$player` has averaged **`r season_opponent$ppg` points per game**, **`r season_opponent$apg` assists per game**, **`r season_opponent$rpg` rebounds per game**
+* Against `r next_opponent` in the regular season, `r params$player` has averaged **`r season_opponent$ppg` points per game**, **`r season_opponent$apg` assists per game**, **`r season_opponent$rpg` rebounds per game**
 * In the regular season, `r params$player` averaged **`r season$pts_reb_ast`** combined points, assists, and rebounds. In the past 5 games, the average combined points, assists, and rebounds is **`r season_last5$pts_reb_ast`: `r paste0(round(((season_last5$pts_reb_ast / season$pts_reb_ast) - 1)* 100,0),"%")` change**
 * In the regular season 1st Quarter, `r params$player` averaged **`r season$firstqppg`** points per game, **`r season$firstqapg`** assists per game, **`r season$firstqrpg`** rebounds per game
     * When `r params$player` reaches his Q1 PPG avg of `r season$firstqppg`, his total PPG avg is **`r a_pts`**. When it is not reached, his total PPG avg is **`r a_less`**, a difference of **`r a_pts - a_less`** points. His 1st Quarter PPG average is in the top **`r round(percentile_points_q1,0)` percentile** of the league

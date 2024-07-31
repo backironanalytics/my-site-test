@@ -1,0 +1,33 @@
+---
+output: 
+  html_document:
+    theme: simplex
+    
+params:
+  team: GSW
+  
+---  
+
+```{r main, echo = FALSE, warning = FALSE, message = FALSE, fig.align = 'center'}
+
+library(tidyverse)
+library(nbastatR)
+library(dplyr)
+library(flexdashboard)
+library(parallel)
+library(reactable)
+library(reactablefmtr)
+
+team_name <- gamedata %>% filter(slugTeam == params$team) %>% group_by(nameTeam) %>% summarize(n = n()) %>% pull(nameTeam)
+
+
+play_play_trimmed <- play_play %>% filter(numberEventMessageType != 12 | numberEventMessageType != 11) %>% mutate(description = ifelse(is.na(descriptionPlayHome),ifelse(is.na(descriptionPlayNeutral),descriptionPlayVisitor,descriptionPlayNeutral),descriptionPlayHome))  %>% mutate(secondsRemainingQuarter = ifelse(secondsRemainingQuarter == 0, "00",ifelse(nchar(secondsRemainingQuarter) == 1,paste0("0",secondsRemainingQuarter),secondsRemainingQuarter))) %>% mutate(time = paste0(as.character(minuteRemainingQuarter),":",secondsRemainingQuarter)) %>% select(scoreHome,scoreAway,namePlayer1,namePlayer2,idGame,numberPeriod,time,description) %>% mutate(scoreHome = ifelse(time == "12:00" & numberPeriod == 1 & is.na(scoreHome),0,scoreHome),scoreAway = ifelse(time == "12:00" & numberPeriod == 1 & is.na(scoreAway),0,scoreAway)) %>% left_join(gamedata %>% filter(locationGame == "H") %>% group_by(idGame,slugTeam,slugOpponent,slugMatchup,dateGame,numberGameTeamSeason,slugSeason) %>% summarize(n = n()) %>% rename("Away Team" = slugOpponent, "Home Team" = slugTeam,Matchup = slugMatchup,Date = dateGame,Game = numberGameTeamSeason, Season = slugSeason), by = "idGame") %>% rename(Home = scoreHome,Away = scoreAway,"Home Player" = namePlayer1, "Away Player" = namePlayer2, Quarter = numberPeriod, Play = description) %>% select(-idGame,-n) %>% filter(`Home Team`  == params$team | `Away Team`  == params$team) %>% arrange(Date) %>% select(Season,Game,Date,Matchup,Quarter,time,Play,Home,Away)
+
+table <- reactable(play_play_trimmed, searchable = TRUE, bordered = TRUE, striped = TRUE, highlight = TRUE, showPageSizeOptions = TRUE, compact = TRUE, wrap = FALSE, resizable = TRUE, filterable = TRUE, defaultPageSize = 50)
+
+table %>% add_title(title = paste(team_name, "Play by Play Data"), align = "center")
+
+```
+
+
+

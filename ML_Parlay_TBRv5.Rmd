@@ -1,5 +1,5 @@
 ---
-title: "Back Iron Analytics"
+title: "Dollar Data Science"
 output: 
   flexdashboard::flex_dashboard:
     theme: simplex

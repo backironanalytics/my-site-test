@@ -7,7 +7,7 @@ output: html_document
 
 params:
   team: Warriors
-  player: [Luka Doncic,Steph,Tatum,Anthony Edwards,Embiid,Jalen Brunson,Damian Lillard,Nikola Jokic, Kyrie Irving, Devin Booker, Kevin Durant, Jaylen Brown,  
+  player: [Steph, Luka Doncic,Tatum,Anthony Edwards,Embiid,Jalen Brunson,Damian Lillard,Nikola Jokic, Kyrie Irving, Devin Booker, Kevin Durant, Jaylen Brown,  
   Jamal Murray, Shai, Chet, Giannis, Trae Young, Jimmy Butler, Bam Adebayo, Ja Morant,Victor Wembanyama,Dejounte Murray, Kawhi,Tyrese Haliburton, Rudy Gobert,Herb Jones,
   DeMar DeRozan]
   games: 5
@@ -22,6 +22,7 @@ library(nbastatR)
 library(dplyr)
 library(flexdashboard)
 library(parallel)
+library(rvest)
 
 
 Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
@@ -61,6 +62,43 @@ play_play <- bind_rows(results)
 
 stopCluster(cl)
 
+#Schedule
+
+teams <- nba_teams(league = "NBA")
+
+teams <- teams %>% filter(isNonNBATeam == 0, idConference != 0) %>% select(cityTeam, slugTeam, idTeam, nameTeam) %>% rename(Opponent = cityTeam)
+
+slugteams <- teams %>% select(slugTeam)
+
+slugteams_list <- slugteams %>% mutate(slugTeam = tolower(slugTeam)) %>% 
+  mutate(slugTeam = ifelse(slugTeam == "uta","utah",
+                ifelse(slugTeam == "nop","no",slugTeam))) %>% pull(slugTeam)
+
+schedule <- lapply(slugteams_list, function(x){
+  
+  testurl <- paste0("https://www.espn.com/nba/team/schedule/_/name/",x,"/seasontype/2")
+  
+  h <- read_html(testurl)
+  
+  tab <- h |> html_nodes("table")
+  
+  tab <- tab[[1]] |> html_table()
+  
+  tab <- tab |> setNames(c("Date", "Opponenet", "Time", "TV","Tickets","Tickets_dup","Unused1","Unused2")) 
+  
+  tab <- tab[-(1:2),]
+  
+  tab <- tab %>% mutate(location = ifelse(str_detect(Opponenet,"@"),"Away","Home")) %>% 
+    mutate(Opponent = ifelse(location == "Home", str_sub(Opponenet,3),str_sub(Opponenet,2))) %>% 
+    mutate(Date = str_extract(Date, '\\b[^,]+$')) %>% mutate(Date = as.Date(Date, "%b%d")) %>% select(Date,location,Opponent)
+  
+  tab <- tab %>% left_join(teams, by = "Opponent") %>% mutate(Team = toupper(x)) %>% 
+    mutate(Team = ifelse(Team == "UTAH","UTA",ifelse(Team == "NO","NOP",Team))) %>% mutate(next_game = ifelse(Date >= Sys.Date(),TRUE,FALSE))
+  
+})
+
+schedule <- bind_rows(schedule)
+
 
 
 ```
@@ -72,7 +110,7 @@ stopCluster(cl)
 
 
 for (player in players) {
-  rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/ML_Parlay_TBRv5.Rmd',
+  rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/ML_Parlay_TBRv7.Rmd',
                     output_file = paste0(player,".html"),
                     output_dir = file.path('C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/sheets'),
                     params = list(player = player))

@@ -4569,7 +4569,7 @@ p1 <- plot_court(court_themes$custom, use_short_three = F) +
   labs(caption = "Excludes Shots in Restricted Area")
 
 pic <- image_read(photo)
-logo <- image_read_svg(team_logo)
+#logo <- image_read_svg(team_logo)
 
 ggdraw(p1) + theme(plot.background = element_rect(fill="white", color = NA)) 
 
@@ -4609,7 +4609,7 @@ p1 <- plot_court(court_themes$custom, use_short_three = F) +
           subtitle = "Regular Season Q1") +
   labs(caption = "")
 
-ggdraw(p1) + theme(plot.background = element_rect(fill="white", color = NA)) + draw_image(logo, scale = .1, x=0.35, y = 0.25) + draw_image(pic, scale = .2, x=0.4, y = 0.2) 
+ggdraw(p1) + theme(plot.background = element_rect(fill="white", color = NA))  + draw_image(pic, scale = .2, x=0.4, y = 0.2) 
 
 
 
@@ -4642,7 +4642,7 @@ p1 <- plot_court(court_themes$custom, use_short_three = F) +
           subtitle = "Regular Season Q2") +
   labs(caption = "")
 
-ggdraw(p1) + theme(plot.background = element_rect(fill="white", color = NA)) + draw_image(logo, scale = .1, x=0.35, y = 0.25) + draw_image(pic, scale = .2, x=0.4, y = 0.2) 
+ggdraw(p1) + theme(plot.background = element_rect(fill="white", color = NA)) + draw_image(pic, scale = .2, x=0.4, y = 0.2) 
 
 
 
@@ -4676,7 +4676,7 @@ p1 <- plot_court(court_themes$custom, use_short_three = F) +
           subtitle = "Regular Season Q3") +
   labs(caption = "")
 
-ggdraw(p1) + theme(plot.background = element_rect(fill="white", color = NA)) + draw_image(logo, scale = .1, x=0.35, y = 0.25) + draw_image(pic, scale = .2, x=0.4, y = 0.2) 
+ggdraw(p1) + theme(plot.background = element_rect(fill="white", color = NA))  + draw_image(pic, scale = .2, x=0.4, y = 0.2) 
 
 
 
@@ -4708,7 +4708,7 @@ p1 <- plot_court(court_themes$custom, use_short_three = F) +
           subtitle = "Regular Season Q4") +
   labs(caption = "")
 
-ggdraw(p1) + theme(plot.background = element_rect(fill="white", color = NA)) + draw_image(logo, scale = .1, x=0.35, y = 0.25) + draw_image(pic, scale = .2, x=0.4, y = 0.2) 
+ggdraw(p1) + theme(plot.background = element_rect(fill="white", color = NA))  + draw_image(pic, scale = .2, x=0.4, y = 0.2) 
 
 
 
@@ -4955,7 +4955,7 @@ p1 <- plot_court(court_themes$dark, use_short_three = F) +
 
 
 
-ggdraw(p1) + theme(plot.background = element_rect(fill="black", color = NA)) + draw_image(logo, scale = .1, x=0.25, y = 0.25) + draw_image(pic, scale = .2, x=0.3, y = 0.2) 
+ggdraw(p1) + theme(plot.background = element_rect(fill="black", color = NA))  + draw_image(pic, scale = .2, x=0.3, y = 0.2) 
 
 
 
@@ -5927,11 +5927,11 @@ library(rsvg)
 
 pic <- image_read(photo)
 
-logo <- image_read_svg(team_logo)
+#logo <- image_read_svg(team_logo)
 
 
 
-p <- ggdraw() + draw_image(logo,scale = .6, x = -0.3, y = 0.2)+ draw_image(photo) + theme(plot.background = element_rect(fill = "#F2DFDD",color = "#F2DFDD"))
+p <- ggdraw()  + theme(plot.background = element_rect(fill = "#F2DFDD",color = "#F2DFDD"))
 
 print(p, info = FALSE)
 

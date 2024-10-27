@@ -51,6 +51,9 @@ Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
 gamedata <- game_logs(seasons = 2024, result_types = "team", season_types = c("Regular Season","Playoffs"))
 gamedata_current <- game_logs(seasons = 2025, result_types = "team", season_types = c("Regular Season"))
 
+current_season <- "2024-25"
+last_season <- "2023-24"
+
 gamedata <- bind_rows(gamedata,gamedata_current)
                               
                             
@@ -65,7 +68,7 @@ player_id <- playerdata %>% filter(str_detect(namePlayer,params$player)) %>%
   select(dateGame, idGame, slugOpponent, idPlayer, namePlayer, fgm,fga,pts,treb,ast,stl,blk,fg3m,fg3a,tov,
          plusminus,minutes,locationGame, countDaysRestPlayer, isB2B, isB2BFirst, isB2BSecond) %>% pull(idPlayer)
 
-slugteam <- playerdata %>% filter(str_detect(namePlayer,params$player)) %>% pull(slugTeam)
+slugteam <- playerdata %>% filter(str_detect(namePlayer,params$player), slugSeason == current_season) %>% pull(slugTeam)
 
 gameids<- playerdata %>% filter(idPlayer == player_id)%>% group_by(idGame) %>% summarize(n = n()) %>% pull(idGame)
 
@@ -112,8 +115,8 @@ rest = as.integer(Sys.Date() - most_recent - 1)
 
 next_opponent_table <- schedule %>% filter(Team == slugteam[1])
 
-next_opponent <- next_opponent_table[1, ] %>% pull(slugTeam)
-next_location <- substring(next_opponent_table[1, ] %>% pull(location),1,1)
+next_opponent <- next_opponent_table %>% filter(Date == schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min) %>% pull(slugTeam)
+next_location <- substring(next_opponent_table %>% filter(Date == schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min)  %>% pull(location),1,1)
 
 
 
@@ -135,7 +138,7 @@ team_name <- slug_team %>% left_join(teams, by = "slugTeam") %>% pull(nameTeam)
 
 team_logo <- teams %>% filter(idTeam == team_id_current) %>% pull(urlThumbnailTeam)
 
-current_season <- "2024-25"
+
   
   
 ```
@@ -173,31 +176,41 @@ play_play_all <- play_play %>% filter(!is.na(slugScore))
 play_play_all_assists <- play_play %>% filter( str_detect(descriptionPlayHome,"AST") | str_detect(descriptionPlayVisitor,"AST"))
 play_play_all_rebounds <- play_play %>% filter(is.na(slugScore), str_detect(descriptionPlayHome,"REBOUND") | str_detect(descriptionPlayVisitor,"REBOUND"))
 
-play_play_makes <- play_play_player %>% select(idGame,numberPeriod, descriptionPlayHome,descriptionPlayNeutral,descriptionPlayVisitor, namePlayer1,slugScore,scoreHome,scoreAway,slugTeamPlayer1) %>% rename(slugTeam = slugTeamPlayer1) %>% mutate(description = ifelse(is.na(descriptionPlayHome),ifelse(is.na(descriptionPlayNeutral),descriptionPlayVisitor,descriptionPlayNeutral),descriptionPlayHome)) %>% mutate(free_throw_flag = str_detect(description,"Free Throw"), three_point_flag = str_detect(description,"3PT")) %>% mutate(two_point_flag = ifelse(free_throw_flag == FALSE & three_point_flag == FALSE, TRUE,FALSE)) %>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason,locationGame,slugTeam) %>% summarize(n = n()), by = c("idGame","slugTeam")) %>% mutate(pts = ifelse(free_throw_flag == TRUE,1,ifelse(two_point_flag== TRUE,2,3)),score_type = ifelse(free_throw_flag == TRUE,"Free Throw",ifelse(two_point_flag== TRUE,"2 pt","3 pt")))
+play_play_makes <- play_play_player %>% select(idGame,numberPeriod, descriptionPlayHome,descriptionPlayNeutral,descriptionPlayVisitor, namePlayer1,slugScore,scoreHome,scoreAway,slugTeamPlayer1) %>% rename(slugTeam = slugTeamPlayer1) %>% mutate(description = ifelse(is.na(descriptionPlayHome),ifelse(is.na(descriptionPlayNeutral),descriptionPlayVisitor,descriptionPlayNeutral),descriptionPlayHome)) %>% mutate(free_throw_flag = str_detect(description,"Free Throw"), three_point_flag = str_detect(description,"3PT")) %>% mutate(two_point_flag = ifelse(free_throw_flag == FALSE & three_point_flag == FALSE, TRUE,FALSE)) %>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason,locationGame,slugTeam,slugSeason) %>% summarize(n = n()), by = c("idGame","slugTeam")) %>% mutate(pts = ifelse(free_throw_flag == TRUE,1,ifelse(two_point_flag== TRUE,2,3)),score_type = ifelse(free_throw_flag == TRUE,"Free Throw",ifelse(two_point_flag== TRUE,"2 pt","3 pt")))
 
-play_play_makes_expanded <- play_play_player %>% select(idGame,numberPeriod, descriptionPlayHome,descriptionPlayNeutral,descriptionPlayVisitor, namePlayer1, idPlayerNBA1, slugScore,scoreHome,scoreAway, slugTeamPlayer1) %>% rename(slugTeam = slugTeamPlayer1) %>% mutate(description = ifelse(is.na(descriptionPlayHome),ifelse(is.na(descriptionPlayNeutral),descriptionPlayVisitor,descriptionPlayNeutral),descriptionPlayHome)) %>% mutate(free_throw_flag = str_detect(description,"Free Throw"), three_point_flag = str_detect(description,"3PT")) %>% mutate(two_point_flag = ifelse(free_throw_flag == FALSE & three_point_flag == FALSE, TRUE,FALSE)) %>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason,locationGame, slugTeam) %>% summarize(n = n()), by = c("idGame","slugTeam")) %>% mutate(pts = ifelse(free_throw_flag == TRUE,1,ifelse(two_point_flag== TRUE,2,3)),score_type = ifelse(free_throw_flag == TRUE,"Free Throw",ifelse(two_point_flag== TRUE,"2 pt","3 pt"))) %>% group_by(dateGame,namePlayer1,idPlayerNBA1) %>% summarize(pts = sum(pts))
+play_play_makes_expanded <- play_play_player %>% select(idGame,numberPeriod, descriptionPlayHome,descriptionPlayNeutral,descriptionPlayVisitor, namePlayer1, idPlayerNBA1, slugScore,scoreHome,scoreAway, slugTeamPlayer1) %>% rename(slugTeam = slugTeamPlayer1) %>% mutate(description = ifelse(is.na(descriptionPlayHome),ifelse(is.na(descriptionPlayNeutral),descriptionPlayVisitor,descriptionPlayNeutral),descriptionPlayHome)) %>% mutate(free_throw_flag = str_detect(description,"Free Throw"), three_point_flag = str_detect(description,"3PT")) %>% mutate(two_point_flag = ifelse(free_throw_flag == FALSE & three_point_flag == FALSE, TRUE,FALSE)) %>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason,locationGame, slugTeam,slugSeason) %>% summarize(n = n()), by = c("idGame","slugTeam")) %>% mutate(pts = ifelse(free_throw_flag == TRUE,1,ifelse(two_point_flag== TRUE,2,3)),score_type = ifelse(free_throw_flag == TRUE,"Free Throw",ifelse(two_point_flag== TRUE,"2 pt","3 pt"))) %>% group_by(dateGame,namePlayer1,idPlayerNBA1) %>% summarize(pts = sum(pts))
 
 firstq_makes <- player_data %>% group_by(dateGame,locationGame,typeSeason,slugOpponent,slugSeason) %>% summarize(n = n()) %>% left_join(play_play_makes %>% filter(numberPeriod == 1) %>% group_by(dateGame) %>% summarize(pts = sum(pts)), by = "dateGame") %>% mutate(pts = replace_na(pts,0))
 
 firstq_makes_expanded <- player_data_expanded %>% left_join(play_play_makes_expanded %>% rename(idPlayer = idPlayerNBA1), by = c("dateGame","idPlayer")) %>% mutate(pts = replace_na(pts,0))
 
-play_play_assists <- play_play_player_assists %>% select(idGame,numberPeriod,descriptionPlayHome,descriptionPlayVisitor, namePlayer1,namePlayer2,slugTeamPlayer1) %>% rename(slugTeam = slugTeamPlayer1) %>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason,locationGame,slugTeam) %>% summarize(n = n()), by = c("idGame","slugTeam"))
+play_play_assists <- play_play_player_assists %>% select(idGame,numberPeriod,descriptionPlayHome,descriptionPlayVisitor, namePlayer1,namePlayer2,slugTeamPlayer1) %>% rename(slugTeam = slugTeamPlayer1) %>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason,locationGame,slugTeam,slugSeason) %>% summarize(n = n()), by = c("idGame","slugTeam"))
 
 firstq_assists <- player_data %>% group_by(dateGame,locationGame,typeSeason,slugOpponent,slugSeason) %>% summarize(n = n()) %>% left_join(play_play_assists %>% filter(numberPeriod == 1) %>% group_by(dateGame,typeSeason,locationGame) %>% summarize(assists = n()), by = "dateGame") %>% mutate(assists = replace_na(assists,0)) %>% rename(locationGame = locationGame.x, typeSeason = typeSeason.x)
 
-play_play_rebounds <- play_play_player_rebounds %>% select(idGame,numberPeriod,descriptionPlayHome,descriptionPlayVisitor, namePlayer1,slugTeamPlayer1) %>% rename(slugTeam = slugTeamPlayer1) %>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason,locationGame,slugTeam) %>% summarize(n = n()), by = c("idGame","slugTeam")) 
+play_play_rebounds <- play_play_player_rebounds %>% select(idGame,numberPeriod,descriptionPlayHome,descriptionPlayVisitor, namePlayer1,slugTeamPlayer1) %>% rename(slugTeam = slugTeamPlayer1) %>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason,locationGame,slugTeam,slugSeason) %>% summarize(n = n()), by = c("idGame","slugTeam")) 
 
 firstq_rebounds <- player_data %>% group_by(dateGame,locationGame,typeSeason,slugOpponent,slugSeason) %>% summarize(n = n()) %>% left_join(play_play_rebounds %>% filter(numberPeriod == 1) %>% group_by(dateGame,typeSeason,locationGame) %>% summarize(rebounds = n()), by = "dateGame") %>% mutate(rebounds = replace_na(rebounds,0)) %>% rename(locationGame = locationGame.x, typeSeason = typeSeason.x)
 
 #season <- player_data %>% filter(typeSeason == "Regular Season") %>% group_by(namePlayer,slugSeason) %>% summarize(n = n(), total_pts = sum(pts), total_reb = sum(treb), total_ast = sum(ast), total_stl = sum(stl), total_blk = sum(blk), total_fgm = sum(fgm), total_fga = sum(fga), total_fg3m = sum(fg3m), total_fg3a = sum(fg3a), total_minutes = sum(minutes), total_tov = sum(tov)) %>% mutate(ppg = round(total_pts/n,1), rpg = round(total_reb/n,1), apg = round(total_ast/n,1), spg = round(total_stl/n,1), bpg = round(total_blk/n,1), fg_percentage = round((total_fgm/total_fga)*100,1), fg3_percentage = round((total_fg3m/total_fg3a)*100,1), min = round(total_minutes/n,1),threepg = round(total_fg3m/n,1), tovpg = round(total_tov/n,1), pts_ast = round((total_pts+total_ast)/n,1), pts_reb_ast = round((total_reb+total_pts+total_ast)/n,1), pts_reb = round((total_pts+total_reb)/n,1), ast_reb = round((total_ast+total_reb)/n,1)) %>% select(n,min,ppg,rpg,apg,spg,bpg,threepg,fg_percentage,fg3_percentage,tovpg, pts_reb_ast, pts_ast,pts_reb,ast_reb) %>%rename(GP = n,`FG` = fg_percentage, `FG_3P` = fg3_percentage)
 
-season <- player_data %>% left_join(play_play_rebounds %>% filter(numberPeriod == 1) %>% group_by(idGame) %>% summarize(firstqrebounds = n()), by = "idGame") %>% mutate(firstqrebounds = replace_na(firstqrebounds,0)) %>% left_join(play_play_assists %>% filter(numberPeriod == 1) %>% group_by(idGame) %>% summarize(firstqassists = n()), by = "idGame") %>% mutate(firstqassists = replace_na(firstqassists,0)) %>% left_join(play_play_makes %>% filter(numberPeriod == 1) %>% group_by(idGame,namePlayer1,slugScore,scoreHome,scoreAway,score_type) %>% summarize(n = n(),firstqpoints = sum(pts)) %>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason) %>% summarize(n = n()), by = "idGame") %>% group_by(idGame) %>% summarize(firstqpoints = sum(firstqpoints)), by = "idGame") %>% mutate(firstqpoints = replace_na(firstqpoints,0)) %>% left_join(play_play_makes %>% group_by(idGame,namePlayer1,slugScore,scoreHome,scoreAway,score_type) %>% summarize(n = n()) %>% mutate(first = ifelse((scoreHome >0 & scoreAway == 0) | (scoreAway > 0 & scoreHome == 0),1,0))%>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason) %>% summarize(n = n()), by = "idGame") %>% group_by(idGame,first) %>% summarize(n = n()) %>% filter(first == 1), by = "idGame") %>% mutate(first = replace_na((first),0)) %>% filter(typeSeason == "Regular Season",slugSeason == current_season) %>% group_by(namePlayer,slugSeason) %>% summarize(n = n(), total_pts = sum(pts), total_reb = sum(treb), total_ast = sum(ast), total_stl = sum(stl), total_blk = sum(blk), total_fgm = sum(fgm), total_fga = sum(fga), total_fg3m = sum(fg3m), total_fg3a = sum(fg3a), total_minutes = sum(minutes), total_tov = sum(tov), total_first = sum(first), totalfqpts = sum(firstqpoints), totalfqast = sum(firstqassists), totalfqtreb = sum(firstqrebounds)) %>% mutate(ppg = round(total_pts/n,1), rpg = round(total_reb/n,1), apg = round(total_ast/n,1), spg = round(total_stl/n,1), bpg = round(total_blk/n,1), fg_percentage = round((total_fgm/total_fga)*100,1), fg3_percentage = round((total_fg3m/total_fg3a)*100,1), min = round(total_minutes/n,1),threepg = round(total_fg3m/n,1), tovpg = round(total_tov/n,1), pts_ast = round((total_pts+total_ast)/n,1), pts_reb_ast = round((total_reb+total_pts+total_ast)/n,1), pts_reb = round((total_pts+total_reb)/n,1), ast_reb = round((total_ast+total_reb)/n,1),firstqppg = round(totalfqpts/n,1), firstqapg = round(totalfqast/n,1), firstqrpg = round(totalfqtreb/n,1), pts_per_attempt = round(total_pts/total_fga,2)) %>% select(n,min,ppg,rpg,apg,spg,bpg,threepg,fg_percentage,fg3_percentage,tovpg, pts_reb_ast, pts_ast,pts_reb,ast_reb, total_first,firstqppg,firstqapg,firstqrpg, pts_per_attempt) %>%rename(GP = n,`FG` = fg_percentage, `FG_3P` = fg3_percentage)
+season <- player_data %>% left_join(play_play_rebounds %>% filter(numberPeriod == 1) %>% group_by(idGame) %>% summarize(firstqrebounds = n()), by = "idGame") %>% mutate(firstqrebounds = replace_na(firstqrebounds,0)) %>% left_join(play_play_assists %>% filter(numberPeriod == 1) %>% group_by(idGame) %>% summarize(firstqassists = n()), by = "idGame") %>% mutate(firstqassists = replace_na(firstqassists,0)) %>% left_join(play_play_makes %>% filter(numberPeriod == 1) %>% group_by(idGame,namePlayer1,slugScore,scoreHome,scoreAway,score_type) %>% summarize(n = n(),firstqpoints = sum(pts)) %>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason,slugSeason) %>% summarize(n = n()), by = "idGame") %>% group_by(idGame) %>% summarize(firstqpoints = sum(firstqpoints)), by = "idGame") %>% mutate(firstqpoints = replace_na(firstqpoints,0)) %>% left_join(play_play_makes %>% group_by(idGame,namePlayer1,slugScore,scoreHome,scoreAway,score_type) %>% summarize(n = n()) %>% mutate(first = ifelse((scoreHome >0 & scoreAway == 0) | (scoreAway > 0 & scoreHome == 0),1,0))%>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason,slugSeason) %>% summarize(n = n()), by = "idGame") %>% group_by(idGame,first) %>% summarize(n = n()) %>% filter(first == 1), by = "idGame") %>% mutate(first = replace_na((first),0)) %>% filter(typeSeason == "Regular Season",slugSeason == current_season) %>% group_by(namePlayer,slugSeason) %>% summarize(n = n(), total_pts = sum(pts), total_reb = sum(treb), total_ast = sum(ast), total_stl = sum(stl), total_blk = sum(blk), total_fgm = sum(fgm), total_fga = sum(fga), total_fg3m = sum(fg3m), total_fg3a = sum(fg3a), total_minutes = sum(minutes), total_tov = sum(tov), total_first = sum(first), totalfqpts = sum(firstqpoints), totalfqast = sum(firstqassists), totalfqtreb = sum(firstqrebounds)) %>% mutate(ppg = round(total_pts/n,1), rpg = round(total_reb/n,1), apg = round(total_ast/n,1), spg = round(total_stl/n,1), bpg = round(total_blk/n,1), fg_percentage = round((total_fgm/total_fga)*100,1), fg3_percentage = round((total_fg3m/total_fg3a)*100,1), min = round(total_minutes/n,1),threepg = round(total_fg3m/n,1), tovpg = round(total_tov/n,1), pts_ast = round((total_pts+total_ast)/n,1), pts_reb_ast = round((total_reb+total_pts+total_ast)/n,1), pts_reb = round((total_pts+total_reb)/n,1), ast_reb = round((total_ast+total_reb)/n,1),firstqppg = round(totalfqpts/n,1), firstqapg = round(totalfqast/n,1), firstqrpg = round(totalfqtreb/n,1), pts_per_attempt = round(total_pts/total_fga,2)) %>% select(n,min,ppg,rpg,apg,spg,bpg,threepg,fg_percentage,fg3_percentage,tovpg, pts_reb_ast, pts_ast,pts_reb,ast_reb, total_first,firstqppg,firstqapg,firstqrpg, pts_per_attempt) %>%rename(GP = n,`FG` = fg_percentage, `FG_3P` = fg3_percentage)
 
 names <- colnames(season)
 error <- as.data.frame(matrix(c(player_name[1], as.integer(seq(1:ncol(season))*0)), nrow = 1, ncol=ncol(season)))
 colnames(error) <- names
 error[, -1] <- sapply(error[, -1], as.numeric)
 season_frame <- if(nrow(season)==0){error}else{season}
+
+
+season_last <- player_data %>% left_join(play_play_rebounds %>% filter(numberPeriod == 1) %>% group_by(idGame) %>% summarize(firstqrebounds = n()), by = "idGame") %>% mutate(firstqrebounds = replace_na(firstqrebounds,0)) %>% left_join(play_play_assists %>% filter(numberPeriod == 1) %>% group_by(idGame) %>% summarize(firstqassists = n()), by = "idGame") %>% mutate(firstqassists = replace_na(firstqassists,0)) %>% left_join(play_play_makes %>% filter(numberPeriod == 1) %>% group_by(idGame,namePlayer1,slugScore,scoreHome,scoreAway,score_type) %>% summarize(n = n(),firstqpoints = sum(pts)) %>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason,slugSeason) %>% summarize(n = n()), by = "idGame") %>% group_by(idGame) %>% summarize(firstqpoints = sum(firstqpoints)), by = "idGame") %>% mutate(firstqpoints = replace_na(firstqpoints,0)) %>% left_join(play_play_makes %>% group_by(idGame,namePlayer1,slugScore,scoreHome,scoreAway,score_type) %>% summarize(n = n()) %>% mutate(first = ifelse((scoreHome >0 & scoreAway == 0) | (scoreAway > 0 & scoreHome == 0),1,0))%>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason,slugSeason) %>% summarize(n = n()), by = "idGame") %>% group_by(idGame,first) %>% summarize(n = n()) %>% filter(first == 1), by = "idGame") %>% mutate(first = replace_na((first),0)) %>% filter(typeSeason == "Regular Season",slugSeason == last_season) %>% group_by(namePlayer,slugSeason) %>% summarize(n = n(), total_pts = sum(pts), total_reb = sum(treb), total_ast = sum(ast), total_stl = sum(stl), total_blk = sum(blk), total_fgm = sum(fgm), total_fga = sum(fga), total_fg3m = sum(fg3m), total_fg3a = sum(fg3a), total_minutes = sum(minutes), total_tov = sum(tov), total_first = sum(first), totalfqpts = sum(firstqpoints), totalfqast = sum(firstqassists), totalfqtreb = sum(firstqrebounds)) %>% mutate(ppg = round(total_pts/n,1), rpg = round(total_reb/n,1), apg = round(total_ast/n,1), spg = round(total_stl/n,1), bpg = round(total_blk/n,1), fg_percentage = round((total_fgm/total_fga)*100,1), fg3_percentage = round((total_fg3m/total_fg3a)*100,1), min = round(total_minutes/n,1),threepg = round(total_fg3m/n,1), tovpg = round(total_tov/n,1), pts_ast = round((total_pts+total_ast)/n,1), pts_reb_ast = round((total_reb+total_pts+total_ast)/n,1), pts_reb = round((total_pts+total_reb)/n,1), ast_reb = round((total_ast+total_reb)/n,1),firstqppg = round(totalfqpts/n,1), firstqapg = round(totalfqast/n,1), firstqrpg = round(totalfqtreb/n,1), pts_per_attempt = round(total_pts/total_fga,2)) %>% select(n,min,ppg,rpg,apg,spg,bpg,threepg,fg_percentage,fg3_percentage,tovpg, pts_reb_ast, pts_ast,pts_reb,ast_reb, total_first,firstqppg,firstqapg,firstqrpg, pts_per_attempt) %>%rename(GP = n,`FG` = fg_percentage, `FG_3P` = fg3_percentage)
+
+names <- colnames(season_last)
+error <- as.data.frame(matrix(c(player_name[1], as.integer(seq(1:ncol(season))*0)), nrow = 1, ncol=ncol(season_last)))
+colnames(error) <- names
+error[, -1] <- sapply(error[, -1], as.numeric)
+season_last_frame <- if(nrow(season_last)==0){error}else{season_last}
+
 
 
 b2b <- player_data %>% left_join(play_play_rebounds %>% filter(numberPeriod == 1) %>% group_by(idGame) %>% summarize(firstqrebounds = n()), by = "idGame") %>% mutate(firstqrebounds = replace_na(firstqrebounds,0)) %>% left_join(play_play_assists %>% filter(numberPeriod == 1) %>% group_by(idGame) %>% summarize(firstqassists = n()), by = "idGame") %>% mutate(firstqassists = replace_na(firstqassists,0)) %>% left_join(play_play_makes %>% filter(numberPeriod == 1) %>% group_by(idGame,namePlayer1,slugScore,scoreHome,scoreAway,score_type) %>% summarize(n = n(),firstqpoints = sum(pts)) %>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason) %>% summarize(n = n()), by = "idGame") %>% group_by(idGame) %>% summarize(firstqpoints = sum(firstqpoints)), by = "idGame") %>% mutate(firstqpoints = replace_na(firstqpoints,0)) %>% left_join(play_play_makes %>% group_by(idGame,namePlayer1,slugScore,scoreHome,scoreAway,score_type) %>% summarize(n = n()) %>% mutate(first = ifelse((scoreHome >0 & scoreAway == 0) | (scoreAway > 0 & scoreHome == 0),1,0))%>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason) %>% summarize(n = n()), by = "idGame") %>% group_by(idGame,first) %>% summarize(n = n()) %>% filter(first == 1), by = "idGame") %>% mutate(first = replace_na((first),0)) %>% filter(typeSeason == "Regular Season", isB2BSecond == TRUE,slugSeason == current_season) %>% group_by(namePlayer,slugSeason) %>% summarize(n = n(), total_pts = sum(pts), total_reb = sum(treb), total_ast = sum(ast), total_stl = sum(stl), total_blk = sum(blk), total_fgm = sum(fgm), total_fga = sum(fga), total_fg3m = sum(fg3m), total_fg3a = sum(fg3a), total_minutes = sum(minutes), total_tov = sum(tov), total_first = sum(first), totalfqpts = sum(firstqpoints), totalfqast = sum(firstqassists), totalfqtreb = sum(firstqrebounds)) %>% mutate(ppg = round(total_pts/n,1), rpg = round(total_reb/n,1), apg = round(total_ast/n,1), spg = round(total_stl/n,1), bpg = round(total_blk/n,1), fg_percentage = round((total_fgm/total_fga)*100,1), fg3_percentage = round((total_fg3m/total_fg3a)*100,1), min = round(total_minutes/n,1),threepg = round(total_fg3m/n,1), tovpg = round(total_tov/n,1), pts_ast = round((total_pts+total_ast)/n,1), pts_reb_ast = round((total_reb+total_pts+total_ast)/n,1), pts_reb = round((total_pts+total_reb)/n,1), ast_reb = round((total_ast+total_reb)/n,1),firstqppg = round(totalfqpts/n,1), firstqapg = round(totalfqast/n,1), firstqrpg = round(totalfqtreb/n,1), pts_per_attempt = round(total_pts/total_fga,2)) %>% select(n,min,ppg,rpg,apg,spg,bpg,threepg,fg_percentage,fg3_percentage,tovpg, pts_reb_ast, pts_ast,pts_reb,ast_reb, total_first,firstqppg,firstqapg,firstqrpg, pts_per_attempt) %>%rename(GP = n,`FG` = fg_percentage, `FG_3P` = fg3_percentage)
@@ -210,7 +223,7 @@ b2b_frame <- if(nrow(b2b)==0){error}else{b2b}
 
 #season_last10 <- player_data %>% arrange(desc(dateGame)) %>% head(10) %>% group_by(namePlayer,slugSeason) %>% summarize(n = n(), total_pts = sum(pts), total_reb = sum(treb), total_ast = sum(ast), total_stl = sum(stl), total_blk = sum(blk), total_fgm = sum(fgm), total_fga = sum(fga), total_fg3m = sum(fg3m), total_fg3a = sum(fg3a), total_minutes = sum(minutes), total_tov = sum(tov))  %>% mutate(ppg = round(total_pts/n,1), rpg = round(total_reb/n,1), apg = round(total_ast/n,1), spg = round(total_stl/n,1), bpg = round(total_blk/n,1), fg_percentage = round((total_fgm/total_fga)*100,1), fg3_percentage = round((total_fg3m/total_fg3a)*100,1), min = round(total_minutes/n,1),threepg = round(total_fg3m/n,1), tovpg = round(total_tov/n,1), pts_reb_ast = round((total_reb+total_pts+total_ast)/n,1), pts_ast = round((total_pts+total_ast)/n,1), pts_reb = round((total_pts+total_reb)/n,1), ast_reb = round((total_ast+total_reb)/n,1)) %>% select(n,min,ppg,rpg,apg,spg,bpg,threepg,fg_percentage,fg3_percentage,tovpg,pts_reb_ast, pts_ast,pts_reb,ast_reb) %>%rename(GP = n,`FG` = fg_percentage, `FG_3P` = fg3_percentage)
 
-season_last10 <- player_data %>% left_join(play_play_rebounds %>% filter(numberPeriod == 1) %>% group_by(idGame) %>% summarize(firstqrebounds = n()), by = "idGame") %>% mutate(firstqrebounds = replace_na(firstqrebounds,0)) %>% left_join(play_play_assists %>% filter(numberPeriod == 1) %>% group_by(idGame) %>% summarize(firstqassists = n()), by = "idGame") %>% mutate(firstqassists = replace_na(firstqassists,0)) %>% left_join(play_play_makes %>% filter(numberPeriod == 1) %>% group_by(idGame,namePlayer1,slugScore,scoreHome,scoreAway,score_type) %>% summarize(n = n(),firstqpoints = sum(pts)) %>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason) %>% summarize(n = n()), by = "idGame") %>% group_by(idGame) %>% summarize(firstqpoints = sum(firstqpoints)), by = "idGame") %>% mutate(firstqpoints = replace_na(firstqpoints,0)) %>% left_join(play_play_makes %>% group_by(idGame,namePlayer1,slugScore,scoreHome,scoreAway,score_type) %>% summarize(n = n()) %>% mutate(first = ifelse((scoreHome >0 & scoreAway == 0) | (scoreAway > 0 & scoreHome == 0),1,0))%>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason) %>% summarize(n = n()), by = "idGame") %>% group_by(idGame,first) %>% summarize(n = n()) %>% filter(first == 1), by = "idGame") %>% filter(slugSeason == current_season) %>% mutate(first = replace_na((first),0)) %>% arrange(desc(dateGame)) %>% head(10) %>% group_by(namePlayer,slugSeason) %>% summarize(n = n(), total_pts = sum(pts), total_reb = sum(treb), total_ast = sum(ast), total_stl = sum(stl), total_blk = sum(blk), total_fgm = sum(fgm), total_fga = sum(fga), total_fg3m = sum(fg3m), total_fg3a = sum(fg3a), total_minutes = sum(minutes), total_tov = sum(tov), total_first = sum(first), totalfqpts = sum(firstqpoints), totalfqast = sum(firstqassists), totalfqtreb = sum(firstqrebounds))  %>% mutate(ppg = round(total_pts/n,1), rpg = round(total_reb/n,1), apg = round(total_ast/n,1), spg = round(total_stl/n,1), bpg = round(total_blk/n,1), fg_percentage = round((total_fgm/total_fga)*100,1), fg3_percentage = round((total_fg3m/total_fg3a)*100,1), min = round(total_minutes/n,1),threepg = round(total_fg3m/n,1), tovpg = round(total_tov/n,1), pts_reb_ast = round((total_reb+total_pts+total_ast)/n,1), pts_ast = round((total_pts+total_ast)/n,1), pts_reb = round((total_pts+total_reb)/n,1), ast_reb = round((total_ast+total_reb)/n,1),firstqppg = round(totalfqpts/n,1), firstqapg = round(totalfqast/n,1), firstqrpg = round(totalfqtreb/n,1), pts_per_attempt = round(total_pts/total_fga,2)) %>% select(n,min,ppg,rpg,apg,spg,bpg,threepg,fg_percentage,fg3_percentage,tovpg,pts_reb_ast, pts_ast,pts_reb,ast_reb, total_first,firstqppg,firstqapg,firstqrpg,pts_per_attempt) %>%rename(GP = n,`FG` = fg_percentage, `FG_3P` = fg3_percentage)
+season_last10 <- player_data %>% left_join(play_play_rebounds %>% filter(numberPeriod == 1) %>% group_by(idGame) %>% summarize(firstqrebounds = n()), by = "idGame") %>% mutate(firstqrebounds = replace_na(firstqrebounds,0)) %>% left_join(play_play_assists %>% filter(numberPeriod == 1) %>% group_by(idGame) %>% summarize(firstqassists = n()), by = "idGame") %>% mutate(firstqassists = replace_na(firstqassists,0)) %>% left_join(play_play_makes %>% filter(numberPeriod == 1) %>% group_by(idGame,namePlayer1,slugScore,scoreHome,scoreAway,score_type) %>% summarize(n = n(),firstqpoints = sum(pts)) %>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason) %>% summarize(n = n()), by = "idGame") %>% group_by(idGame) %>% summarize(firstqpoints = sum(firstqpoints)), by = "idGame") %>% mutate(firstqpoints = replace_na(firstqpoints,0)) %>% left_join(play_play_makes %>% group_by(idGame,namePlayer1,slugScore,scoreHome,scoreAway,score_type) %>% summarize(n = n()) %>% mutate(first = ifelse((scoreHome >0 & scoreAway == 0) | (scoreAway > 0 & scoreHome == 0),1,0))%>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason) %>% summarize(n = n()), by = "idGame") %>% group_by(idGame,first) %>% summarize(n = n()) %>% filter(first == 1), by = "idGame") %>% mutate(first = replace_na((first),0)) %>% arrange(desc(dateGame)) %>% head(10) %>% group_by(namePlayer) %>% summarize(n = n(), total_pts = sum(pts), total_reb = sum(treb), total_ast = sum(ast), total_stl = sum(stl), total_blk = sum(blk), total_fgm = sum(fgm), total_fga = sum(fga), total_fg3m = sum(fg3m), total_fg3a = sum(fg3a), total_minutes = sum(minutes), total_tov = sum(tov), total_first = sum(first), totalfqpts = sum(firstqpoints), totalfqast = sum(firstqassists), totalfqtreb = sum(firstqrebounds))  %>% mutate(ppg = round(total_pts/n,1), rpg = round(total_reb/n,1), apg = round(total_ast/n,1), spg = round(total_stl/n,1), bpg = round(total_blk/n,1), fg_percentage = round((total_fgm/total_fga)*100,1), fg3_percentage = round((total_fg3m/total_fg3a)*100,1), min = round(total_minutes/n,1),threepg = round(total_fg3m/n,1), tovpg = round(total_tov/n,1), pts_reb_ast = round((total_reb+total_pts+total_ast)/n,1), pts_ast = round((total_pts+total_ast)/n,1), pts_reb = round((total_pts+total_reb)/n,1), ast_reb = round((total_ast+total_reb)/n,1),firstqppg = round(totalfqpts/n,1), firstqapg = round(totalfqast/n,1), firstqrpg = round(totalfqtreb/n,1), pts_per_attempt = round(total_pts/total_fga,2)) %>% select(n,min,ppg,rpg,apg,spg,bpg,threepg,fg_percentage,fg3_percentage,tovpg,pts_reb_ast, pts_ast,pts_reb,ast_reb, total_first,firstqppg,firstqapg,firstqrpg,pts_per_attempt) %>%rename(GP = n,`FG` = fg_percentage, `FG_3P` = fg3_percentage)
 
 names <- colnames(season_last10)
 error <- as.data.frame(matrix(c(player_name[1], as.integer(seq(1:ncol(season_last10))*0)), nrow = 1, ncol=ncol(season_last10)))
@@ -220,7 +233,7 @@ season_last10_frame <- if(nrow(season_last10)==0){error}else{season_last10}
 
 #season_last5 <- player_data %>% arrange(desc(dateGame)) %>% head(5) %>% group_by(namePlayer,slugSeason) %>% summarize(n = n(), total_pts = sum(pts), total_reb = sum(treb), total_ast = sum(ast), total_stl = sum(stl), total_blk = sum(blk), total_fgm = sum(fgm), total_fga = sum(fga), total_fg3m = sum(fg3m), total_fg3a = sum(fg3a), total_minutes = sum(minutes), total_tov = sum(tov))  %>% mutate(ppg = round(total_pts/n,1), rpg = round(total_reb/n,1), apg = round(total_ast/n,1), spg = round(total_stl/n,1), bpg = round(total_blk/n,1), fg_percentage = round((total_fgm/total_fga)*100,1), fg3_percentage = round((total_fg3m/total_fg3a)*100,1), min = round(total_minutes/n,1),threepg = round(total_fg3m/n,1), tovpg = round(total_tov/n,1), pts_reb_ast = round((total_reb+total_pts+total_ast)/n,1), pts_ast = round((total_pts+total_ast)/n,1), pts_reb = round((total_pts+total_reb)/n,1), ast_reb = round((total_ast+total_reb)/n,1)) %>% select(n,min,ppg,rpg,apg,spg,bpg,threepg,fg_percentage,fg3_percentage,tovpg,pts_reb_ast,pts_ast,pts_reb,ast_reb) %>%rename(GP = n,`FG` = fg_percentage, `FG_3P` = fg3_percentage)
 
-season_last5 <- player_data %>% left_join(play_play_rebounds %>% filter(numberPeriod == 1) %>% group_by(idGame) %>% summarize(firstqrebounds = n()), by = "idGame") %>% mutate(firstqrebounds = replace_na(firstqrebounds,0)) %>% left_join(play_play_assists %>% filter(numberPeriod == 1) %>% group_by(idGame) %>% summarize(firstqassists = n()), by = "idGame") %>% mutate(firstqassists = replace_na(firstqassists,0)) %>% left_join(play_play_makes %>% filter(numberPeriod == 1) %>% group_by(idGame,namePlayer1,slugScore,scoreHome,scoreAway,score_type) %>% summarize(n = n(),firstqpoints = sum(pts)) %>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason) %>% summarize(n = n()), by = "idGame") %>% group_by(idGame) %>% summarize(firstqpoints = sum(firstqpoints)), by = "idGame") %>% mutate(firstqpoints = replace_na(firstqpoints,0)) %>% left_join(play_play_makes %>% group_by(idGame,namePlayer1,slugScore,scoreHome,scoreAway,score_type) %>% summarize(n = n()) %>% mutate(first = ifelse((scoreHome >0 & scoreAway == 0) | (scoreAway > 0 & scoreHome == 0),1,0))%>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason) %>% summarize(n = n()), by = "idGame") %>% group_by(idGame,first) %>% summarize(n = n()) %>% filter(first == 1), by = "idGame") %>% filter(slugSeason == current_season) %>% mutate(first = replace_na((first),0)) %>% arrange(desc(dateGame)) %>% head(5) %>% group_by(namePlayer,slugSeason) %>% summarize(n = n(), total_pts = sum(pts), total_reb = sum(treb), total_ast = sum(ast), total_stl = sum(stl), total_blk = sum(blk), total_fgm = sum(fgm), total_fga = sum(fga), total_fg3m = sum(fg3m), total_fg3a = sum(fg3a), total_minutes = sum(minutes), total_tov = sum(tov), total_first = sum(first), totalfqpts = sum(firstqpoints), totalfqast = sum(firstqassists), totalfqtreb = sum(firstqrebounds))  %>% mutate(ppg = round(total_pts/n,1), rpg = round(total_reb/n,1), apg = round(total_ast/n,1), spg = round(total_stl/n,1), bpg = round(total_blk/n,1), fg_percentage = round((total_fgm/total_fga)*100,1), fg3_percentage = round((total_fg3m/total_fg3a)*100,1), min = round(total_minutes/n,1),threepg = round(total_fg3m/n,1), tovpg = round(total_tov/n,1), pts_reb_ast = round((total_reb+total_pts+total_ast)/n,1), pts_ast = round((total_pts+total_ast)/n,1), pts_reb = round((total_pts+total_reb)/n,1), ast_reb = round((total_ast+total_reb)/n,1),firstqppg = round(totalfqpts/n,1), firstqapg = round(totalfqast/n,1), firstqrpg = round(totalfqtreb/n,1), pts_per_attempt = round(total_pts/total_fga,2)) %>% select(n,min,ppg,rpg,apg,spg,bpg,threepg,fg_percentage,fg3_percentage,tovpg,pts_reb_ast,pts_ast,pts_reb,ast_reb, total_first,firstqppg,firstqapg,firstqrpg,pts_per_attempt) %>%rename(GP = n,`FG` = fg_percentage, `FG_3P` = fg3_percentage)
+season_last5 <- player_data %>% left_join(play_play_rebounds %>% filter(numberPeriod == 1) %>% group_by(idGame) %>% summarize(firstqrebounds = n()), by = "idGame") %>% mutate(firstqrebounds = replace_na(firstqrebounds,0)) %>% left_join(play_play_assists %>% filter(numberPeriod == 1) %>% group_by(idGame) %>% summarize(firstqassists = n()), by = "idGame") %>% mutate(firstqassists = replace_na(firstqassists,0)) %>% left_join(play_play_makes %>% filter(numberPeriod == 1) %>% group_by(idGame,namePlayer1,slugScore,scoreHome,scoreAway,score_type) %>% summarize(n = n(),firstqpoints = sum(pts)) %>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason) %>% summarize(n = n()), by = "idGame") %>% group_by(idGame) %>% summarize(firstqpoints = sum(firstqpoints)), by = "idGame") %>% mutate(firstqpoints = replace_na(firstqpoints,0)) %>% left_join(play_play_makes %>% group_by(idGame,namePlayer1,slugScore,scoreHome,scoreAway,score_type) %>% summarize(n = n()) %>% mutate(first = ifelse((scoreHome >0 & scoreAway == 0) | (scoreAway > 0 & scoreHome == 0),1,0))%>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason) %>% summarize(n = n()), by = "idGame") %>% group_by(idGame,first) %>% summarize(n = n()) %>% filter(first == 1), by = "idGame") %>% mutate(first = replace_na((first),0)) %>% arrange(desc(dateGame)) %>% head(5) %>% group_by(namePlayer) %>% summarize(n = n(), total_pts = sum(pts), total_reb = sum(treb), total_ast = sum(ast), total_stl = sum(stl), total_blk = sum(blk), total_fgm = sum(fgm), total_fga = sum(fga), total_fg3m = sum(fg3m), total_fg3a = sum(fg3a), total_minutes = sum(minutes), total_tov = sum(tov), total_first = sum(first), totalfqpts = sum(firstqpoints), totalfqast = sum(firstqassists), totalfqtreb = sum(firstqrebounds))  %>% mutate(ppg = round(total_pts/n,1), rpg = round(total_reb/n,1), apg = round(total_ast/n,1), spg = round(total_stl/n,1), bpg = round(total_blk/n,1), fg_percentage = round((total_fgm/total_fga)*100,1), fg3_percentage = round((total_fg3m/total_fg3a)*100,1), min = round(total_minutes/n,1),threepg = round(total_fg3m/n,1), tovpg = round(total_tov/n,1), pts_reb_ast = round((total_reb+total_pts+total_ast)/n,1), pts_ast = round((total_pts+total_ast)/n,1), pts_reb = round((total_pts+total_reb)/n,1), ast_reb = round((total_ast+total_reb)/n,1),firstqppg = round(totalfqpts/n,1), firstqapg = round(totalfqast/n,1), firstqrpg = round(totalfqtreb/n,1), pts_per_attempt = round(total_pts/total_fga,2)) %>% select(n,min,ppg,rpg,apg,spg,bpg,threepg,fg_percentage,fg3_percentage,tovpg,pts_reb_ast,pts_ast,pts_reb,ast_reb, total_first,firstqppg,firstqapg,firstqrpg,pts_per_attempt) %>%rename(GP = n,`FG` = fg_percentage, `FG_3P` = fg3_percentage)
 
 names <- colnames(season_last5)
 error <- as.data.frame(matrix(c(player_name[1], as.integer(seq(1:ncol(season_last5))*0)), nrow = 1, ncol=ncol(season_last5)))
@@ -295,8 +308,8 @@ playoff_home_frame <- if(nrow(playoff_home)==0){error}else{playoff_home}
 
 
 
-Type <- c("2024/25 Regular Season","Last 10 GP","Last 5 GP","2024/25 Regular Season Home","2024/25 Regular Season Away",paste("Against",next_opponent,"Regular Season"),"Second Night of Back of Back")
-combined <- bind_rows(season_frame,season_last10_frame,season_last5_frame,season_home_frame,season_away_frame,season_opponent_frame,b2b_frame)
+Type <- c("2024/25 Regular Season","2023/24 Regular Season","Last 10 GP","Last 5 GP","2024/25 Regular Season Home","2024/25 Regular Season Away",paste("Against",next_opponent,"Regular Season"),"Second Night of Back of Back")
+combined <- bind_rows(season_frame,season_last_frame,season_last10_frame,season_last5_frame,season_home_frame,season_away_frame,season_opponent_frame,b2b_frame)
 
 
 df <- data.frame(Type,combined)
@@ -2799,7 +2812,7 @@ play_play_miss <- play_play_player %>% select(idGame,numberPeriod, descriptionPl
 
 avg <- player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% group_by(dateGame) %>% summarize(n = n()) %>% left_join(play_play_makes %>% filter(numberPeriod == 1) %>% group_by(dateGame) %>% summarize(pts = sum(pts)), by = "dateGame") %>% mutate(pts = replace_na(pts,0)) %>% summarize(avg = mean(pts)) %>% pull(avg)
 
-avg_lastx <- player_data %>% filter(slugSeason == current_season) %>% arrange(desc(dateGame)) %>% head(params$games) %>% group_by(dateGame) %>% summarize(n = n()) %>% left_join(play_play_makes %>% filter(numberPeriod == 1) %>% group_by(dateGame) %>% summarize(pts = sum(pts)), by = "dateGame") %>% mutate(pts = replace_na(pts,0)) %>% summarize(avg = mean(pts)) %>% pull(avg)
+avg_lastx <- player_data %>% arrange(desc(dateGame)) %>% head(params$games) %>% group_by(dateGame) %>% summarize(n = n()) %>% left_join(play_play_makes %>% filter(numberPeriod == 1) %>% group_by(dateGame) %>% summarize(pts = sum(pts)), by = "dateGame") %>% mutate(pts = replace_na(pts,0)) %>% summarize(avg = mean(pts)) %>% pull(avg)
 
 num_period <- seq(1:4)
 
@@ -2815,10 +2828,10 @@ percentile_points_q3 <- percentile[3]
 percentile_points_q4 <- percentile[4]
 
 
-p <- firstq_makes %>% filter(slugSeason == current_season)%>% ggplot(aes(dateGame,pts, label = slugOpponent)) + geom_line() + geom_point(aes(color = locationGame, shape = typeSeason))+ theme_minimal() +labs(x = "Date") + scale_y_continuous(breaks = seq(0,90,1)) + ggtitle(toupper(paste(params$player,"1st Quarter Pts")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1)))) + geom_hline(yintercept = avg) + geom_smooth(span = 0.6) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b")
+p <- firstq_makes %>% ggplot(aes(dateGame,pts, label = slugOpponent)) + geom_line() + geom_point(aes(color = locationGame, shape = typeSeason))+ theme_minimal() +labs(x = "Date") + scale_y_continuous(breaks = seq(0,90,1)) + ggtitle(toupper(paste(params$player,"1st Quarter Pts")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1)))) + geom_hline(yintercept = avg) + geom_smooth(span = 0.6) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b") + facet_grid(~ slugSeason, scales = "free_x")
 
 ggplotly(p) %>% layout(legend = list(orientation = "h", x = 0, y = -0.2), 
-                       title = list(text = toupper(paste(params$player,"1st Quarter Pts",'<br>','<sup>',toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))),'</sup>'))))
+                       title = list(text = toupper(paste(params$player,"1st Quarter Pts",'<br>','<sup>',toupper(paste("Current Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))),'</sup>'))))
 
 ```
 
@@ -2834,7 +2847,7 @@ metric = "pts"
 
 p <- firstq_makes %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% ggplot(aes(locationGame,.data[[metric]], fill = locationGame)) + geom_boxplot() + theme_minimal()+ labs(x = "Location") + ggtitle(toupper(paste(params$player,"regular season",metric,"per game by location"))) + theme(legend.position="none") + scale_fill_manual(values = c(primary_color,secondary_color))
 
-ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"per game by location",'<br>','<sup>',toupper("Regular Season"),'</sup>'))))
+ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"per game by location",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
 
 
 ```
@@ -2846,7 +2859,7 @@ ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"p
 
 p <- firstq_makes %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% mutate(day = weekdays(dateGame, abbreviate = TRUE))  %>% ggplot(aes(x=factor(day, levels = c("Sun","Mon","Tue","Wed","Thu","Fri","Sat")),y =.data[[metric]], fill = day)) + geom_boxplot() + theme_minimal()+ labs(x = "Weekday")  + theme(legend.position="none")+ scale_fill_brewer(palette = "RdYlBu")
 
-ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"per game by Weekday",'<br>','<sup>',toupper("Regular Season"),'</sup>'))))
+ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"per game by Weekday",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
 
 ```
 
@@ -2858,7 +2871,7 @@ ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"p
 
 p <- firstq_makes %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% ggplot(aes(.data[[metric]])) + geom_histogram(bins = 6, color = secondary_color, fill = primary_color)+ theme_minimal() + scale_x_continuous(breaks = seq(0,90,1))+ ggtitle(toupper(paste(params$player,"regular season",metric,"histogram")))
 
-ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"histogram",'<br>','<sup>',toupper("Regular Season"),'</sup>'))))
+ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"histogram",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
 
 ```
 
@@ -2954,7 +2967,7 @@ df <- data.frame(OU = hit_rate,Over = round(hit_rate_above*100,0), Under = round
 p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))
 
 
-ggplotly(p, tooltip = list("OU","percentage","type")) %>% layout(title = list(text = toupper(paste(params$player,metric,"O/U Probabilities",'<br>','<sup>',toupper("Regular Season"),'</sup>'))))
+ggplotly(p, tooltip = list("OU","percentage","type")) %>% layout(title = list(text = toupper(paste(params$player,metric,"O/U Probabilities",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
 
 
 
@@ -3056,13 +3069,13 @@ Row {.tabset .tabset-fade .tabset-pills}
 
 avg <- mean(firstq_assists %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% pull(assists))
 
-avg_lastx <- mean(firstq_assists %>% filter(slugSeason == current_season) %>% arrange(desc(dateGame)) %>% head(params$games) %>% pull(assists))
+avg_lastx <- mean(firstq_assists %>% arrange(desc(dateGame)) %>% head(params$games) %>% pull(assists))
 
-p <- firstq_assists %>% filter(slugSeason == current_season) %>% ggplot(aes(dateGame,assists, label = slugOpponent)) + geom_line() + geom_point(aes(color = locationGame, shape = typeSeason))+ theme_minimal() +labs(x = "Date") + scale_y_continuous(breaks = seq(0,90,1)) + ggtitle(toupper(paste(params$player,"1st Quarter Assists")), subtitle = toupper(paste("Season Avg:", round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1)))) + geom_smooth(span = 0.6) + geom_hline(yintercept = avg) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b")
+p <- firstq_assists %>% ggplot(aes(dateGame,assists, label = slugOpponent)) + geom_line() + geom_point(aes(color = locationGame, shape = typeSeason))+ theme_minimal() +labs(x = "Date") + scale_y_continuous(breaks = seq(0,90,1)) + ggtitle(toupper(paste(params$player,"1st Quarter Assists")), subtitle = toupper(paste("Season Avg:", round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1)))) + geom_smooth(span = 0.6) + geom_hline(yintercept = avg) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b") + facet_grid(~ slugSeason, scales = "free_x")
 
 
 ggplotly(p) %>% layout(legend = list(orientation = "h", x = 0, y = -0.2), 
-                       title = list(text = toupper(paste(params$player,"1st Quarter Assists",'<br>','<sup>',toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))),'</sup>'))))
+                       title = list(text = toupper(paste(params$player,"1st Quarter Assists",'<br>','<sup>',toupper(paste("Current Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))),'</sup>'))))
 
 ```
 
@@ -3078,7 +3091,7 @@ metric = "assists"
 
 p <- firstq_assists %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% ggplot(aes(locationGame,.data[[metric]], fill = locationGame)) + geom_boxplot() + theme_minimal()+ labs(x = "Location") + ggtitle(toupper(paste(params$player,"regular season",metric,"per game by location"))) + theme(legend.position="none") + scale_fill_manual(values = c(primary_color,secondary_color))
 
-ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"per game by location",'<br>','<sup>',toupper("Regular Season"),'</sup>'))))
+ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"per game by location",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
 
 
 ```
@@ -3090,7 +3103,7 @@ ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"p
 
 p <- firstq_assists %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% mutate(day = weekdays(dateGame, abbreviate = TRUE))  %>% ggplot(aes(x=factor(day, levels = c("Sun","Mon","Tue","Wed","Thu","Fri","Sat")),y =.data[[metric]], fill = day)) + geom_boxplot() + theme_minimal()+ labs(x = "Weekday")  + theme(legend.position="none")+ scale_fill_brewer(palette = "RdYlBu")
 
-ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"per game by Weekday",'<br>','<sup>',toupper("Regular Season"),'</sup>'))))
+ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"per game by Weekday",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
 
 ```
 
@@ -3102,7 +3115,7 @@ ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"p
 
 p <- firstq_assists %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% ggplot(aes(.data[[metric]])) + geom_histogram(bins = 6, color = secondary_color, fill = primary_color)+ theme_minimal() + scale_x_continuous(breaks = seq(0,90,1))+ ggtitle(toupper(paste(params$player,"regular season",metric,"histogram")))
 
-ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"histogram",'<br>','<sup>',toupper("Regular Season"),'</sup>'))))
+ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"histogram",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
 
 ```
 
@@ -3164,7 +3177,7 @@ df <- data.frame(OU = hit_rate,Over = round(hit_rate_above*100,0), Under = round
 p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))
 
 
-ggplotly(p, tooltip = list("OU","percentage","type")) %>% layout(title = list(text = toupper(paste(params$player,metric,"O/U Probabilities",'<br>','<sup>',toupper("Regular Season"),'</sup>'))))
+ggplotly(p, tooltip = list("OU","percentage","type")) %>% layout(title = list(text = toupper(paste(params$player,metric,"O/U Probabilities",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
 
 
 
@@ -3267,12 +3280,12 @@ Row {.tabset .tabset-fade .tabset-pills}
 
 avg <- mean(firstq_rebounds %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% pull(rebounds))
 
-avg_lastx <- mean(firstq_rebounds %>% filter(slugSeason == current_season) %>% arrange(desc(dateGame)) %>% head(params$games) %>% pull(rebounds))
+avg_lastx <- mean(firstq_rebounds  %>% arrange(desc(dateGame)) %>% head(params$games) %>% pull(rebounds))
 
-p <- firstq_rebounds %>% filter(slugSeason == current_season) %>% ggplot(aes(dateGame,rebounds, label = slugOpponent)) + geom_line() + geom_point(aes(color = locationGame, shape = typeSeason))+ theme_minimal() +labs(x = "Date") + scale_y_continuous(breaks = seq(0,90,1)) + ggtitle(toupper(paste(params$player,"1st Quarter Rebounds")), subtitle = toupper(paste("Season Avg:", round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1)))) + geom_smooth(span = 0.6) + geom_hline(yintercept = avg) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b")
+p <- firstq_rebounds  %>% ggplot(aes(dateGame,rebounds, label = slugOpponent)) + geom_line() + geom_point(aes(color = locationGame, shape = typeSeason))+ theme_minimal() +labs(x = "Date") + scale_y_continuous(breaks = seq(0,90,1)) + ggtitle(toupper(paste(params$player,"1st Quarter Rebounds")), subtitle = toupper(paste("Season Avg:", round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1)))) + geom_smooth(span = 0.6) + geom_hline(yintercept = avg) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b") + facet_grid(~ slugSeason, scales = "free_x")
 
 ggplotly(p) %>% layout(legend = list(orientation = "h", x = 0, y = -0.2), 
-                       title = list(text = toupper(paste(params$player,"1st Quarter Rebounds",'<br>','<sup>',toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))),'</sup>'))))
+                       title = list(text = toupper(paste(params$player,"1st Quarter Rebounds",'<br>','<sup>',toupper(paste("Current Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))),'</sup>'))))
 
 ```
 
@@ -3287,7 +3300,7 @@ metric = "rebounds"
 
 p <- firstq_rebounds %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% ggplot(aes(locationGame,.data[[metric]], fill = locationGame)) + geom_boxplot() + theme_minimal()+ labs(x = "Location") + ggtitle(toupper(paste(params$player,"regular season",metric,"per game by location"))) + theme(legend.position="none") + scale_fill_manual(values = c(primary_color,secondary_color))
 
-ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"per game by location",'<br>','<sup>',toupper("Regular Season"),'</sup>'))))
+ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"per game by location",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
 
 ```
 
@@ -3298,7 +3311,7 @@ ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"p
 
 p <- firstq_rebounds %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% mutate(day = weekdays(dateGame, abbreviate = TRUE))  %>% ggplot(aes(x=factor(day, levels = c("Sun","Mon","Tue","Wed","Thu","Fri","Sat")),y =.data[[metric]], fill = day)) + geom_boxplot() + theme_minimal()+ labs(x = "Weekday")  + theme(legend.position="none")+ scale_fill_brewer(palette = "RdYlBu")
 
-ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"per game by Weekday",'<br>','<sup>',toupper("Regular Season"),'</sup>'))))
+ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"per game by Weekday",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
 
 ```
 
@@ -3309,7 +3322,7 @@ ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"p
 
 p <- firstq_rebounds %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% ggplot(aes(.data[[metric]])) + geom_histogram(bins = 6, color = secondary_color, fill = primary_color)+ theme_minimal() + scale_x_continuous(breaks = seq(0,90,1))+ ggtitle(toupper(paste(params$player,"regular season",metric,"histogram")))
 
-ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"histogram",'<br>','<sup>',toupper("Regular Season"),'</sup>'))))
+ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"histogram",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
 
 ```
 
@@ -3371,7 +3384,7 @@ df <- data.frame(OU = hit_rate,Over = round(hit_rate_above*100,0), Under = round
 p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))
 
 
-ggplotly(p, tooltip = list("OU","percentage","type")) %>% layout(title = list(text = toupper(paste(params$player,metric,"O/U Probabilities",'<br>','<sup>',toupper("Regular Season"),'</sup>'))))
+ggplotly(p, tooltip = list("OU","percentage","type")) %>% layout(title = list(text = toupper(paste(params$player,metric,"O/U Probabilities",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
 
 
 ```
@@ -3383,7 +3396,7 @@ Points {data-navmenu="Quarterly Analysis" data-navmenu-icon="fa-diagram-project"
 Row
 -----------------------------------------------------------------------
 
-### Regular Season Points per Quarter {data-width=1500}
+### Current Regular Season Points per Quarter {data-width=1500}
 
 ```{r Quarterly points, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
 
@@ -3401,7 +3414,7 @@ ggplotly(p)
 
 
 
-### Regular Season Points per Quarter League Comparison
+### Current Regular Season Points per Quarter League Comparison
 
 ```{r Quarterly points hist, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
 
@@ -3426,7 +3439,7 @@ Row
 -----------------------------------------------------------------------
 
 
-### Regular Season Assists per Quarter {data-width=1500}
+### Current Regular Season Assists per Quarter {data-width=1500}
 
 ```{r Quarterly assists, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
 
@@ -3458,7 +3471,7 @@ ggplotly(p)
 ```
 
 
-### Regular Season Assists per Quarter League Comparison
+### Current Regular Season Assists per Quarter League Comparison
 
 ```{r Quarterly assists hist, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
 
@@ -3480,7 +3493,7 @@ Rebounds {data-navmenu="Quarterly Analysis"}
 Row
 -----------------------------------------------------------------------
 
-### Regular Season Rebounds per Quarter {data-width=1500}
+### Current Regular Season Rebounds per Quarter {data-width=1500}
 
 ```{r Quarterly rebounds, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
 
@@ -3498,7 +3511,7 @@ ggplotly(p)
 
 
 
-### Regular Season Rebounds per Quarter League Comparison
+### Current Regular Season Rebounds per Quarter League Comparison
 
 ```{r Quarterly rebounds hist, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
 
@@ -3562,7 +3575,7 @@ probability <- prob
 
 df <- data.frame(Points = points_prob, Probability = round(probability*100,1))
 
-formattable(df, align = c("c","c"), list(Probability = color_bar("orange")), caption = paste("Likelihood that this total game point total is scored when ",params$player," scores at least ",round(first,1)," points in 1Q: Regular Season Only"))
+formattable(df, align = c("c","c"), list(Probability = color_bar("orange")), caption = paste("Likelihood that this total game point total is scored when ",params$player," scores at least ",round(first,1)," points in 1Q: Current Regular Season Only"))
 
 a <- bind %>% filter(Type == "Total")
 a_sorted <- a %>% arrange(desc(dateGame))
@@ -3633,7 +3646,7 @@ probability <- prob
 
 df <- data.frame(Assists = assists_prob, Probability = round(probability*100,1))
 
-formattable(df, align = c("c","c"), list(Probability = color_bar("orange")), caption = paste("Likelihood that this game assist total happens when ",params$player," has at least ",round(first,1)," assists in 1Q: Regular Season Only"))
+formattable(df, align = c("c","c"), list(Probability = color_bar("orange")), caption = paste("Likelihood that this game assist total happens when ",params$player," has at least ",round(first,1)," assists in 1Q: Current Regular Season Only"))
 
 a <- bind %>% filter(Type == "Total")
 a_sorted <- a %>% arrange(desc(dateGame))
@@ -3709,7 +3722,7 @@ probability <- prob
 
 df <- data.frame(Rebounds = reb_prob, Probability = round(probability*100,1))
 
-formattable(df, align = c("c","c"), list(Probability = color_bar("orange")), caption = paste("Likelihood that this game rebound total happens when ",params$player," has at least ",round(first,1)," rebounds in 1Q: Regular Season Only"))
+formattable(df, align = c("c","c"), list(Probability = color_bar("orange")), caption = paste("Likelihood that this game rebound total happens when ",params$player," has at least ",round(first,1)," rebounds in 1Q: Current Regular Season Only"))
 
 a <- bind %>% filter(Type == "Total")
 a_sorted <- a %>% arrange(desc(dateGame))
@@ -3781,7 +3794,7 @@ probability <- prob
 
 df <- data.frame(Threes = points_prob, Probability = round(probability*100,1))
 
-formattable(df, align = c("c","c"), list(Probability = color_bar("orange")), caption = paste("Likelihood that this threes made total is scored when ",params$player," makes at least ",round(first,1)," threes in 1Q: Regular Season Only"))
+formattable(df, align = c("c","c"), list(Probability = color_bar("orange")), caption = paste("Likelihood that this threes made total is scored when ",params$player," makes at least ",round(first,1)," threes in 1Q: Current Regular Season Only"))
 
 ```
 
@@ -3835,7 +3848,7 @@ probability <- prob
 
 df <- data.frame(`Pts+Reb+Ast` = points_prob, Probability = round(probability*100,1))
 
-formattable(df, align = c("c","c"), list(Probability = color_bar("orange")), caption = paste("Likelihood that this Pts+Reb+Ast total is attained when ",params$player," has at least ",round(first,1)," Pts+Reb+Ast in 1Q: Regular Season Only"))
+formattable(df, align = c("c","c"), list(Probability = color_bar("orange")), caption = paste("Likelihood that this Pts+Reb+Ast total is attained when ",params$player," has at least ",round(first,1)," Pts+Reb+Ast in 1Q: Current Regular Season Only"))
 
 ```
 
@@ -3877,7 +3890,7 @@ season_opponent_table <- player_data %>% left_join(play_play_rebounds %>% filter
          `Q1 APG` = firstqapg,
          `Q1 RPG` = firstqrpg) 
 
-formattable(season_opponent_table, align = "c", list(min = color_tile("white","gold"),PPG = color_tile("white","gold"),RPG = color_tile("white","gold"),APG = color_tile("white","gold"),SPG = color_tile("white","gold"),BPG = color_tile("white","gold"),TOV = color_tile("white","gold"),FG3M = color_tile("white","gold"),`FG%` = color_tile("white","gold"),`3FG%` = color_tile("white","gold"), `Pts+Reb+Ast` = color_tile("white","gold"), `Pts+Ast` = color_tile("white","gold"), `Pts+Reb` = color_tile("white","gold"), `Reb+Ast` = color_tile("white","gold"), `First Scorer Count` = color_tile("white","gold"), `Q1 PPG` = color_tile("white","gold"), `Q1 APG` = color_tile("white","gold"), `Q1 RPG` = color_tile("white","gold")), caption = "Against Opponents: Regular Season")
+formattable(season_opponent_table, align = "c", list(min = color_tile("white","gold"),PPG = color_tile("white","gold"),RPG = color_tile("white","gold"),APG = color_tile("white","gold"),SPG = color_tile("white","gold"),BPG = color_tile("white","gold"),TOV = color_tile("white","gold"),FG3M = color_tile("white","gold"),`FG%` = color_tile("white","gold"),`3FG%` = color_tile("white","gold"), `Pts+Reb+Ast` = color_tile("white","gold"), `Pts+Ast` = color_tile("white","gold"), `Pts+Reb` = color_tile("white","gold"), `Reb+Ast` = color_tile("white","gold"), `First Scorer Count` = color_tile("white","gold"), `Q1 PPG` = color_tile("white","gold"), `Q1 APG` = color_tile("white","gold"), `Q1 RPG` = color_tile("white","gold")), caption = "Against Opponents: Current Regular Season")
 
 
 ```
@@ -3908,7 +3921,7 @@ season_opponent_table <- player_data %>% left_join(play_play_rebounds %>% filter
          `Q1 APG` = firstqapg,
          `Q1 RPG` = firstqrpg) 
 
-formattable(season_opponent_table, align = "c", list(min = color_tile("white","gold"),PPG = color_tile("white","gold"),RPG = color_tile("white","gold"),APG = color_tile("white","gold"),SPG = color_tile("white","gold"),BPG = color_tile("white","gold"),TOV = color_tile("white","gold"),FG3M = color_tile("white","gold"),`FG%` = color_tile("white","gold"),`3FG%` = color_tile("white","gold"), `Pts+Reb+Ast` = color_tile("white","gold"), `Pts+Ast` = color_tile("white","gold"), `Pts+Reb` = color_tile("white","gold"), `Reb+Ast` = color_tile("white","gold"), `First Scorer Count` = color_tile("white","gold"), `Q1 PPG` = color_tile("white","gold"), `Q1 APG` = color_tile("white","gold"), `Q1 RPG` = color_tile("white","gold")), caption = "Against Opponents: Regular Season")
+formattable(season_opponent_table, align = "c", list(min = color_tile("white","gold"),PPG = color_tile("white","gold"),RPG = color_tile("white","gold"),APG = color_tile("white","gold"),SPG = color_tile("white","gold"),BPG = color_tile("white","gold"),TOV = color_tile("white","gold"),FG3M = color_tile("white","gold"),`FG%` = color_tile("white","gold"),`3FG%` = color_tile("white","gold"), `Pts+Reb+Ast` = color_tile("white","gold"), `Pts+Ast` = color_tile("white","gold"), `Pts+Reb` = color_tile("white","gold"), `Reb+Ast` = color_tile("white","gold"), `First Scorer Count` = color_tile("white","gold"), `Q1 PPG` = color_tile("white","gold"), `Q1 APG` = color_tile("white","gold"), `Q1 RPG` = color_tile("white","gold")), caption = "Against Opponents: Current Regular Season")
 
 
 ```
@@ -3940,7 +3953,7 @@ season_opponent_table_away <- player_data %>% left_join(play_play_rebounds %>% f
          `Q1 APG` = firstqapg,
          `Q1 RPG` = firstqrpg) 
 
-formattable(season_opponent_table_away, align = "c", list(min = color_tile("white","gold"),PPG = color_tile("white","gold"),RPG = color_tile("white","gold"),APG = color_tile("white","gold"),SPG = color_tile("white","gold"),BPG = color_tile("white","gold"),TOV = color_tile("white","gold"),FG3M = color_tile("white","gold"),`FG%` = color_tile("white","gold"),`3FG%` = color_tile("white","gold"), `Pts+Reb+Ast` = color_tile("white","gold"), `Pts+Ast` = color_tile("white","gold"), `Pts+Reb` = color_tile("white","gold"), `Reb+Ast` = color_tile("white","gold"), `First Scorer Count` = color_tile("white","gold"), `Q1 PPG` = color_tile("white","gold"), `Q1 APG` = color_tile("white","gold"), `Q1 RPG` = color_tile("white","gold")), caption = "Against Opponents: Regular Season")
+formattable(season_opponent_table_away, align = "c", list(min = color_tile("white","gold"),PPG = color_tile("white","gold"),RPG = color_tile("white","gold"),APG = color_tile("white","gold"),SPG = color_tile("white","gold"),BPG = color_tile("white","gold"),TOV = color_tile("white","gold"),FG3M = color_tile("white","gold"),`FG%` = color_tile("white","gold"),`3FG%` = color_tile("white","gold"), `Pts+Reb+Ast` = color_tile("white","gold"), `Pts+Ast` = color_tile("white","gold"), `Pts+Reb` = color_tile("white","gold"), `Reb+Ast` = color_tile("white","gold"), `First Scorer Count` = color_tile("white","gold"), `Q1 PPG` = color_tile("white","gold"), `Q1 APG` = color_tile("white","gold"), `Q1 RPG` = color_tile("white","gold")), caption = "Against Opponents: Current Regular Season")
 
 
 ```

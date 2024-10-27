@@ -34,7 +34,11 @@ Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
 
 all_rosters <- seasons_rosters(seasons = 2025, return_message = FALSE)
 
-playerdata <- game_logs(seasons = 2025, result_types = "player", season_types = c("Regular Season"))
+playerdata <- game_logs(seasons = 2024:2025, result_types = "player", season_types = c("Regular Season"))
+
+playerdata_playoffs <- game_logs(seasons = 2024, result_types = "player", season_types = c("Playoffs"))
+
+playerdata <- bind_rows(playerdata, playerdata_playoffs)
 
 
 player_name <- function(x){
@@ -120,7 +124,7 @@ next_team_batch <- lapply(next_game_date_teams, function(x){
 
 next_team_batch <- bind_rows(next_team_batch)
 
-next_team_batch <- next_team_batch %>% left_join(playerdata %>% group_by(idPlayer) %>% summarize(n = n()) %>% ungroup(), by = "idPlayer") %>% filter(n >=1)
+next_team_batch <- next_team_batch %>% left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer) %>% summarize(n = n()) %>% ungroup(), by = "idPlayer") %>% filter(n >=1)
 
 next_team_batch <- next_team_batch %>% pull(namePlayer)
 

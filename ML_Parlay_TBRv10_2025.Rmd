@@ -364,7 +364,7 @@ metric = "minutes"
 avg <- mean(player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% pull(metric))
 avg_lastx <- mean(player_data %>% arrange(desc(dateGame)) %>% head(params$games) %>% pull(metric))
 
-p <- player_data %>% ggplot(aes(dateGame,.data[[metric]], label = slugOpponent)) +geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + geom_smooth(span = 0.6) + labs(x = "Date")  + scale_y_continuous(breaks = seq(0,90,2)) + geom_hline(yintercept = avg) + ggtitle(toupper(paste(params$player,metric,"Per Game")), subtitle = toupper(paste("Current Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1)))) + theme_minimal() + scale_x_date(breaks = "1 month", date_labels = "%b") + scale_color_manual(values = c(primary_color,secondary_color)) + scale_shape_manual(values = c(15,16)) + facet_grid(~ slugSeason, scales = "free_x")
+p <- player_data %>% ggplot(aes(dateGame,.data[[metric]], label = slugOpponent)) +geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + geom_smooth(span = 0.6) + labs(x = "Date")  + scale_y_continuous(breaks = seq(0,90,2)) + geom_hline(yintercept = avg) + ggtitle(toupper(paste(params$player,metric,"Per Game")), subtitle = toupper(paste("Current Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1)))) + theme_minimal() + scale_x_date(breaks = "1 month", date_labels = "%b") + scale_color_manual(values = c(primary_color,secondary_color)) + scale_shape_manual(values = c(15,16)) + facet_grid(~ slugSeason, scales = "free_x")+ guides(color = guide_legend(title = element_blank()),shape = guide_legend(title = element_blank()))
 
 ggplotly(p) %>% layout(legend = list(orientation = "h", x = 0, y = -0.2), 
                        title = list(text = toupper(paste(params$player,metric,"Per Game",'<br>','<sup>',toupper(paste("Current Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))),'</sup>'))))
@@ -435,13 +435,14 @@ valueBox(round(avg_away,1), icon = "fa-solid fa-basketball")
 
 avg_opp <- mean(player_data %>% filter(typeSeason == "Regular Season", slugOpponent == next_opponent, slugSeason == current_season) %>% pull(metric))
 
+
 message <- if(is.na(avg_opp)){
   avg
 } else {
   avg_opp
 }
 
-valueBox(round(message,1), icon = "fa-solid fa-basketball")
+valueBox(round(avg_opp,1), icon = "fa-solid fa-basketball")
 ```
 
 ### Consensus Estimate
@@ -455,9 +456,9 @@ last_5_weight <- 0.1
 
 
 prediction <- if(next_location == "H"){
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_home),avg,avg_home) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 } else{
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_away),avg,avg_away) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 }
 
 
@@ -482,7 +483,7 @@ consensus <- round((avg *.50) + (avg_lastx *.30) + (avg_opponent * .20),0)
 
 lastDate <- max(player_data$dateGame)
 
-p <- player_data %>% ggplot(aes(dateGame,.data[[metric]], label = slugOpponent)) +geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + geom_smooth(span = 0.6) + labs(x = "Date") + ggtitle(toupper(paste(params$player,metric,"Per Game")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))))+ geom_hline(yintercept = avg)+ scale_y_continuous(breaks = seq(0,90,1)) + theme_minimal() + scale_color_manual(values = c(primary_color,secondary_color)) + scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b") + facet_grid(~ slugSeason, scales = "free_x")
+p <- player_data %>% ggplot(aes(dateGame,.data[[metric]], label = slugOpponent)) +geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + geom_smooth(span = 0.6) + labs(x = "Date") + ggtitle(toupper(paste(params$player,metric,"Per Game")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))))+ geom_hline(yintercept = avg)+ scale_y_continuous(breaks = seq(0,90,1)) + theme_minimal() + scale_color_manual(values = c(primary_color,secondary_color)) + scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b") + facet_grid(~ slugSeason, scales = "free_x")+ guides(color = guide_legend(title = element_blank()),shape = guide_legend(title = element_blank()))
 
 ggplotly(p) %>% layout(legend = list(orientation = "h", x = 0, y = -0.2), 
                        title = list(text = toupper(paste(params$player,metric,"Per Game",'<br>','<sup>',toupper(paste("Current Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))),'</sup>'))))
@@ -577,7 +578,7 @@ hit_rate_below <- sapply(hit_rate, function(x){
 
 df <- data.frame(OU = hit_rate,Over = round(hit_rate_above*100,0), Under = round(hit_rate_below*100,0))
 
-p <- df %>% mutate(Over = Over/100, Under = Under/100) %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage*100,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + scale_y_continuous(labels = scales::percent) + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = .50, color = "white", linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5), fontface = "bold")  
+p <- df %>% mutate(Over = Over/100, Under = Under/100) %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage*100,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + scale_y_continuous(labels = scales::percent) + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = .50, color = "white", linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5), fontface = "bold") + guides(fill = guide_legend(title = element_blank())) 
 
 
 ggplotly(p, tooltip = list("OU","type")) %>% layout(title = list(text = toupper(paste(params$player,metric,"O/U Probabilities",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
@@ -658,9 +659,9 @@ last_5_weight <- 0.1
 
 
 prediction <- if(next_location == "H"){
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_home),avg,avg_home) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 } else{
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_away),avg,avg_away) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 }
 
 
@@ -677,7 +678,7 @@ Row  {.tabset .tabset-fade .tabset-pills}
 avg <- mean(player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% pull(metric))
 avg_lastx <- mean(player_data %>% arrange(desc(dateGame)) %>% head(params$games) %>% pull(metric))
 
-p <- player_data %>% ggplot(aes(dateGame,.data[[metric]], label = slugOpponent)) +geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + scale_y_continuous(breaks = seq(0,90,1)) + geom_smooth(span = 0.6) + theme_minimal() + labs(x = "Date") + ggtitle(toupper(paste(params$player,metric,"per game")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))))+ geom_hline(yintercept = avg) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b") + facet_grid(~ slugSeason, scales = "free_x")
+p <- player_data %>% ggplot(aes(dateGame,.data[[metric]], label = slugOpponent)) +geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + scale_y_continuous(breaks = seq(0,90,1)) + geom_smooth(span = 0.6) + theme_minimal() + labs(x = "Date") + ggtitle(toupper(paste(params$player,metric,"per game")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))))+ geom_hline(yintercept = avg) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b") + facet_grid(~ slugSeason, scales = "free_x")+ guides(color = guide_legend(title = element_blank()),shape = guide_legend(title = element_blank()))
 
 ggplotly(p) %>% layout(legend = list(orientation = "h", x = 0, y = -0.2), 
                        title = list(text = toupper(paste(params$player,metric,"Per Game",'<br>','<sup>',toupper(paste("Current Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))),'</sup>'))))
@@ -769,7 +770,7 @@ hit_rate_below <- sapply(hit_rate, function(x){
 
 df <- data.frame(OU = hit_rate,Over = round(hit_rate_above*100,0), Under = round(hit_rate_below*100,0))
 
-p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))
+p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))+ guides(fill = guide_legend(title = element_blank())) 
 
 
 ggplotly(p, tooltip = list("OU","percentage","type"))  %>% layout(title = list(text = toupper(paste(params$player,metric,"O/U Probabilities",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
@@ -849,9 +850,9 @@ last_5_weight <- 0.1
 
 
 prediction <- if(next_location == "H"){
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_home),avg,avg_home) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 } else{
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_away),avg,avg_away) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 }
 
 
@@ -869,7 +870,7 @@ metric = "treb"
 avg <- mean(player_data%>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% pull(metric))
 avg_lastx <- mean(player_data %>% arrange(desc(dateGame)) %>% head(params$games) %>% pull(metric))
 
-p <- player_data %>% ggplot(aes(dateGame,.data[[metric]], label = slugOpponent)) +geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + geom_smooth(span = 0.6) + theme_minimal() + labs(x = "Date") + ggtitle(toupper(paste(params$player,metric,"per game")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1)))) + scale_y_continuous(breaks = seq(0,90,1)) + geom_hline(yintercept = avg) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b")+ facet_grid(~ slugSeason, scales = "free_x")
+p <- player_data %>% ggplot(aes(dateGame,.data[[metric]], label = slugOpponent)) +geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + geom_smooth(span = 0.6) + theme_minimal() + labs(x = "Date") + ggtitle(toupper(paste(params$player,metric,"per game")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1)))) + scale_y_continuous(breaks = seq(0,90,1)) + geom_hline(yintercept = avg) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b")+ facet_grid(~ slugSeason, scales = "free_x")+ guides(color = guide_legend(title = element_blank()),shape = guide_legend(title = element_blank()))
 
 ggplotly(p) %>% layout(legend = list(orientation = "h", x = 0, y = -0.2), 
                        title = list(text = toupper(paste(params$player,metric,"Per Game",'<br>','<sup>',toupper(paste("Current Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))),'</sup>'))))
@@ -960,7 +961,7 @@ hit_rate_below <- sapply(hit_rate, function(x){
 
 df <- data.frame(OU = hit_rate,Over = round(hit_rate_above*100,0), Under = round(hit_rate_below*100,0))
 
-p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))
+p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))+ guides(fill = guide_legend(title = element_blank())) 
 
 
 ggplotly(p, tooltip = list("OU","percentage","type"))  %>% layout(title = list(text = toupper(paste(params$player,metric,"O/U Probabilities",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
@@ -1041,9 +1042,9 @@ last_5_weight <- 0.1
 
 
 prediction <- if(next_location == "H"){
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_home),avg,avg_home) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 } else{
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_away),avg,avg_away) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 }
 
 
@@ -1063,7 +1064,7 @@ Row  {.tabset .tabset-fade .tabset-pills}
 avg <- mean(player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% pull(metric))
 avg_lastx <- mean(player_data %>% arrange(desc(dateGame)) %>% head(params$games) %>% pull(metric))
 
-p <- player_data %>% ggplot(aes(dateGame,.data[[metric]], label = slugOpponent)) +geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + scale_y_continuous(breaks = seq(0,90,1)) + geom_smooth(span = 0.6) + theme_minimal() + labs(x = "Date") + ggtitle(toupper(paste(params$player,metric,"per game")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))))+ geom_hline(yintercept = avg) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b")+ facet_grid(~ slugSeason, scales = "free_x")
+p <- player_data %>% ggplot(aes(dateGame,.data[[metric]], label = slugOpponent)) +geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + scale_y_continuous(breaks = seq(0,90,1)) + geom_smooth(span = 0.6) + theme_minimal() + labs(x = "Date") + ggtitle(toupper(paste(params$player,metric,"per game")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))))+ geom_hline(yintercept = avg) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b")+ facet_grid(~ slugSeason, scales = "free_x")+ guides(color = guide_legend(title = element_blank()),shape = guide_legend(title = element_blank()))
 
 ggplotly(p) %>% layout(legend = list(orientation = "h", x = 0, y = -0.2), 
                        title = list(text = toupper(paste(params$player,metric,"Per Game",'<br>','<sup>',toupper(paste("Current Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))),'</sup>'))))
@@ -1157,7 +1158,7 @@ hit_rate_below <- sapply(hit_rate, function(x){
 
 df <- data.frame(OU = hit_rate,Over = round(hit_rate_above*100,0), Under = round(hit_rate_below*100,0))
 
-p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))
+p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))+ guides(fill = guide_legend(title = element_blank())) 
 
 
 ggplotly(p, tooltip = list("OU","percentage","type"))  %>% layout(title = list(text = toupper(paste(params$player,metric,"O/U Probabilities",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
@@ -1236,9 +1237,9 @@ last_5_weight <- 0.1
 
 
 prediction <- if(next_location == "H"){
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_home),avg,avg_home) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 } else{
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_away),avg,avg_away) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 }
 
 
@@ -1257,7 +1258,7 @@ Row  {.tabset .tabset-fade .tabset-pills}
 avg <- mean(player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% pull(metric))
 avg_lastx <- mean(player_data %>% arrange(desc(dateGame)) %>% head(params$games) %>% pull(metric))
 
-p <- player_data %>% ggplot(aes(dateGame,.data[[metric]], label = slugOpponent)) +geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + geom_smooth(span = 0.6) + theme_minimal() + labs(x = "Date") + ggtitle(toupper(paste(params$player,metric,"per game")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1)))) + scale_y_continuous(breaks = seq(0,90,1))+ geom_hline(yintercept = avg) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b")+ facet_grid(~ slugSeason, scales = "free_x")
+p <- player_data %>% ggplot(aes(dateGame,.data[[metric]], label = slugOpponent)) +geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + geom_smooth(span = 0.6) + theme_minimal() + labs(x = "Date") + ggtitle(toupper(paste(params$player,metric,"per game")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1)))) + scale_y_continuous(breaks = seq(0,90,1))+ geom_hline(yintercept = avg) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b")+ facet_grid(~ slugSeason, scales = "free_x")+ guides(color = guide_legend(title = element_blank()),shape = guide_legend(title = element_blank()))
 
 ggplotly(p) %>% layout(legend = list(orientation = "h", x = 0, y = -0.2), 
                        title = list(text = toupper(paste(params$player,metric,"Per Game",'<br>','<sup>',toupper(paste("Current Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))),'</sup>'))))
@@ -1408,7 +1409,7 @@ hit_rate_below <- sapply(hit_rate, function(x){
 
 df <- data.frame(OU = hit_rate,Over = round(hit_rate_above*100,0), Under = round(hit_rate_below*100,0))
 
-p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))
+p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))+ guides(fill = guide_legend(title = element_blank())) 
 
 
 ggplotly(p, tooltip = list("OU","percentage","type"))  %>% layout(title = list(text = toupper(paste(params$player,metric,"O/U Probabilities",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
@@ -1487,9 +1488,9 @@ last_5_weight <- 0.1
 
 
 prediction <- if(next_location == "H"){
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_home),avg,avg_home) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 } else{
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_away),avg,avg_away) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 }
 
 
@@ -1507,7 +1508,7 @@ Row  {.tabset .tabset-fade .tabset-pills}
 avg <- mean(player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% pull(metric))
 avg_lastx <- mean(player_data %>% arrange(desc(dateGame)) %>% head(params$games) %>% pull(metric))
 
-p <- player_data %>% ggplot(aes(dateGame,.data[[metric]], label = slugOpponent)) +geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + scale_y_continuous(breaks = seq(0,90,1)) + geom_smooth(span = 0.6) + theme_minimal() + labs(x = "Date") + ggtitle(toupper(paste(params$player,metric,"per game")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))))+ geom_hline(yintercept = avg) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b")+ facet_grid(~ slugSeason, scales = "free_x")
+p <- player_data %>% ggplot(aes(dateGame,.data[[metric]], label = slugOpponent)) +geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + scale_y_continuous(breaks = seq(0,90,1)) + geom_smooth(span = 0.6) + theme_minimal() + labs(x = "Date") + ggtitle(toupper(paste(params$player,metric,"per game")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))))+ geom_hline(yintercept = avg) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b")+ facet_grid(~ slugSeason, scales = "free_x")+ guides(color = guide_legend(title = element_blank()),shape = guide_legend(title = element_blank()))
 
 ggplotly(p) %>% layout(legend = list(orientation = "h", x = 0, y = -0.2), 
                        title = list(text = toupper(paste(params$player,metric,"Per Game",'<br>','<sup>',toupper(paste("Current Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))),'</sup>'))))
@@ -1601,7 +1602,7 @@ hit_rate_below <- sapply(hit_rate, function(x){
 
 df <- data.frame(OU = hit_rate,Over = round(hit_rate_above*100,0), Under = round(hit_rate_below*100,0))
 
-p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))
+p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))+ guides(fill = guide_legend(title = element_blank())) 
 
 
 ggplotly(p, tooltip = list("OU","percentage","type")) %>% layout(title = list(text = toupper(paste(params$player,metric,"O/U Probabilities",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
@@ -1680,9 +1681,9 @@ last_5_weight <- 0.1
 
 
 prediction <- if(next_location == "H"){
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_home),avg,avg_home) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 } else{
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_away),avg,avg_away) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 }
 
 
@@ -1700,7 +1701,7 @@ Row  {.tabset .tabset-fade .tabset-pills}
 avg <- mean(player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% pull(metric))
 avg_lastx <- mean(player_data %>% arrange(desc(dateGame)) %>% head(params$games) %>% pull(metric))
 
-p <- player_data %>% ggplot(aes(dateGame,.data[[metric]], label = slugOpponent)) +geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + scale_y_continuous(breaks = seq(0,90,1)) + geom_smooth(span = 0.6) + theme_minimal() + labs(x = "Date") + ggtitle(toupper(paste(params$player,metric,"per game")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))))+ geom_hline(yintercept = avg) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b")+ facet_grid(~ slugSeason, scales = "free_x")
+p <- player_data %>% ggplot(aes(dateGame,.data[[metric]], label = slugOpponent)) +geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + scale_y_continuous(breaks = seq(0,90,1)) + geom_smooth(span = 0.6) + theme_minimal() + labs(x = "Date") + ggtitle(toupper(paste(params$player,metric,"per game")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))))+ geom_hline(yintercept = avg) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b")+ facet_grid(~ slugSeason, scales = "free_x")+ guides(color = guide_legend(title = element_blank()),shape = guide_legend(title = element_blank()))
 
 ggplotly(p) %>% layout(legend = list(orientation = "h", x = 0, y = -0.2), 
                        title = list(text = toupper(paste(params$player,metric,"Per Game",'<br>','<sup>',toupper(paste("Current Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))),'</sup>'))))
@@ -1795,7 +1796,7 @@ hit_rate_below <- sapply(hit_rate, function(x){
 
 df <- data.frame(OU = hit_rate,Over = round(hit_rate_above*100,0), Under = round(hit_rate_below*100,0))
 
-p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))
+p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))+ guides(fill = guide_legend(title = element_blank())) 
 
 
 ggplotly(p, tooltip = list("OU","percentage","type")) %>% layout(title = list(text = toupper(paste(params$player,metric,"O/U Probabilities",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
@@ -1880,9 +1881,9 @@ last_5_weight <- 0.1
 
 
 prediction <- if(next_location == "H"){
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_home),avg,avg_home) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 } else{
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_away),avg,avg_away) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 }
 
 
@@ -1919,7 +1920,7 @@ playoff_rank <- playerdata %>% filter(typeSeason == "Playoffs")  %>%
     arrange(desc(dateGame)) %>% mutate(tripdoub = ifelse(pts >= 10 & treb >= 10 & ast >= 10, "Y","N"),pt_reb_ast_total = pts+treb+ast) %>% group_by(namePlayer) %>% summarize(n = n(),total = sum(pt_reb_ast_total), minutes = sum(minutes)) %>% mutate(totalpg = total/n, minutepg = minutes/n) %>% mutate(rank = order(order(totalpg, decreasing = T))) %>% arrange(desc(totalpg)) %>% filter(namePlayer == params$player) %>% pull(rank) 
 
 
-p <- dat %>% ggplot(aes(dateGame,pt_reb_ast_total, label = slugOpponent)) + geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + theme_minimal() + geom_smooth(span = 0.6) +labs(x = "Date") + scale_y_continuous(breaks = seq(0,60,2)) + ggtitle(toupper(paste(params$player,"Pts+reb+ast")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))))+ geom_hline(yintercept = avg) + labs(caption = paste("Season Rank:",season_rank," Playoff Rank:",playoff_rank)) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b") + facet_grid(~ slugSeason, scales = "free_x")
+p <- dat %>% ggplot(aes(dateGame,pt_reb_ast_total, label = slugOpponent)) + geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + theme_minimal() + geom_smooth(span = 0.6) +labs(x = "Date") + scale_y_continuous(breaks = seq(0,60,2)) + ggtitle(toupper(paste(params$player,"Pts+reb+ast")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))))+ geom_hline(yintercept = avg) + labs(caption = paste("Season Rank:",season_rank," Playoff Rank:",playoff_rank)) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b") + facet_grid(~ slugSeason, scales = "free_x")+ guides(color = guide_legend(title = element_blank()),shape = guide_legend(title = element_blank()))
 
 ggplotly(p) %>% layout(legend = list(orientation = "h", x = 0, y = -0.2), 
                        title = list(text = toupper(paste(params$player,"Pts+reb+ast",'<br>','<sup>',toupper(paste("Current Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))),'</sup>'))))
@@ -2071,7 +2072,7 @@ hit_rate_below <- sapply(hit_rate, function(x){
 
 df <- data.frame(OU = hit_rate,Over = round(hit_rate_above*100,0), Under = round(hit_rate_below*100,0))
 
-p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))
+p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))+ guides(fill = guide_legend(title = element_blank())) 
 
 
 ggplotly(p, tooltip = list("OU","percentage","type")) %>% layout(title = list(text = toupper(paste(params$player,metric,"O/U Probabilities",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
@@ -2201,9 +2202,9 @@ last_5_weight <- 0.1
 
 
 prediction <- if(next_location == "H"){
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_home),avg,avg_home) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 } else{
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_away),avg,avg_away) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 }
 
 
@@ -2232,7 +2233,7 @@ avg_lastx <- mean(dat %>% head(params$games) %>% pull(pt_ast_total))
 
 
 
-p <- dat %>% ggplot(aes(dateGame,pt_ast_total, label = slugOpponent)) + geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + theme_minimal() + geom_smooth(span = 0.6) +labs(x = "Date") + scale_y_continuous(breaks = seq(0,60,2)) + ggtitle(toupper(paste(params$player,"Pts+reb+ast")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))))+ geom_hline(yintercept = avg) + labs(caption = paste("Season Rank:",season_rank," Playoff Rank:",playoff_rank)) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b")+ facet_grid(~ slugSeason, scales = "free_x")
+p <- dat %>% ggplot(aes(dateGame,pt_ast_total, label = slugOpponent)) + geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + theme_minimal() + geom_smooth(span = 0.6) +labs(x = "Date") + scale_y_continuous(breaks = seq(0,60,2)) + ggtitle(toupper(paste(params$player,"Pts+reb+ast")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))))+ geom_hline(yintercept = avg) + labs(caption = paste("Season Rank:",season_rank," Playoff Rank:",playoff_rank)) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b")+ facet_grid(~ slugSeason, scales = "free_x")+ guides(color = guide_legend(title = element_blank()),shape = guide_legend(title = element_blank()))
 
 ggplotly(p) %>% layout(legend = list(orientation = "h", x = 0, y = -0.2), 
                        title = list(text = toupper(paste(params$player,"Pts+ast",'<br>','<sup>',toupper(paste("Current Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))),'</sup>'))))
@@ -2311,7 +2312,7 @@ hit_rate_below <- sapply(hit_rate, function(x){
 
 df <- data.frame(OU = hit_rate,Over = round(hit_rate_above*100,0), Under = round(hit_rate_below*100,0))
 
-p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))
+p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))+ guides(fill = guide_legend(title = element_blank())) 
 
 
 ggplotly(p, tooltip = list("OU","percentage","type")) %>% layout(title = list(text = toupper(paste(params$player,metric,"O/U Probabilities",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
@@ -2397,9 +2398,9 @@ last_5_weight <- 0.1
 
 
 prediction <- if(next_location == "H"){
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_home),avg,avg_home) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 } else{
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_away),avg,avg_away) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 }
 
 
@@ -2428,7 +2429,7 @@ avg_lastx <- mean(dat %>% head(params$games) %>% pull(pt_reb_total))
 
 
 
-p <- dat %>% ggplot(aes(dateGame,pt_reb_total, label = slugOpponent)) + geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + theme_minimal() + geom_smooth(span = 0.6) +labs(x = "Date") + scale_y_continuous(breaks = seq(0,60,2)) + ggtitle(toupper(paste(params$player,"Pts+reb+ast")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))))+ geom_hline(yintercept = avg) + labs(caption = paste("Season Rank:",season_rank," Playoff Rank:",playoff_rank)) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b")+ facet_grid(~ slugSeason, scales = "free_x")
+p <- dat %>% ggplot(aes(dateGame,pt_reb_total, label = slugOpponent)) + geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + theme_minimal() + geom_smooth(span = 0.6) +labs(x = "Date") + scale_y_continuous(breaks = seq(0,60,2)) + ggtitle(toupper(paste(params$player,"Pts+reb+ast")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))))+ geom_hline(yintercept = avg) + labs(caption = paste("Season Rank:",season_rank," Playoff Rank:",playoff_rank)) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b")+ facet_grid(~ slugSeason, scales = "free_x")+ guides(color = guide_legend(title = element_blank()),shape = guide_legend(title = element_blank()))
 
 ggplotly(p) %>% layout(legend = list(orientation = "h", x = 0, y = -0.2), 
                        title = list(text = toupper(paste(params$player,"Pts+reb",'<br>','<sup>',toupper(paste("Current Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))),'</sup>'))))
@@ -2510,7 +2511,7 @@ hit_rate_below <- sapply(hit_rate, function(x){
 
 df <- data.frame(OU = hit_rate,Over = round(hit_rate_above*100,0), Under = round(hit_rate_below*100,0))
 
-p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))
+p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))+ guides(fill = guide_legend(title = element_blank())) 
 
 
 ggplotly(p, tooltip = list("OU","percentage","type")) %>% layout(title = list(text = toupper(paste(params$player,metric,"O/U Probabilities",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
@@ -2595,9 +2596,9 @@ last_5_weight <- 0.1
 
 
 prediction <- if(next_location == "H"){
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_home),avg,avg_home) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 } else{
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_away),avg,avg_away) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 }
 
 
@@ -2627,7 +2628,7 @@ avg_lastx <- mean(dat %>% head(params$games) %>% pull(reb_ast_total))
 
 
 
-p <- dat %>% ggplot(aes(dateGame,reb_ast_total, label = slugOpponent)) + geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + theme_minimal() + geom_smooth(span = 0.6) +labs(x = "Date") + scale_y_continuous(breaks = seq(0,60,2)) + ggtitle(toupper(paste(params$player,"Reb+Ast")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))))+ geom_hline(yintercept = avg) + labs(caption = paste("Season Rank:",season_rank," Playoff Rank:",playoff_rank)) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b")+ facet_grid(~ slugSeason, scales = "free_x")
+p <- dat %>% ggplot(aes(dateGame,reb_ast_total, label = slugOpponent)) + geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + theme_minimal() + geom_smooth(span = 0.6) +labs(x = "Date") + scale_y_continuous(breaks = seq(0,60,2)) + ggtitle(toupper(paste(params$player,"Reb+Ast")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))))+ geom_hline(yintercept = avg) + labs(caption = paste("Season Rank:",season_rank," Playoff Rank:",playoff_rank)) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b")+ facet_grid(~ slugSeason, scales = "free_x")+ guides(color = guide_legend(title = element_blank()),shape = guide_legend(title = element_blank()))
 
 ggplotly(p) %>% layout(legend = list(orientation = "h", x = 0, y = -0.2), 
                        title = list(text = toupper(paste(params$player,"Reb+Ast",'<br>','<sup>',toupper(paste("Current Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))),'</sup>'))))
@@ -2706,7 +2707,7 @@ hit_rate_below <- sapply(hit_rate, function(x){
 
 df <- data.frame(OU = hit_rate,Over = round(hit_rate_above*100,0), Under = round(hit_rate_below*100,0))
 
-p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))
+p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))+ guides(fill = guide_legend(title = element_blank())) 
 
 
 ggplotly(p, tooltip = list("OU","percentage","type")) %>% layout(title = list(text = toupper(paste(params$player,metric,"O/U Probabilities",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
@@ -2788,9 +2789,9 @@ last_5_weight <- 0.1
 
 
 prediction <- if(next_location == "H"){
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_home),avg,avg_home) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 } else{
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_away),avg,avg_away) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 }
 
 
@@ -2828,7 +2829,7 @@ percentile_points_q3 <- percentile[3]
 percentile_points_q4 <- percentile[4]
 
 
-p <- firstq_makes %>% ggplot(aes(dateGame,pts, label = slugOpponent)) + geom_line() + geom_point(aes(color = locationGame, shape = typeSeason))+ theme_minimal() +labs(x = "Date") + scale_y_continuous(breaks = seq(0,90,1)) + ggtitle(toupper(paste(params$player,"1st Quarter Pts")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1)))) + geom_hline(yintercept = avg) + geom_smooth(span = 0.6) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b") + facet_grid(~ slugSeason, scales = "free_x")
+p <- firstq_makes %>% ggplot(aes(dateGame,pts, label = slugOpponent)) + geom_line() + geom_point(aes(color = locationGame, shape = typeSeason))+ theme_minimal() +labs(x = "Date") + scale_y_continuous(breaks = seq(0,90,1)) + ggtitle(toupper(paste(params$player,"1st Quarter Pts")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1)))) + geom_hline(yintercept = avg) + geom_smooth(span = 0.6) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b") + facet_grid(~ slugSeason, scales = "free_x")+ guides(color = guide_legend(title = element_blank()),shape = guide_legend(title = element_blank()))
 
 ggplotly(p) %>% layout(legend = list(orientation = "h", x = 0, y = -0.2), 
                        title = list(text = toupper(paste(params$player,"1st Quarter Pts",'<br>','<sup>',toupper(paste("Current Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))),'</sup>'))))
@@ -2964,7 +2965,7 @@ hit_rate_below <- sapply(hit_rate, function(x){
 
 df <- data.frame(OU = hit_rate,Over = round(hit_rate_above*100,0), Under = round(hit_rate_below*100,0))
 
-p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))
+p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))+ guides(fill = guide_legend(title = element_blank())) 
 
 
 ggplotly(p, tooltip = list("OU","percentage","type")) %>% layout(title = list(text = toupper(paste(params$player,metric,"O/U Probabilities",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
@@ -3045,9 +3046,9 @@ last_5_weight <- 0.1
 
 
 prediction <- if(next_location == "H"){
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_home),avg,avg_home) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 } else{
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_away),avg,avg_away) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 }
 
 
@@ -3071,7 +3072,7 @@ avg <- mean(firstq_assists %>% filter(typeSeason == "Regular Season", slugSeason
 
 avg_lastx <- mean(firstq_assists %>% arrange(desc(dateGame)) %>% head(params$games) %>% pull(assists))
 
-p <- firstq_assists %>% ggplot(aes(dateGame,assists, label = slugOpponent)) + geom_line() + geom_point(aes(color = locationGame, shape = typeSeason))+ theme_minimal() +labs(x = "Date") + scale_y_continuous(breaks = seq(0,90,1)) + ggtitle(toupper(paste(params$player,"1st Quarter Assists")), subtitle = toupper(paste("Season Avg:", round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1)))) + geom_smooth(span = 0.6) + geom_hline(yintercept = avg) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b") + facet_grid(~ slugSeason, scales = "free_x")
+p <- firstq_assists %>% ggplot(aes(dateGame,assists, label = slugOpponent)) + geom_line() + geom_point(aes(color = locationGame, shape = typeSeason))+ theme_minimal() +labs(x = "Date") + scale_y_continuous(breaks = seq(0,90,1)) + ggtitle(toupper(paste(params$player,"1st Quarter Assists")), subtitle = toupper(paste("Season Avg:", round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1)))) + geom_smooth(span = 0.6) + geom_hline(yintercept = avg) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b") + facet_grid(~ slugSeason, scales = "free_x")+ guides(color = guide_legend(title = element_blank()),shape = guide_legend(title = element_blank()))
 
 
 ggplotly(p) %>% layout(legend = list(orientation = "h", x = 0, y = -0.2), 
@@ -3174,7 +3175,7 @@ hit_rate_below <- sapply(hit_rate, function(x){
 
 df <- data.frame(OU = hit_rate,Over = round(hit_rate_above*100,0), Under = round(hit_rate_below*100,0))
 
-p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))
+p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))+ guides(fill = guide_legend(title = element_blank())) 
 
 
 ggplotly(p, tooltip = list("OU","percentage","type")) %>% layout(title = list(text = toupper(paste(params$player,metric,"O/U Probabilities",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
@@ -3256,9 +3257,9 @@ last_5_weight <- 0.1
 
 
 prediction <- if(next_location == "H"){
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_home * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_home),avg,avg_home) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 } else{
-  (avg * avg_weight) + (avg_lastx * last_5_weight) + (avg_away * location_weight) + (avg_opp * opp_weight)
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_away),avg,avg_away) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
 }
 
 
@@ -3282,7 +3283,7 @@ avg <- mean(firstq_rebounds %>% filter(typeSeason == "Regular Season", slugSeaso
 
 avg_lastx <- mean(firstq_rebounds  %>% arrange(desc(dateGame)) %>% head(params$games) %>% pull(rebounds))
 
-p <- firstq_rebounds  %>% ggplot(aes(dateGame,rebounds, label = slugOpponent)) + geom_line() + geom_point(aes(color = locationGame, shape = typeSeason))+ theme_minimal() +labs(x = "Date") + scale_y_continuous(breaks = seq(0,90,1)) + ggtitle(toupper(paste(params$player,"1st Quarter Rebounds")), subtitle = toupper(paste("Season Avg:", round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1)))) + geom_smooth(span = 0.6) + geom_hline(yintercept = avg) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b") + facet_grid(~ slugSeason, scales = "free_x")
+p <- firstq_rebounds  %>% ggplot(aes(dateGame,rebounds, label = slugOpponent)) + geom_line() + geom_point(aes(color = locationGame, shape = typeSeason))+ theme_minimal() +labs(x = "Date") + scale_y_continuous(breaks = seq(0,90,1)) + ggtitle(toupper(paste(params$player,"1st Quarter Rebounds")), subtitle = toupper(paste("Season Avg:", round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1)))) + geom_smooth(span = 0.6) + geom_hline(yintercept = avg) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b") + facet_grid(~ slugSeason, scales = "free_x")+ guides(color = guide_legend(title = element_blank()),shape = guide_legend(title = element_blank()))
 
 ggplotly(p) %>% layout(legend = list(orientation = "h", x = 0, y = -0.2), 
                        title = list(text = toupper(paste(params$player,"1st Quarter Rebounds",'<br>','<sup>',toupper(paste("Current Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))),'</sup>'))))
@@ -3381,7 +3382,7 @@ hit_rate_below <- sapply(hit_rate, function(x){
 
 df <- data.frame(OU = hit_rate,Over = round(hit_rate_above*100,0), Under = round(hit_rate_below*100,0))
 
-p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))
+p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))+ guides(fill = guide_legend(title = element_blank())) 
 
 
 ggplotly(p, tooltip = list("OU","percentage","type")) %>% layout(title = list(text = toupper(paste(params$player,metric,"O/U Probabilities",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))

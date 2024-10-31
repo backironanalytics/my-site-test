@@ -73,7 +73,7 @@ slugteam <- playerdata %>% filter(str_detect(namePlayer,params$player), slugSeas
 gameids<- playerdata %>% filter(idPlayer == player_id)%>% group_by(idGame) %>% summarize(n = n()) %>% pull(idGame)
 
 player_data <- playerdata %>% filter(idPlayer == player_id[1]) %>% 
-  select(dateGame, idGame, slugOpponent, idPlayer, namePlayer, fgm,fga,pts,treb,ast,stl,blk,fg3m,fg3a,tov,
+  select(dateGame, idGame, slugOpponent, idPlayer, namePlayer, fgm,fga,pts,treb,ast,stl,blk,fg3m,fg3a,tov,ftm,
          plusminus,minutes,locationGame, countDaysRestPlayer, isB2B, isB2BFirst, isB2BSecond, slugSeason,typeSeason, urlPlayerHeadshot)
 
 team_id <- playerdata %>% filter(idPlayer == player_id) %>% 
@@ -164,7 +164,7 @@ pts_per_attempt_avg <- pts_per_attempt %>% filter(idPlayer == player_id) %>% pul
 pts_per_attempt_n <- pts_per_attempt %>% filter(idPlayer == player_id) %>% pull(n)
 
 player_data <- playerdata %>% filter(idPlayer == player_id) %>% select(dateGame, idGame, slugOpponent, idPlayer, namePlayer, fgm,fga,pts,treb,ast,stl,blk,fg3m,fg3a,tov,
-         plusminus,minutes,locationGame, countDaysRestPlayer, isB2B, isB2BFirst, isB2BSecond, slugSeason,typeSeason)
+         plusminus,minutes,locationGame, countDaysRestPlayer, isB2B, isB2BFirst, isB2BSecond, slugSeason,typeSeason,ftm)
 
 player_data_expanded <- playerdata  %>% select(dateGame, idGame, slugOpponent, idPlayer, namePlayer, fgm,fga,pts,treb,ast,stl,blk,fg3m,fg3a,tov,plusminus,minutes,locationGame, countDaysRestPlayer, isB2B, isB2BFirst, isB2BSecond, slugSeason,typeSeason) %>% group_by(dateGame,locationGame,namePlayer, idPlayer, typeSeason) %>% summarize(n = n()) 
 
@@ -645,7 +645,7 @@ message <- if(is.na(avg_opp)){
   avg_opp
 }
 
-valueBox(round(message,1), icon = "fa-solid fa-basketball")
+valueBox(round(avg_opp,1), icon = "fa-solid fa-basketball")
 ```
 
 ### Consensus Estimate
@@ -836,7 +836,7 @@ message <- if(is.na(avg_opp)){
   avg_opp
 }
 
-valueBox(round(message,1), icon = "fa-solid fa-basketball")
+valueBox(round(avg_opp,1), icon = "fa-solid fa-basketball")
 ```
 
 ### Consensus Estimate
@@ -1028,7 +1028,7 @@ message <- if(is.na(avg_opp)){
   avg_opp
 }
 
-valueBox(round(message,1), icon = "fa-solid fa-basketball")
+valueBox(round(avg_opp,1), icon = "fa-solid fa-basketball")
 ```
 
 ### Consensus Estimate
@@ -1167,7 +1167,7 @@ ggplotly(p, tooltip = list("OU","percentage","type"))  %>% layout(title = list(t
 
 ```
 
-Three Pointers {data-navmenu="Exploratory Stats"}
+Three Pointers Made {data-navmenu="Exploratory Stats"}
 =======================================================================
 
 Row
@@ -1223,7 +1223,7 @@ message <- if(is.na(avg_opp)){
   avg_opp
 }
 
-valueBox(round(message,1), icon = "fa-solid fa-basketball")
+valueBox(round(avg_opp,1), icon = "fa-solid fa-basketball")
 ```
 
 ### Consensus Estimate
@@ -1370,7 +1370,7 @@ fg3m_over_under <- seq(from = 1, to = 5, by = 1)
 
 prob <- sapply(fg3m_over_under, function(x){
 
-dat <- playerdata %>% filter(idPlayer == player_id) %>% 
+dat <- playerdata %>% filter(idPlayer == player_id, slugSeason == current_season) %>% 
   select(dateGame, idGame, slugOpponent, idPlayer, namePlayer, fgm,fga,pts,treb,ast,stl,blk,fg3m,fg3a,tov,
          plusminus,minutes,locationGame, countDaysRestPlayer, isB2B, isB2BFirst, isB2BSecond) %>% 
   arrange(desc(dateGame)) %>% mutate(tripdoub = ifelse(pts >= 10 & treb >= 10 & ast >= 10, "Y","N"),pt_reb_ast_total = pts+treb+ast) %>% select(dateGame,pts,treb,ast,fg3m) 
@@ -1379,7 +1379,7 @@ mean(dat$fg3m >= x)
 
 })
 
-dat_fg3m <- playerdata %>% filter(idPlayer == player_id) %>% 
+dat_fg3m <- playerdata %>% filter(idPlayer == player_id, slugSeason == current_season) %>% 
   select(dateGame, idGame, slugOpponent, idPlayer, namePlayer, fgm,fga,pts,treb,ast,stl,blk,fg3m,fg3a,tov,
          plusminus,minutes,locationGame, countDaysRestPlayer, isB2B, isB2BFirst, isB2BSecond) %>% 
   arrange(desc(dateGame)) %>% mutate(tripdoub = ifelse(pts >= 10 & treb >= 10 & ast >= 10, "Y","N"),pt_reb_ast_total = pts+treb+ast) %>% select(dateGame,pts,treb,ast,fg3m)
@@ -1417,6 +1417,202 @@ ggplotly(p, tooltip = list("OU","percentage","type"))  %>% layout(title = list(t
 
 
 ```
+
+Three Pointers Attempted {data-navmenu="Exploratory Stats"}
+=======================================================================
+
+Row
+-----------------------------------------------------------------------
+
+### Three's Attempted per Game
+
+```{r}
+metric = "fg3a"
+
+avg <- mean(player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% pull(metric))
+
+valueBox(round(avg,1), icon = "fa-solid fa-basketball")
+```
+
+### Three's Attempted per Game Last 5
+
+```{r}
+
+avg_lastx <- mean(player_data %>% arrange(desc(dateGame)) %>% head(5) %>% pull(metric))
+
+valueBox(round(avg_lastx,1), icon = "fa-solid fa-basketball")
+```
+
+### Three's Attempted per Game Home Games
+
+```{r}
+
+avg_home <- mean(player_data %>% filter(typeSeason == "Regular Season", locationGame == "H", slugSeason == current_season) %>% pull(metric))
+
+valueBox(round(avg_home,1), icon = "fa-solid fa-basketball")
+```
+
+### Three's Attempted per Game Away Games
+
+```{r}
+
+avg_away <- mean(player_data %>% filter(typeSeason == "Regular Season", locationGame == "A", slugSeason == current_season) %>% pull(metric))
+
+valueBox(round(avg_away,1), icon = "fa-solid fa-basketball")
+```
+
+
+### Three's Attempted per Game Against Next Opponent: `r next_opponent`
+
+```{r}
+
+avg_opp <- mean(player_data %>% filter(typeSeason == "Regular Season", slugOpponent == next_opponent, slugSeason == current_season) %>% pull(metric))
+
+message <- if(is.na(avg_opp)){
+  avg
+} else {
+  avg_opp
+}
+
+valueBox(round(avg_opp,1), icon = "fa-solid fa-basketball")
+```
+
+### Consensus Estimate
+
+```{r}
+
+avg_weight <- 0.5
+location_weight <- 0.1
+opp_weight <- 0.3
+last_5_weight <- 0.1
+
+
+prediction <- if(next_location == "H"){
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_home),avg,avg_home) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
+} else{
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_away),avg,avg_away) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
+}
+
+
+valueBox(round(prediction,1), icon = "fa-solid fa-spinner", color = "#D9230F")
+```
+
+Row  {.tabset .tabset-fade .tabset-pills}
+-----------------------------------------------------------------------
+
+
+### Three Pointers Attempted Per Game
+
+```{r Exploratory 3fgaPG, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
+
+
+avg <- mean(player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% pull(metric))
+avg_lastx <- mean(player_data %>% arrange(desc(dateGame)) %>% head(params$games) %>% pull(metric))
+
+p <- player_data %>% ggplot(aes(dateGame,.data[[metric]], label = slugOpponent)) +geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + geom_smooth(span = 0.6) + theme_minimal() + labs(x = "Date") + ggtitle(toupper(paste(params$player,metric,"per game")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1)))) + scale_y_continuous(breaks = seq(0,90,1))+ geom_hline(yintercept = avg) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b")+ facet_grid(~ slugSeason, scales = "free_x")+ guides(color = guide_legend(title = ""),shape = guide_legend(title = ""))
+
+ggplotly(p) %>% layout(legend = list(orientation = "h", x = 0, y = -0.2), 
+                       title = list(text = toupper(paste(params$player,metric,"Per Game",'<br>','<sup>',toupper(paste("Current Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))),'</sup>'))))
+
+
+```
+
+
+
+### Three Pointers Attempted by Location
+
+```{r fg3a boxplot, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
+
+
+
+p <- player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% ggplot(aes(locationGame,.data[[metric]], fill = locationGame)) + geom_boxplot() + theme_minimal()+ labs(x = "Location") + ggtitle(toupper(paste(params$player,"regular season",metric,"per game by location"))) + theme(legend.position="none") + scale_fill_manual(values = c(primary_color,secondary_color))
+
+ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"per game by location",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
+
+
+```
+
+### Three Pointers Attempted by Weekday
+
+```{r fg3a boxplot weekday, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
+
+
+p <- player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% mutate(day = weekdays(dateGame, abbreviate = TRUE))  %>% ggplot(aes(x=factor(day, levels = c("Sun","Mon","Tue","Wed","Thu","Fri","Sat")),y =.data[[metric]], fill = day)) + geom_boxplot() + theme_minimal()+ labs(x = "Weekday")  + theme(legend.position="none")+ scale_fill_brewer(palette = "RdYlBu")
+
+ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"per game by Weekday",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
+
+```
+
+### Three Pointers Attempted Histogram
+
+```{r fg3a hist, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
+
+p <- player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% ggplot(aes(.data[[metric]])) + geom_histogram(bins = 10, color = secondary_color, fill = primary_color)+ theme_minimal() + scale_x_continuous(breaks = seq(0,90,1))+ ggtitle(toupper(paste(params$player,"regular season",metric,"histogram")))
+
+ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"histogram",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
+
+```
+
+
+
+
+### O/U Probabilities
+
+
+```{r points hit rate threes attempted, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
+
+fg3a_over_under <- seq(from = 1, to = 12, by = 1)
+
+prob <- sapply(fg3a_over_under, function(x){
+
+dat <- playerdata %>% filter(idPlayer == player_id, slugSeason == current_season) %>% 
+  select(dateGame, idGame, slugOpponent, idPlayer, namePlayer, fgm,fga,pts,treb,ast,stl,blk,fg3m,fg3a,tov,
+         plusminus,minutes,locationGame, countDaysRestPlayer, isB2B, isB2BFirst, isB2BSecond) %>% 
+  arrange(desc(dateGame)) %>% mutate(tripdoub = ifelse(pts >= 10 & treb >= 10 & ast >= 10, "Y","N"),pt_reb_ast_total = pts+treb+ast) %>% select(dateGame,pts,treb,ast,fg3m,fg3a) 
+
+mean(dat$fg3a >= x)
+
+})
+
+dat_fg3a <- playerdata %>% filter(idPlayer == player_id, slugSeason == current_season) %>% 
+  select(dateGame, idGame, slugOpponent, idPlayer, namePlayer, fgm,fga,pts,treb,ast,stl,blk,fg3m,fg3a,tov,
+         plusminus,minutes,locationGame, countDaysRestPlayer, isB2B, isB2BFirst, isB2BSecond) %>% 
+  arrange(desc(dateGame)) %>% mutate(tripdoub = ifelse(pts >= 10 & treb >= 10 & ast >= 10, "Y","N"),pt_reb_ast_total = pts+treb+ast) %>% select(dateGame,pts,treb,ast,fg3m,fg3a)
+
+
+
+
+
+
+player_data_regular <- player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season)
+
+season_avg <- round(avg,0)+0.5
+
+hit_rate <- seq(from = season_avg-3,to = season_avg +3, by =1)
+
+hit_rate_above <- sapply(hit_rate, function(x){
+  
+  mean(player_data_regular$fg3a > x)
+  
+})
+
+hit_rate_below <- sapply(hit_rate, function(x){
+
+  mean(player_data_regular$fg3a <= x)
+ 
+})
+
+df <- data.frame(OU = hit_rate,Over = round(hit_rate_above*100,0), Under = round(hit_rate_below*100,0))
+
+p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))+ guides(fill = guide_legend(title = element_blank())) 
+
+
+ggplotly(p, tooltip = list("OU","percentage","type"))  %>% layout(title = list(text = toupper(paste(params$player,metric,"O/U Probabilities",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
+
+
+
+```
+
 
 Turnovers {data-navmenu="Exploratory Stats"}
 =======================================================================
@@ -1474,7 +1670,7 @@ message <- if(is.na(avg_opp)){
   avg_opp
 }
 
-valueBox(round(message,1), icon = "fa-solid fa-basketball")
+valueBox(round(avg_opp,1), icon = "fa-solid fa-basketball")
 ```
 
 ### Consensus Estimate
@@ -1667,7 +1863,7 @@ message <- if(is.na(avg_opp)){
   avg_opp
 }
 
-valueBox(round(message,1), icon = "fa-solid fa-basketball")
+valueBox(round(avg_opp,1), icon = "fa-solid fa-basketball")
 ```
 
 ### Consensus Estimate
@@ -1867,7 +2063,7 @@ message <- if(is.na(avg_opp)){
   avg_opp
 }
 
-valueBox(round(message,1), icon = "fa-solid fa-basketball")
+valueBox(round(avg_opp,1), icon = "fa-solid fa-basketball")
 ```
 
 ### Consensus Estimate
@@ -2188,7 +2384,7 @@ message <- if(is.na(avg_opp)){
   avg_opp
 }
 
-valueBox(round(message,1), icon = "fa-solid fa-basketball")
+valueBox(round(avg_opp,1), icon = "fa-solid fa-basketball")
 ```
 
 ### Consensus Estimate
@@ -2384,7 +2580,7 @@ message <- if(is.na(avg_opp)){
   avg_opp
 }
 
-valueBox(round(message,1), icon = "fa-solid fa-basketball")
+valueBox(round(avg_opp,1), icon = "fa-solid fa-basketball")
 ```
 
 ### Consensus Estimate
@@ -2582,7 +2778,7 @@ message <- if(is.na(avg_opp)){
   avg_opp
 }
 
-valueBox(round(message,1), icon = "fa-solid fa-basketball")
+valueBox(round(avg_opp,1), icon = "fa-solid fa-basketball")
 ```
 
 ### Consensus Estimate
@@ -2718,6 +2914,742 @@ ggplotly(p, tooltip = list("OU","percentage","type")) %>% layout(title = list(te
 
 
 
+Steals + Blocks {data-navmenu="Exploratory Stats"}
+=======================================================================
+
+Row
+-----------------------------------------------------------------------
+
+### Steals+Blocks per Game
+
+```{r}
+
+dat <- playerdata %>% filter(idPlayer == player_id) %>% 
+  select(dateGame, idGame, slugOpponent, idPlayer, namePlayer, fgm,fga,pts,treb,ast,stl,blk,fg3m,fg3a,tov,
+         plusminus,minutes,locationGame, countDaysRestPlayer, isB2B, isB2BFirst, isB2BSecond,typeSeason,slugSeason) %>% 
+  arrange(desc(dateGame)) %>% mutate(tripdoub = ifelse(pts >= 10 & treb >= 10 & ast >= 10, "Y","N"),stl_blk_total = stl+blk) %>% select(dateGame,locationGame,pts,treb,ast,stl_blk_total,typeSeason,slugOpponent,slugSeason)  
+
+metric = "stl_blk_total"
+
+avg <- mean(dat %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% pull(metric))
+
+valueBox(round(avg,1), icon = "fa-solid fa-basketball")
+```
+
+### Steals+Blocks per Game Last 5
+
+```{r}
+
+avg_lastx <- mean(dat %>% arrange(desc(dateGame)) %>% head(5) %>% pull(metric))
+
+valueBox(round(avg_lastx,1), icon = "fa-solid fa-basketball")
+```
+
+### Steals+Blocks per Game Home Games
+
+```{r}
+
+avg_home <- mean(dat %>% filter(typeSeason == "Regular Season", locationGame == "H", slugSeason == current_season) %>% pull(metric))
+
+valueBox(round(avg_home,1), icon = "fa-solid fa-basketball")
+```
+
+### Steals+Blocks per Game Away Games
+
+```{r}
+
+avg_away <- mean(dat %>% filter(typeSeason == "Regular Season", locationGame == "A", slugSeason == current_season) %>% pull(metric))
+
+valueBox(round(avg_away,1), icon = "fa-solid fa-basketball")
+```
+
+
+### Steals+Blocks per Game Against Next Opponent: `r next_opponent`
+
+```{r}
+
+avg_opp <- mean(dat %>% filter(typeSeason == "Regular Season", slugOpponent == next_opponent, slugSeason == current_season) %>% pull(metric))
+
+message <- if(is.na(avg_opp)){
+  avg
+} else {
+  avg_opp
+}
+
+valueBox(round(avg_opp,1), icon = "fa-solid fa-basketball")
+```
+
+### Consensus Estimate
+
+```{r}
+
+avg_weight <- 0.5
+location_weight <- 0.1
+opp_weight <- 0.3
+last_5_weight <- 0.1
+
+
+prediction <- if(next_location == "H"){
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_home),avg,avg_home) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
+} else{
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_away),avg,avg_away) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
+}
+
+
+valueBox(round(prediction,1), icon = "fa-solid fa-spinner", color = "#D9230F")
+```
+
+
+
+Row {.tabset .tabset-fade .tabset-pills}
+-----------------------------------------------------------------------
+
+
+### Steals+Blocks Per Game
+
+```{r stl_blk trend, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
+
+
+
+dat_combined <- playerdata %>% filter(idPlayer == player_id) %>% 
+  select(dateGame, idGame, slugOpponent, idPlayer, namePlayer, fgm,fga,pts,treb,ast,stl,blk,fg3m,fg3a,tov,
+         plusminus,minutes,locationGame, countDaysRestPlayer, isB2B, isB2BFirst, isB2BSecond,typeSeason,slugSeason) %>% 
+  arrange(desc(dateGame)) %>% mutate(tripdoub = ifelse(pts >= 10 & treb >= 10 & ast >= 10, "Y","N"),stl_blk_total = stl+blk) %>% select(dateGame,locationGame,pts,treb,ast,stl_blk_total,typeSeason,slugSeason) 
+
+avg <- mean(dat %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% pull(stl_blk_total))
+avg_lastx <- mean(dat %>% head(params$games) %>% pull(stl_blk_total))
+
+
+
+
+p <- dat %>% ggplot(aes(dateGame,stl_blk_total, label = slugOpponent)) + geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + theme_minimal() + geom_smooth(span = 0.6) +labs(x = "Date") + scale_y_continuous(breaks = seq(0,60,2)) + ggtitle(toupper(paste(params$player,"Reb+Ast")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))))+ geom_hline(yintercept = avg) + labs(caption = paste("Season Rank:",season_rank," Playoff Rank:",playoff_rank)) + scale_color_manual(values = c(primary_color,secondary_color))+ scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b")+ facet_grid(~ slugSeason, scales = "free_x")+ guides(color = guide_legend(title = ""),shape = guide_legend(title = ""))
+
+ggplotly(p) %>% layout(legend = list(orientation = "h", x = 0, y = -0.2), 
+                       title = list(text = toupper(paste(params$player,"Stl+Blk",'<br>','<sup>',toupper(paste("Current Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))),'</sup>'))))
+
+
+
+
+```
+
+
+### Steals+Blocks by Location
+
+```{r stl_blk boxplot, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
+
+metric = "stl_blk_total"
+
+
+
+p <- dat %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% ggplot(aes(locationGame,.data[[metric]], fill = locationGame)) + geom_boxplot() + theme_minimal()+ labs(x = "Location") + ggtitle(toupper(paste(params$player,"regular season",metric,"per game by location"))) + theme(legend.position="none") + scale_fill_manual(values = c(primary_color,secondary_color))
+
+ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"per game by location",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
+
+```
+
+### Steals+Blocks by Weekday
+
+```{r stl_blk boxplot weekday, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
+
+
+p <- dat %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% mutate(day = weekdays(dateGame, abbreviate = TRUE))  %>% ggplot(aes(x=factor(day, levels = c("Sun","Mon","Tue","Wed","Thu","Fri","Sat")),y =.data[[metric]], fill = day)) + geom_boxplot() + theme_minimal()+ labs(x = "Weekday")  + theme(legend.position="none")+ scale_fill_brewer(palette = "RdYlBu")
+
+ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"per game by Weekday",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
+
+```
+
+### Steals+Blocks Histogram
+
+```{r stl_blk, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
+
+
+
+p <- playerdata %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% filter(idPlayer == player_id) %>% 
+  select(dateGame, idGame, slugOpponent, idPlayer, namePlayer, fgm,fga,pts,treb,ast,stl,blk,fg3m,fg3a,tov,
+         plusminus,minutes,locationGame, countDaysRestPlayer, isB2B, isB2BFirst, isB2BSecond) %>% 
+  arrange(desc(dateGame)) %>% mutate(tripdoub = ifelse(pts >= 10 & treb >= 10 & ast >= 10, "Y","N"),stl_blk_total = stl+blk) %>% select(dateGame,pts,treb,ast,stl_blk_total) %>% ggplot(aes(stl_blk_total)) + geom_histogram(bins = 10, color = secondary_color, fill = primary_color)+ theme_minimal() + ggtitle(toupper(paste(params$player,"Stl + Blk regular season histogram")))
+
+ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"histogram",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
+
+```
+
+
+
+
+### O/U Probabilities
+
+
+```{r hit rate stl_blk, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
+
+player_data_regular <- dat %>% filter(typeSeason == "Regular Season", slugSeason == current_season)
+
+season_avg <- round(avg,0)+0.5
+
+hit_rate <- seq(from = season_avg-3,to = season_avg +3, by =1)
+
+hit_rate_above <- sapply(hit_rate, function(x){
+  
+  mean(player_data_regular$stl_blk_total > x)
+  
+})
+
+hit_rate_below <- sapply(hit_rate, function(x){
+
+  mean(player_data_regular$stl_blk_total <= x)
+ 
+})
+
+df <- data.frame(OU = hit_rate,Over = round(hit_rate_above*100,0), Under = round(hit_rate_below*100,0))
+
+p <- df %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = 50, color = primary_color, linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5))+ guides(fill = guide_legend(title = element_blank())) 
+
+
+ggplotly(p, tooltip = list("OU","percentage","type")) %>% layout(title = list(text = toupper(paste(params$player,metric,"O/U Probabilities",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
+
+
+
+```
+
+Total Free Throws Made {data-navmenu="Exploratory Stats"}
+=======================================================================
+
+Row
+-----------------------------------------------------------------------
+
+### Free Throws Made per Game
+
+```{r}
+metric = "ftm"
+
+avg <- mean(player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% pull(metric))
+
+valueBox(round(avg,1), icon = "fa-solid fa-basketball")
+```
+
+### Free Throws Made per Game Last 5
+
+```{r}
+
+avg_lastx <- mean(player_data %>% arrange(desc(dateGame)) %>% head(5) %>% pull(metric))
+
+valueBox(round(avg_lastx,1), icon = "fa-solid fa-basketball")
+```
+
+### Free Throws Made per Game Home Games
+
+```{r}
+
+avg_home <- mean(player_data %>% filter(typeSeason == "Regular Season", locationGame == "H", slugSeason == current_season) %>% pull(metric))
+
+valueBox(round(avg_home,1), icon = "fa-solid fa-basketball")
+```
+
+### Free Throws Made per Game Away Games
+
+```{r}
+
+avg_away <- mean(player_data %>% filter(typeSeason == "Regular Season", locationGame == "A", slugSeason == current_season) %>% pull(metric))
+
+valueBox(round(avg_away,1), icon = "fa-solid fa-basketball")
+```
+
+
+### Free Throws Made per Game Against Next Opponent: `r next_opponent`
+
+```{r}
+
+avg_opp <- mean(player_data %>% filter(typeSeason == "Regular Season", slugOpponent == next_opponent, slugSeason == current_season) %>% pull(metric))
+
+
+message <- if(is.na(avg_opp)){
+  avg
+} else {
+  avg_opp
+}
+
+valueBox(round(avg_opp,1), icon = "fa-solid fa-basketball")
+```
+
+### Consensus Estimate
+
+```{r}
+
+avg_weight <- 0.5
+location_weight <- 0.1
+opp_weight <- 0.3
+last_5_weight <- 0.1
+
+
+prediction <- if(next_location == "H"){
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_home),avg,avg_home) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
+} else{
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_away),avg,avg_away) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
+}
+
+
+valueBox(round(prediction,1), icon = "fa-solid fa-spinner", color = "#D9230F")
+```
+
+
+Row  {.tabset .tabset-fade .tabset-pills}
+-----------------------------------------------------------------------
+
+### Free Throws Made Per Game 
+
+```{r Exploratory FTM, echo = FALSE, warning = FALSE, message = FALSE, fig.align = "center"}
+
+metric = "ftm"
+
+avg <- mean(player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% pull(metric))
+avg_lastx <- mean(player_data %>% arrange(desc(dateGame)) %>% head(params$games) %>% pull(metric))
+avg_opponent <- mean(player_data %>% filter(typeSeason == "Regular Season",slugOpponent == next_opponent, slugSeason == current_season) %>% pull(metric))
+
+consensus <- round((avg *.50) + (avg_lastx *.30) + (avg_opponent * .20),0)
+
+lastDate <- max(player_data$dateGame)
+
+p <- player_data %>% ggplot(aes(dateGame,.data[[metric]], label = slugOpponent)) +geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + geom_smooth(span = 0.6) + labs(x = "Date") + ggtitle(toupper(paste(params$player,metric,"Per Game")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))))+ geom_hline(yintercept = avg)+ scale_y_continuous(breaks = seq(0,90,1)) + theme_minimal() + scale_color_manual(values = c(primary_color,secondary_color)) + scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b") + facet_grid(~ slugSeason, scales = "free_x") + guides(color = guide_legend(title = ""),shape = guide_legend(title = ""))
+
+ggplotly(p) %>% layout(legend = list(orientation = "h", x = 0, y = -0.2), 
+                       title = list(text = toupper(paste(params$player,metric,"Per Game",'<br>','<sup>',toupper(paste("Current Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))),'</sup>'))))
+
+
+```
+
+
+
+### Free Throws Made Histogram 
+
+```{r ftm hist, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
+
+
+p <- player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% ggplot(aes(.data[[metric]])) + geom_histogram(bins = 10, color = secondary_color, fill = primary_color)+ theme_minimal() + scale_x_continuous(breaks = seq(0,90,2))+ ggtitle(toupper(paste(params$player,"Regular Season",metric,"histogram"))) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"histogram",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
+
+```
+
+### Free Throws Made by Location 
+
+```{r FTM boxplot, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
+
+
+p <- player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% ggplot(aes(locationGame,.data[[metric]], fill = locationGame)) + geom_boxplot() + theme_minimal()+ labs(x = "Location") + ggtitle(toupper(paste(params$player,"Regular Season",metric,"Per Game by location"))) + theme(legend.position="none")+ scale_fill_manual(values = c(primary_color,secondary_color))
+
+ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"per game by location",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
+
+```
+
+
+### Free Throws Made by Weekday
+
+```{r FTM boxplot weekday, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
+
+
+p <- player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% mutate(day = weekdays(dateGame, abbreviate = TRUE))  %>% ggplot(aes(x=factor(day, levels = c("Sun","Mon","Tue","Wed","Thu","Fri","Sat")),y =.data[[metric]], fill = day)) + geom_boxplot() + theme_minimal()+ labs(x = "Weekday")  + theme(legend.position="none") + scale_fill_brewer(palette = "RdYlBu")
+
+ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"per game by Weekday",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
+
+```
+
+
+
+### O/U Probabilities
+
+
+```{r ftm hit rate, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
+
+
+player_data_regular <- player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season)
+
+season_avg <- round(avg,0)+0.5
+
+hit_rate <- seq(from = season_avg-3,to = season_avg +3, by =1)
+
+hit_rate_above <- sapply(hit_rate, function(x){
+  
+  mean(player_data_regular$ftm > x)
+  
+})
+
+hit_rate_below <- sapply(hit_rate, function(x){
+  
+  mean(player_data_regular$ftm <= x)
+  
+})
+
+
+df <- data.frame(OU = hit_rate,Over = round(hit_rate_above*100,0), Under = round(hit_rate_below*100,0))
+
+p <- df %>% mutate(Over = Over/100, Under = Under/100) %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage*100,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + scale_y_continuous(labels = scales::percent) + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = .50, color = "white", linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5), fontface = "bold") + guides(fill = guide_legend(title = element_blank())) 
+
+
+ggplotly(p, tooltip = list("OU","type")) %>% layout(title = list(text = toupper(paste(params$player,metric,"O/U Probabilities",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
+
+
+```
+
+
+Total Field Goals Made {data-navmenu="Exploratory Stats"}
+=======================================================================
+
+Row
+-----------------------------------------------------------------------
+
+### Field Goals Made per Game
+
+```{r}
+metric = "fgm"
+
+avg <- mean(player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% pull(metric))
+
+valueBox(round(avg,1), icon = "fa-solid fa-basketball")
+```
+
+### Field Goals Made per Game Last 5
+
+```{r}
+
+avg_lastx <- mean(player_data %>% arrange(desc(dateGame)) %>% head(5) %>% pull(metric))
+
+valueBox(round(avg_lastx,1), icon = "fa-solid fa-basketball")
+```
+
+### Field Goals Made per Game Home Games
+
+```{r}
+
+avg_home <- mean(player_data %>% filter(typeSeason == "Regular Season", locationGame == "H", slugSeason == current_season) %>% pull(metric))
+
+valueBox(round(avg_home,1), icon = "fa-solid fa-basketball")
+```
+
+### Field Goals Made per Game Away Games
+
+```{r}
+
+avg_away <- mean(player_data %>% filter(typeSeason == "Regular Season", locationGame == "A", slugSeason == current_season) %>% pull(metric))
+
+valueBox(round(avg_away,1), icon = "fa-solid fa-basketball")
+```
+
+
+### Field Goals Made per Game Against Next Opponent: `r next_opponent`
+
+```{r}
+
+avg_opp <- mean(player_data %>% filter(typeSeason == "Regular Season", slugOpponent == next_opponent, slugSeason == current_season) %>% pull(metric))
+
+
+message <- if(is.na(avg_opp)){
+  avg
+} else {
+  avg_opp
+}
+
+valueBox(round(avg_opp,1), icon = "fa-solid fa-basketball")
+```
+
+### Consensus Estimate
+
+```{r}
+
+avg_weight <- 0.5
+location_weight <- 0.1
+opp_weight <- 0.3
+last_5_weight <- 0.1
+
+
+prediction <- if(next_location == "H"){
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_home),avg,avg_home) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
+} else{
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_away),avg,avg_away) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
+}
+
+
+valueBox(round(prediction,1), icon = "fa-solid fa-spinner", color = "#D9230F")
+```
+
+
+Row  {.tabset .tabset-fade .tabset-pills}
+-----------------------------------------------------------------------
+
+### Field Goals Made Per Game 
+
+```{r Exploratory FGM, echo = FALSE, warning = FALSE, message = FALSE, fig.align = "center"}
+
+metric = "fgm"
+
+avg <- mean(player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% pull(metric))
+avg_lastx <- mean(player_data %>% arrange(desc(dateGame)) %>% head(params$games) %>% pull(metric))
+avg_opponent <- mean(player_data %>% filter(typeSeason == "Regular Season",slugOpponent == next_opponent, slugSeason == current_season) %>% pull(metric))
+
+consensus <- round((avg *.50) + (avg_lastx *.30) + (avg_opponent * .20),0)
+
+lastDate <- max(player_data$dateGame)
+
+p <- player_data %>% ggplot(aes(dateGame,.data[[metric]], label = slugOpponent)) +geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + geom_smooth(span = 0.6) + labs(x = "Date") + ggtitle(toupper(paste(params$player,metric,"Per Game")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))))+ geom_hline(yintercept = avg)+ scale_y_continuous(breaks = seq(0,90,1)) + theme_minimal() + scale_color_manual(values = c(primary_color,secondary_color)) + scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b") + facet_grid(~ slugSeason, scales = "free_x") + guides(color = guide_legend(title = ""),shape = guide_legend(title = ""))
+
+ggplotly(p) %>% layout(legend = list(orientation = "h", x = 0, y = -0.2), 
+                       title = list(text = toupper(paste(params$player,metric,"Per Game",'<br>','<sup>',toupper(paste("Current Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))),'</sup>'))))
+
+
+```
+
+
+
+### Field Goals Made Histogram 
+
+```{r fgm hist, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
+
+
+p <- player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% ggplot(aes(.data[[metric]])) + geom_histogram(bins = 10, color = secondary_color, fill = primary_color)+ theme_minimal() + scale_x_continuous(breaks = seq(0,90,2))+ ggtitle(toupper(paste(params$player,"Regular Season",metric,"histogram"))) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"histogram",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
+
+```
+
+### Field Goals Made by Location 
+
+```{r FGM boxplot, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
+
+
+p <- player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% ggplot(aes(locationGame,.data[[metric]], fill = locationGame)) + geom_boxplot() + theme_minimal()+ labs(x = "Location") + ggtitle(toupper(paste(params$player,"Regular Season",metric,"Per Game by location"))) + theme(legend.position="none")+ scale_fill_manual(values = c(primary_color,secondary_color))
+
+ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"per game by location",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
+
+```
+
+
+### Field Goals Made by Weekday
+
+```{r FGM boxplot weekday, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
+
+
+p <- player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% mutate(day = weekdays(dateGame, abbreviate = TRUE))  %>% ggplot(aes(x=factor(day, levels = c("Sun","Mon","Tue","Wed","Thu","Fri","Sat")),y =.data[[metric]], fill = day)) + geom_boxplot() + theme_minimal()+ labs(x = "Weekday")  + theme(legend.position="none") + scale_fill_brewer(palette = "RdYlBu")
+
+ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"per game by Weekday",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
+
+```
+
+
+
+### O/U Probabilities
+
+
+```{r fgm hit rate, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
+
+
+player_data_regular <- player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season)
+
+season_avg <- round(avg,0)+0.5
+
+hit_rate <- seq(from = season_avg-3,to = season_avg +3, by =1)
+
+hit_rate_above <- sapply(hit_rate, function(x){
+  
+  mean(player_data_regular$fgm > x)
+  
+})
+
+hit_rate_below <- sapply(hit_rate, function(x){
+  
+  mean(player_data_regular$fgm <= x)
+  
+})
+
+
+df <- data.frame(OU = hit_rate,Over = round(hit_rate_above*100,0), Under = round(hit_rate_below*100,0))
+
+p <- df %>% mutate(Over = Over/100, Under = Under/100) %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage*100,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + scale_y_continuous(labels = scales::percent) + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = .50, color = "white", linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5), fontface = "bold") + guides(fill = guide_legend(title = element_blank())) 
+
+
+ggplotly(p, tooltip = list("OU","type")) %>% layout(title = list(text = toupper(paste(params$player,metric,"O/U Probabilities",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
+
+
+```
+
+Total Field Goals Attempted {data-navmenu="Exploratory Stats"}
+=======================================================================
+
+Row
+-----------------------------------------------------------------------
+
+### Field Goals Attempted per Game
+
+```{r}
+metric = "fga"
+
+avg <- mean(player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% pull(metric))
+
+valueBox(round(avg,1), icon = "fa-solid fa-basketball")
+```
+
+### Field Goals Attempted per Game Last 5
+
+```{r}
+
+avg_lastx <- mean(player_data %>% arrange(desc(dateGame)) %>% head(5) %>% pull(metric))
+
+valueBox(round(avg_lastx,1), icon = "fa-solid fa-basketball")
+```
+
+### Field Goals Attempted per Game Home Games
+
+```{r}
+
+avg_home <- mean(player_data %>% filter(typeSeason == "Regular Season", locationGame == "H", slugSeason == current_season) %>% pull(metric))
+
+valueBox(round(avg_home,1), icon = "fa-solid fa-basketball")
+```
+
+### Field Goals Attempted per Game Away Games
+
+```{r}
+
+avg_away <- mean(player_data %>% filter(typeSeason == "Regular Season", locationGame == "A", slugSeason == current_season) %>% pull(metric))
+
+valueBox(round(avg_away,1), icon = "fa-solid fa-basketball")
+```
+
+
+### Field Goals Attempted per Game Against Next Opponent: `r next_opponent`
+
+```{r}
+
+avg_opp <- mean(player_data %>% filter(typeSeason == "Regular Season", slugOpponent == next_opponent, slugSeason == current_season) %>% pull(metric))
+
+
+message <- if(is.na(avg_opp)){
+  avg
+} else {
+  avg_opp
+}
+
+valueBox(round(avg_opp,1), icon = "fa-solid fa-basketball")
+```
+
+### Consensus Estimate
+
+```{r}
+
+avg_weight <- 0.5
+location_weight <- 0.1
+opp_weight <- 0.3
+last_5_weight <- 0.1
+
+
+prediction <- if(next_location == "H"){
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_home),avg,avg_home) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
+} else{
+  (avg * avg_weight) + (avg_lastx * last_5_weight) + (ifelse(is.na(avg_away),avg,avg_away) * location_weight) + (ifelse(is.na(avg_opp),avg,avg_opp) * opp_weight)
+}
+
+
+valueBox(round(prediction,1), icon = "fa-solid fa-spinner", color = "#D9230F")
+```
+
+
+Row  {.tabset .tabset-fade .tabset-pills}
+-----------------------------------------------------------------------
+
+### Field Goals Attempted Per Game 
+
+```{r Exploratory FGA, echo = FALSE, warning = FALSE, message = FALSE, fig.align = "center"}
+
+metric = "fga"
+
+avg <- mean(player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% pull(metric))
+avg_lastx <- mean(player_data %>% arrange(desc(dateGame)) %>% head(params$games) %>% pull(metric))
+avg_opponent <- mean(player_data %>% filter(typeSeason == "Regular Season",slugOpponent == next_opponent, slugSeason == current_season) %>% pull(metric))
+
+consensus <- round((avg *.50) + (avg_lastx *.30) + (avg_opponent * .20),0)
+
+lastDate <- max(player_data$dateGame)
+
+p <- player_data %>% ggplot(aes(dateGame,.data[[metric]], label = slugOpponent)) +geom_line() + geom_point(aes(color = locationGame, shape = typeSeason)) + geom_smooth(span = 0.6) + labs(x = "Date") + ggtitle(toupper(paste(params$player,metric,"Per Game")), subtitle = toupper(paste("Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))))+ geom_hline(yintercept = avg)+ scale_y_continuous(breaks = seq(0,90,1)) + theme_minimal() + scale_color_manual(values = c(primary_color,secondary_color)) + scale_shape_manual(values = c(15,16)) + scale_x_date(breaks = "1 month", date_labels = "%b") + facet_grid(~ slugSeason, scales = "free_x") + guides(color = guide_legend(title = ""),shape = guide_legend(title = ""))
+
+ggplotly(p) %>% layout(legend = list(orientation = "h", x = 0, y = -0.2), 
+                       title = list(text = toupper(paste(params$player,metric,"Per Game",'<br>','<sup>',toupper(paste("Current Season Avg:",round(avg,1),"/","Avg Last",params$games,"games:",round(avg_lastx,1))),'</sup>'))))
+
+
+```
+
+
+
+### Field Goals Attempted Histogram 
+
+```{r fga hist, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
+
+
+p <- player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% ggplot(aes(.data[[metric]])) + geom_histogram(bins = 10, color = secondary_color, fill = primary_color)+ theme_minimal() + scale_x_continuous(breaks = seq(0,90,2))+ ggtitle(toupper(paste(params$player,"Regular Season",metric,"histogram"))) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"histogram",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
+
+```
+
+### Field Goals Attempted by Location 
+
+```{r FGA boxplot, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
+
+
+p <- player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% ggplot(aes(locationGame,.data[[metric]], fill = locationGame)) + geom_boxplot() + theme_minimal()+ labs(x = "Location") + ggtitle(toupper(paste(params$player,"Regular Season",metric,"Per Game by location"))) + theme(legend.position="none")+ scale_fill_manual(values = c(primary_color,secondary_color))
+
+ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"per game by location",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
+
+```
+
+
+### Field Goals Attempted by Weekday
+
+```{r FGA boxplot weekday, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
+
+
+p <- player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% mutate(day = weekdays(dateGame, abbreviate = TRUE))  %>% ggplot(aes(x=factor(day, levels = c("Sun","Mon","Tue","Wed","Thu","Fri","Sat")),y =.data[[metric]], fill = day)) + geom_boxplot() + theme_minimal()+ labs(x = "Weekday")  + theme(legend.position="none") + scale_fill_brewer(palette = "RdYlBu")
+
+ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"per game by Weekday",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
+
+```
+
+
+
+### O/U Probabilities
+
+
+```{r fga hit rate, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center"}
+
+
+player_data_regular <- player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season)
+
+season_avg <- round(avg,0)+0.5
+
+hit_rate <- seq(from = season_avg-3,to = season_avg +3, by =1)
+
+hit_rate_above <- sapply(hit_rate, function(x){
+  
+  mean(player_data_regular$fga > x)
+  
+})
+
+hit_rate_below <- sapply(hit_rate, function(x){
+  
+  mean(player_data_regular$fga <= x)
+  
+})
+
+
+df <- data.frame(OU = hit_rate,Over = round(hit_rate_above*100,0), Under = round(hit_rate_below*100,0))
+
+p <- df %>% mutate(Over = Over/100, Under = Under/100) %>% pivot_longer(cols = !OU, names_to = "type", values_to = "percentage") %>% ggplot(aes(fill = type, x = OU, y = percentage, label = paste0(percentage*100,"%"))) + geom_bar(position = "stack",stat = "identity") + theme_minimal() + scale_y_continuous(labels = scales::percent) + labs(x = "Over/Under", y = "Hit Rate %") + scale_x_continuous(breaks = seq(0.5,50.5,1))+ ggtitle(toupper(paste(params$player,metric,"Over Under Hit Rate %"))) + scale_fill_manual(values = c(primary_color,secondary_color))+ geom_hline(yintercept = .50, color = "white", linetype = "dashed") + geom_text(size = 3, position = position_stack(vjust = 0.5), fontface = "bold") + guides(fill = guide_legend(title = element_blank())) 
+
+
+ggplotly(p, tooltip = list("OU","type")) %>% layout(title = list(text = toupper(paste(params$player,metric,"O/U Probabilities",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
+
+
+```
+
+
+
 First Quarter Points {data-navmenu="First Quarter Analysis" data-navmenu-icon="fa-chart-line"}
 =======================================================================
 
@@ -2775,7 +3707,7 @@ message <- if(is.na(avg_opp)){
   avg_opp
 }
 
-valueBox(round(message,1), icon = "fa-solid fa-basketball")
+valueBox(round(avg_opp,1), icon = "fa-solid fa-basketball")
 ```
 
 ### Consensus Estimate
@@ -3032,7 +3964,7 @@ message <- if(is.na(avg_opp)){
   avg_opp
 }
 
-valueBox(round(message,1), icon = "fa-solid fa-basketball")
+valueBox(round(avg_opp,1), icon = "fa-solid fa-basketball")
 ```
 
 ### Consensus Estimate
@@ -3243,7 +4175,7 @@ message <- if(is.na(avg_opp)){
   avg_opp
 }
 
-valueBox(round(message,1), icon = "fa-solid fa-basketball")
+valueBox(round(avg_opp,1), icon = "fa-solid fa-basketball")
 ```
 
 ### Consensus Estimate

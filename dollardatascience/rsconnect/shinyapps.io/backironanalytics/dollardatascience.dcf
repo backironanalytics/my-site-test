@@ -1,0 +1,10 @@
+name: dollardatascience
+title:
+username: backironanalytics
+account: backironanalytics
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 13231094
+bundleId: 9315459
+url: https://backironanalytics.shinyapps.io/dollardatascience/
+version: 1

@@ -43,6 +43,7 @@ library(shiny)
 library(fontawesome)
 library(dplyr)
 library(flexdashboard)
+library(bslib)
 
 
 
@@ -392,7 +393,7 @@ df2 <- replace(df2, is.na(df2),0)
 
 #print.data.frame(df2)
 
-formattable(df2,align = "c",list(Min = color_tile("white","gold"),PPG = color_tile("white","gold"),RPG = color_tile("white","gold"),APG = color_tile("white","gold"),SPG = color_tile("white","gold"),BPG = color_tile("white","gold"),TOV = color_tile("white","gold"),FGM = color_tile("white","gold"),FGA = color_tile("white","gold"),FG3M = color_tile("white","gold"),FG3A = color_tile("white","gold"),FTM = color_tile("white","gold"),`FG%` = color_tile("white","gold"),`3FG%`= color_tile("white","gold"), `Pts+Reb+Ast` = color_tile("white","gold"), `Pts+Ast` = color_tile("white","gold"), `Pts+Reb` = color_tile("white","gold"), `Reb+Ast` = color_tile("white","gold"),`Stl+Blk` = color_tile("white","gold"), `First Scorer Count` = color_tile("white","gold"), `Q1 PPG` = color_tile("white","gold"), `Q1 APG` = color_tile("white","gold"), `Q1 RPG` = color_tile("white","gold"), `Pts Per Attempt` = color_tile("white","gold")), caption = "Last xx Games Played May Include Last Season's Data")
+formattable(df2,align = "c",list(Min = color_tile("white","gold"),PPG = color_tile("white","gold"),RPG = color_tile("white","gold"),APG = color_tile("white","gold"),SPG = color_tile("white","gold"),BPG = color_tile("white","gold"),TOV = color_tile("white","gold"),FGM = color_tile("white","gold"),FGA = color_tile("white","gold"),FG3M = color_tile("white","gold"),FG3A = color_tile("white","gold"),FTM = color_tile("white","gold"),`FG%` = color_tile("white","gold"),`3FG%`= color_tile("white","gold"), `Pts+Reb+Ast` = color_tile("white","gold"), `Pts+Ast` = color_tile("white","gold"), `Pts+Reb` = color_tile("white","gold"), `Reb+Ast` = color_tile("white","gold"),`Stl+Blk` = color_tile("white","gold"), `First Scorer Count` = color_tile("white","gold"), `Q1 PPG` = color_tile("white","gold"), `Q1 APG` = color_tile("white","gold"), `Q1 RPG` = color_tile("white","gold"), `Pts Per Attempt` = color_tile("white","gold")), caption = "Note: Last xx Games Played May Include Last Season's Data")
 
 
 
@@ -445,6 +446,7 @@ ggplotly(p) %>% layout(title = list(text = toupper(paste(params$player,metric,"h
 
 Points {data-navmenu="Exploratory Stats"}
 =======================================================================
+
 
 Row
 -----------------------------------------------------------------------
@@ -5838,36 +5840,192 @@ p <- ggdraw() + draw_image(photo) + theme(plot.background = element_rect(fill = 
 
 print(p, info = FALSE)
 
+#profile <- invisible(capture.output(player_profiles(player_ids = player_id[1], nest_data = F, return_message = F)))
+
 
 
 ```
 
 
 
-<center> <p>Current Team: `r team_name` </p></center>
+<center> <p><b>`r team_name` </b></p></center>
 
 
 
 
 
 
-The Low Down {data-navmenu-icon="fa-signal"}
+
+The Low Down {data-navmenu-icon="fa-signal" data-orientation=columns}
 =======================================================================
-<center> <h1>The Low Down</center> </h1>
 
-* In the past 10 games played, `r params$player` has averaged **`r season_last10$ppg` points per game**, **`r season_last10$apg` assists per game**, **`r season_last10$rpg` rebounds per game**
-* Against `r next_opponent` in the regular season, `r params$player` has averaged **`r season_opponent$ppg` points per game**, **`r season_opponent$apg` assists per game**, **`r season_opponent$rpg` rebounds per game**
-* In the regular season, `r params$player` averaged **`r season$pts_reb_ast`** combined points, assists, and rebounds. In the past 5 games, the average combined points, assists, and rebounds is **`r season_last5$pts_reb_ast`: `r paste0(round(((season_last5$pts_reb_ast / season$pts_reb_ast) - 1)* 100,0),"%")` change**
-* In the regular season 1st Quarter, `r params$player` averaged **`r season$firstqppg`** points per game, **`r season$firstqapg`** assists per game, **`r season$firstqrpg`** rebounds per game
-    * When `r params$player` reaches his Q1 PPG avg of `r season$firstqppg`, his total PPG avg is **`r a_pts`**. When it is not reached, his total PPG avg is **`r a_less`**, a difference of **`r a_pts - a_less`** points. His 1st Quarter PPG average is in the top **`r round(percentile_points_q1[[1]],0)` percentile** of the league
-    * When `r params$player` reaches his Q1 APG avg of `r season$firstqapg`, his total APG avg is **`r a_ast`**. When it is not reached, his total APG avg is **`r a_ast_less`**, a difference of **`r a_ast - a_ast_less`** assists. His 1st Quarter APG average is in the top **`r round(percentile_assists_q1,0)` percentile** of the league
-    * When `r params$player` reaches his Q1 RPG avg of `r season$firstqrpg`, his total APG avg is **`r a_reb`**. When it is not reached, his total APG avg is **`r a_reb_less`**, a difference of **`r a_reb - a_reb_less`** assists. His 1st Quarter RPG average is in the top **`r round(percentile_rebounds_q1,0)` percentile** of the league
-* In the regular season, `r params$player` averaged **`r season$threepg`** three pointers per game. In the past 5 games played, `r params$player` is averaging **`r season_last5$threepg` three pointers per game: `r paste0(round(((season_last5$threepg / season$threepg) - 1)* 100,0),"%")` change**
-* `r params$player` has made at least 1 three pointer in **`r paste0(round(mean(dat_fg3m$fg3m >= 1),2)*100,"%")`** of all games played this season. The most 3 pointers `r params$player` has made in all games played this season is **`r max(dat_fg3m$fg3m)`**
-* During the regular season, `r params$player` has averaged **`r round(pts_per_attempt_avg,2)` points per attempt** in `r pts_per_attempt_n` games played
+Column {data-width=200}
+-----------------------------------------------------------------------
+
+<center> <p><b>Regular Season Stats</b></p></center>
+
+### PPG
 
 
+```{r, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center", error = TRUE}
+
+ppg <- player_data %>% filter(slugSeason == current_season, typeSeason == "Regular Season") %>% group_by(namePlayer) %>% summarize(ppg = mean(pts)) %>% pull(ppg)
+
+
+valueBox(ppg)
+
+
+```
+
+### APG
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center", error = TRUE}
+
+
+apg <- player_data %>% filter(slugSeason == current_season, typeSeason == "Regular Season") %>% group_by(namePlayer) %>% summarize(apg = mean(ast)) %>% pull(apg)
+
+valueBox(apg)
+
+
+```
+
+### RPG
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center", error = TRUE}
+
+
+
+valueBox(player_data %>% filter(slugSeason == current_season, typeSeason == "Regular Season") %>% group_by(namePlayer) %>% summarize(rpg = mean(treb)) %>% pull(rpg))
+
+
+```
+
+### SPG
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center", error = TRUE}
+
+
+
+valueBox(player_data %>% filter(slugSeason == current_season, typeSeason == "Regular Season") %>% group_by(namePlayer) %>% summarize(spg = mean(stl)) %>% pull(spg))
+
+
+```
+
+### BPG
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center", error = TRUE}
+
+
+
+valueBox(player_data %>% filter(slugSeason == current_season, typeSeason == "Regular Season") %>% group_by(namePlayer) %>% summarize(bpg = mean(blk)) %>% pull(bpg))
+
+
+```
 
 
 
 
+Column {data-width=200}
+-----------------------------------------------------------------------
+
+<center> <p><b>Q1 Stats</b></p></center>
+
+### PPG
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center", error = TRUE}
+
+
+
+valueBox(firstq_makes %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% group_by(slugSeason) %>% summarize(ppg = mean(pts)) %>% pull(ppg))
+
+
+```
+
+### APG
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center", error = TRUE}
+
+
+
+valueBox(firstq_assists %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% group_by(slugSeason) %>% summarize(apg = mean(assists)) %>% pull(apg))
+
+
+```
+
+
+### RPG
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center", error = TRUE}
+
+
+
+valueBox(firstq_rebounds %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% group_by(slugSeason) %>% summarize(rpg = mean(rebounds)) %>% pull(rpg))
+
+
+```
+
+
+Column {data-width=200}
+-----------------------------------------------------------------------
+
+<center> <p><b>Combo Stats</b></p></center>
+
+
+### Points + Rebounds + Assists
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center", error = TRUE}
+
+
+
+valueBox(player_data %>% filter(slugSeason == current_season, typeSeason == "Regular Season") %>% group_by(namePlayer) %>% summarize(value = mean(pts+treb+ast)) %>% pull(value))
+
+
+```
+
+
+### Points + Assists
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center", error = TRUE}
+
+
+
+valueBox(player_data %>% filter(slugSeason == current_season, typeSeason == "Regular Season") %>% group_by(namePlayer) %>% summarize(value = mean(pts+ast)) %>% pull(value))
+
+
+```
+
+
+
+### Points + Rebounds
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center", error = TRUE}
+
+
+
+valueBox(player_data %>% filter(slugSeason == current_season, typeSeason == "Regular Season") %>% group_by(namePlayer) %>% summarize(value = mean(pts+treb)) %>% pull(value))
+
+
+```
+
+### Rebounds + Assists
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center", error = TRUE}
+
+
+
+valueBox(player_data %>% filter(slugSeason == current_season, typeSeason == "Regular Season") %>% group_by(namePlayer) %>% summarize(value = mean(ast+treb)) %>% pull(value))
+
+
+```
+
+
+### Steals + Blocks
+
+```{r, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center", error = TRUE}
+
+
+
+valueBox(player_data %>% filter(slugSeason == current_season, typeSeason == "Regular Season") %>% group_by(namePlayer) %>% summarize(value = mean(stl+blk)) %>% pull(value))
+
+
+```

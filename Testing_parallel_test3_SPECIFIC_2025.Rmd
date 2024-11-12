@@ -134,7 +134,7 @@ next_team_batch <- next_team_batch %>% pull(namePlayer)
 
 #Previous Game
 
-previous_game_date_teams <- schedule %>% filter(Date == schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min -1) %>% pull(slugTeam)
+previous_game_date_teams <- schedule %>% filter(Date == schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min +1) %>% pull(slugTeam)
 
 previous_team_batch <- lapply(previous_game_date_teams, function(x){
   

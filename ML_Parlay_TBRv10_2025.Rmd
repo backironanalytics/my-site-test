@@ -4426,7 +4426,7 @@ quarterly_points <-play_play_player %>% select(idGame,numberPeriod, descriptionP
 
 quarterly_points <- replace(quarterly_points,is.na(quarterly_points),0)
 
-p <- quarterly_points %>% select(-slugTeam) %>% mutate(ppg = pts/n) %>% filter(typeSeason == "Regular Season", numberPeriod <= 4, slugSeason == current_season) %>% ggplot(aes(numberPeriod,ppg)) + geom_point(size = 5, color = "orange")+ geom_segment(aes(x=numberPeriod,xend = numberPeriod, y = 0, yend = ppg), color = "grey")+ theme_minimal() + geom_text(aes(label = round(ppg,1)), position = position_dodge(width = 0.9),vjust = -2) + labs(x = "Quarter", y = "Avg Points") + ggtitle("Avg Points Per Quarter Per Game (OT Excluded)") + scale_y_continuous(breaks = seq(0,50,1)) + scale_color_manual(values = c(primary_color,secondary_color))
+p <- quarterly_points %>% select(-slugTeam) %>% mutate(ppg = pts/n) %>% filter(typeSeason == "Regular Season", numberPeriod <= 4, slugSeason == current_season) %>% ggplot(aes(numberPeriod,ppg)) + geom_point(size = 5, color = "red", fill = alpha("orange",0.3), alpha = 0.7, stroke = 1)+ geom_segment(aes(x=numberPeriod,xend = numberPeriod, y = 0, yend = ppg), color = "grey")+ theme_minimal() + geom_text(aes(label = round(ppg,1)), position = position_dodge(width = 0.9),vjust = -2) + labs(x = "Quarter", y = "Avg Points") + ggtitle("Avg Points Per Quarter Per Game (OT Excluded)") + scale_y_continuous(breaks = seq(0,50,1)) + scale_color_manual(values = c(primary_color,secondary_color))
 
 ggplotly(p)
 
@@ -4484,7 +4484,7 @@ quarterly_assists <- bind_rows(quarterly_assists)
 
 
 
-p <- quarterly_assists %>% group_by(namePlayer2,idPlayer,numberPeriod,typeSeason,slugSeason) %>% summarize(assists = sum(assists), n = sum(n.y))  %>% mutate(apg = assists/n) %>% filter(typeSeason == "Regular Season", numberPeriod <= 4, slugSeason == current_season) %>% ggplot(aes(numberPeriod,apg)) + geom_point(size = 5, color = "green")+ geom_segment(aes(x=numberPeriod,xend = numberPeriod, y = 0, yend = apg), color = "grey")+ theme_minimal() + geom_text(aes(label = round(apg,1)), position = position_dodge(width = 0.9),vjust = -2) + labs(x = "Quarter", y = "Avg Assists") + ggtitle("Avg Assists Per Quarter Per Game (OT Excluded)") + scale_y_continuous(breaks = seq(0,50,1))
+p <- quarterly_assists %>% group_by(namePlayer2,idPlayer,numberPeriod,typeSeason,slugSeason) %>% summarize(assists = sum(assists), n = sum(n.y))  %>% mutate(apg = assists/n) %>% filter(typeSeason == "Regular Season", numberPeriod <= 4, slugSeason == current_season) %>% ggplot(aes(numberPeriod,apg)) + geom_point(size = 5, color = "green", fill = alpha("orange",0.3), alpha = 0.7, stroke = 1)+ geom_segment(aes(x=numberPeriod,xend = numberPeriod, y = 0, yend = apg), color = "grey")+ theme_minimal() + geom_text(aes(label = round(apg,1)), position = position_dodge(width = 0.9),vjust = -2) + labs(x = "Quarter", y = "Avg Assists") + ggtitle("Avg Assists Per Quarter Per Game (OT Excluded)") + scale_y_continuous(breaks = seq(0,50,1))
 
 ggplotly(p)
 
@@ -4523,7 +4523,7 @@ quarterly_rebounds <-play_play_player_rebounds %>% select(idGame,numberPeriod,de
 
 quarterly_rebounds <- replace(quarterly_rebounds,is.na(quarterly_rebounds),0)
 
-p <- quarterly_rebounds %>% group_by(namePlayer1,idPlayer,numberPeriod,typeSeason,slugSeason) %>% summarize(reb = sum(reb), n = sum(n))  %>% mutate(rpg = reb/n) %>% filter(typeSeason == "Regular Season", numberPeriod <= 4, slugSeason == current_season) %>% ggplot(aes(numberPeriod,rpg)) + geom_point(size = 5, color = "yellow")+ geom_segment(aes(x=numberPeriod,xend = numberPeriod, y = 0, yend = rpg), color = "grey")+ theme_minimal() + geom_text(aes(label = round(rpg,1)), position = position_dodge(width = 0.9),vjust = -2) + labs(x = "Quarter", y = "Avg Rebounds") + ggtitle("Avg Rebounds Per Quarter Per Game (OT Excluded)")+ scale_y_continuous(breaks = seq(0,50,1))
+p <- quarterly_rebounds %>% group_by(namePlayer1,idPlayer,numberPeriod,typeSeason,slugSeason) %>% summarize(reb = sum(reb), n = sum(n))  %>% mutate(rpg = reb/n) %>% filter(typeSeason == "Regular Season", numberPeriod <= 4, slugSeason == current_season) %>% ggplot(aes(numberPeriod,rpg)) + geom_point(size = 5, color = "yellow", fill = alpha("orange",0.3), alpha = 0.7, stroke = 1)+ geom_segment(aes(x=numberPeriod,xend = numberPeriod, y = 0, yend = rpg), color = "grey")+ theme_minimal() + geom_text(aes(label = round(rpg,1)), position = position_dodge(width = 0.9),vjust = -2) + labs(x = "Quarter", y = "Avg Rebounds") + ggtitle("Avg Rebounds Per Quarter Per Game (OT Excluded)")+ scale_y_continuous(breaks = seq(0,50,1))
 
 ggplotly(p)
 
@@ -5119,7 +5119,57 @@ formattable(df, align = c("c","c"), list(Probability = color_bar("orange")), cap
 
 ```
 
+### First Quarter Leading Indicator - Stl+Blk
 
+```{r Quarterly stlnlk lead, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center", error = TRUE}
+
+
+quarterly_stlblk <- quarterly_steals %>% left_join(quarterly_blocks, by = c("idPlayer","slugTeam","numberPeriod","typeSeason","slugSeason")) %>% select(namePlayer2,idPlayer,slugTeam,numberPeriod,typeSeason,slugSeason,steals,blocks,n.x)
+
+quarterly_stlblk <- replace(quarterly_stlblk, is.na(quarterly_stlblk),0)
+
+
+quarterly_stlblkpg <- quarterly_stlblk %>% group_by(namePlayer2,idPlayer,numberPeriod,typeSeason,slugSeason) %>% summarize(blk = sum(blocks), n = sum(n.x), stl = sum(steals))  %>% mutate(stlblkpg = (stl+blk)/n) %>% filter(typeSeason == "Regular Season", numberPeriod <= 4, slugSeason == current_season) %>% select(numberPeriod,stlblkpg)
+
+first <- quarterly_stlblk %>% group_by(namePlayer2,idPlayer,numberPeriod,typeSeason,slugSeason) %>% summarize(blk = sum(blocks), n = sum(n.x), stl = sum(steals))  %>% mutate(stlblkpg = (stl+blk)/n) %>% filter(typeSeason == "Regular Season", numberPeriod == 1, slugSeason == current_season) %>% pull(stlblkpg)
+zero <- 0
+first <- if(length(first) ==0){0}else{first}
+
+stlblk_prob <- seq(from = round(first,0)+1, to = 10, by = 1)
+
+
+
+games <- games_firstqstl %>% full_join(games_firstqblocks, by = c("idGame","dateGame","Type"))
+
+games <- replace(games,is.na(games),0)
+
+games <- games %>% mutate(firstq_stlblk = firstq_steals + firstq_blocks) %>% select(idGame,dateGame,firstq_stlblk,Type)
+
+
+all <- all_firstqstl %>% full_join(all_firstqblocks, by = c("idGame","dateGame","Type"))%>% mutate(stlblk = replace_na(steals,0) + replace_na(blocks,0)) %>% select(idGame,dateGame,stlblk,Type)
+
+
+error <- all %>% mutate(stlblk = stlblk*0, Type = "First Quarter") %>% rename(firstq_stlblk = stlblk)
+games <- if(nrow(games)==0){error}else{games}
+
+combined <- games %>% left_join(all, by = "idGame")
+
+
+bind <- bind_rows(games %>% rename(stlblk = firstq_stlblk),all %>% semi_join(games, by = "idGame"))
+
+
+
+prob <- sapply(stlblk_prob, function(x){
+  mean(combined$stlblk >= x)
+})
+
+probability <- prob
+
+df <- data.frame(`Stl+Blk` = stlblk_prob, Probability = round(probability*100,1))
+
+formattable(df, align = c("c","c"), list(Probability = color_bar("orange")), caption = paste("Likelihood that this Stl+Blk total is attained when ",params$player," has at least ",round(first,1)," Stl+Blk in 1Q: Current Regular Season Only"))
+
+```
 
 
 

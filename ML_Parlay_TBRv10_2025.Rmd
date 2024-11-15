@@ -127,25 +127,26 @@ next_location <- substring(next_opponent_table %>% filter(Date == schedule %>% f
 
 
 
+
 ```
 
 ```{r variables, echo = FALSE }
 
-player_name <- playerdata %>% filter(idPlayer == player_id) %>% 
+player_name <- playerdata %>% filter(idPlayer == player_id[1]) %>% 
   select(dateGame, idGame, slugOpponent, idPlayer, namePlayer, fgm,fga,pts,treb,ast,stl,blk,fg3m,fg3a,tov,
          plusminus,minutes,locationGame, countDaysRestPlayer, isB2B, isB2BFirst, isB2BSecond) %>% pull(namePlayer)
 
 
 
-slug_team <- all_rosters %>% filter(idPlayer == player_id) %>% select(slugTeam)
+slug_team <- all_rosters %>% filter(idPlayer == player_id[1]) %>% select(slugTeam)
 
-team_id_current <- all_rosters %>% filter(idPlayer == player_id) %>% pull(idTeam)
+team_id_current <- all_rosters %>% filter(idPlayer == player_id[1]) %>% pull(idTeam)
 
 team_name <- slug_team %>% left_join(teams, by = "slugTeam") %>% pull(nameTeam)
 
 team_logo <- teams %>% filter(idTeam == team_id_current) %>% pull(urlThumbnailTeam)
 
-
+roster_data <- all_rosters %>% filter(idPlayer == player_id[1])
   
 ```
 
@@ -6562,6 +6563,12 @@ print(p, info = FALSE)
 
 
 <center> <p><b>`r team_name` </b></p></center>
+<center> <p><b>Number: #`r roster_data$numberJersey` </b></p></center>
+<center> <p><b>Age: `r roster_data$agePlayer` </b></p></center>
+<center> <p><b>Position: `r roster_data$groupPosition` </b></p></center>
+<center> <p><b>Experience: `r roster_data$countYearsExperience` years </b></p></center>
+<center> <p><b>Height: `r floor(roster_data$heightInches/12)`'`r ((roster_data$heightInches/12)-floor(roster_data$heightInches/12))*12`" </b></p></center>
+<center> <p><b>Weight: `r roster_data$weightLBS` lbs </b></p></center>
 
 
 

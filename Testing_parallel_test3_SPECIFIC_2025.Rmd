@@ -146,7 +146,9 @@ previous_team_batch <- bind_rows(previous_team_batch)
 
 previous_team_batch <- previous_team_batch %>% left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer) %>% summarize(n = n()) %>% ungroup(), by = "idPlayer") %>% filter(n >=1)
 
-previous_team_batch <- previous_team_batch %>% pull(namePlayer) 
+previous_team_batch <- previous_team_batch %>% pull(namePlayer)
+
+sample <- "Kelly Oubre Jr."
 
 
 wix_jobs <- write.csv(as.data.frame(players) %>% rename(namePlayer = players) %>% left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(namePlayer,slugTeam) %>% summarize(n = n()), by = "namePlayer") %>% select(namePlayer,slugTeam) %>% left_join(teams, by = "slugTeam") %>% select(namePlayer, nameTeam) %>% mutate(HTML = paste0("{\"nodes\":[{\"type\":\"PARAGRAPH\",\"id\":\"hlkd5116\",\"nodes\":[],\"paragraphData\":{}},{\"type\":\"HTML\",\"id\":\"cps99115\",\"nodes\":[],\"htmlData\":{\"containerData\":{\"textWrap\":true,\"height\":{\"custom\":\"1000\"},\"spoiler\":{},\"alignment\":\"CENTER\",\"width\":{\"custom\":\"1800\"}},\"url\":\"https://raw.githack.com/backironanalytics/my-site-test/main/sheets/",gsub("^(.*?)\\s.*", "\\1",namePlayer),"%20",gsub("^\\S+ ", "",namePlayer),".html\",\"source\":\"HTML\"}},{\"type\":\"PARAGRAPH\",\"id\":\"zuhhp117\",\"nodes\":[],\"paragraphData\":{}}],\"metadata\":{\"version\":1,\"createdTimestamp\":\"2022-12-19T17:56:18.279Z\",\"updatedTimestamp\":\"2022-12-19T17:56:18.279Z\",\"id\":\"857a69b7-4e6b-4821-973a-064010acd74b\"},\"documentStyle\":{}}")),"jobs_test2.csv")
@@ -161,6 +163,23 @@ wix_jobs <- write.csv(as.data.frame(players) %>% rename(namePlayer = players) %>
 
 
 for (i in next_team_batch) {
+  
+  rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/ML_Parlay_TBRv10_2025.Rmd',
+                    output_file = paste0(i,".html"),
+                    output_dir = file.path('C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/sheets'),
+                    params = list(player = i))
+}
+
+
+
+```
+
+
+```{r sample}
+
+
+
+for (i in sample) {
   
   rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/ML_Parlay_TBRv10_2025.Rmd',
                     output_file = paste0(i,".html"),

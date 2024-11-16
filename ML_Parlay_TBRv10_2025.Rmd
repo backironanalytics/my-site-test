@@ -122,8 +122,8 @@ rest = as.integer(Sys.Date() - most_recent - 1)
 
 next_opponent_table <- schedule %>% filter(Team == slugteam[1])
 
-next_opponent <- next_opponent_table %>% filter(Date == schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min) %>% pull(slugTeam)
-next_location <- substring(next_opponent_table %>% filter(Date == schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min)  %>% pull(location),1,1)
+next_opponent <- next_opponent_table %>% filter(Date == schedule %>% filter(next_game == TRUE,Team == slugteam[1]) %>% pull(Date) %>% min) %>% pull(slugTeam)
+next_location <- substring(next_opponent_table %>% filter(Date == schedule %>% filter(next_game == TRUE,Team == slugteam[1]) %>% pull(Date) %>% min)  %>% pull(location),1,1)
 
 
 

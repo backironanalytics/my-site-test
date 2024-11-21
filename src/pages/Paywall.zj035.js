@@ -1,5 +1,5 @@
 
 $w.onReady(function () {
-    // Hiding Paywall Sheet
+    // Hiding Paywall Sheet Test
     $w("#paywall1").hide();
 });

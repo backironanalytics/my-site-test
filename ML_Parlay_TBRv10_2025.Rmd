@@ -5,7 +5,7 @@ output:
     theme: simplex
     orientation: rows
     logo: logo_simple.png
-    favicon: logo_simple.png
+    favicon: logo_simple.pngs
     
 
 params:
@@ -4560,6 +4560,8 @@ Column {.tabset .tabset-fade .tabset-pills}
 ### First Quarter Leading Indicator - Points
 
 ```{r Quarterly points lead, echo = FALSE, warning = FALSE, message = FALSE, fig.width = 9, fig.align = "center", error = TRUE}
+
+
 
 
 first <- quarterly_points %>% group_by(namePlayer1,idPlayer,numberPeriod,typeSeason,slugSeason) %>% summarize(pts = sum(pts), n = sum(n)) %>% ungroup()  %>% mutate(ppg = pts/n) %>% filter(typeSeason == "Regular Season", numberPeriod == 1, slugSeason == current_season) %>% pull(ppg)

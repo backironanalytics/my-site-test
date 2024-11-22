@@ -131,6 +131,24 @@ next_team_batch <- bind_rows(next_team_batch)
 
 next_team_batch <- next_team_batch %>% left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer) %>% summarize(n = n()) %>% ungroup(), by = "idPlayer") %>% filter(n >=1)
 
+#Back to Back Identifier
+
+b2b_identifier <- schedule %>% filter(Date == schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min) %>% left_join(schedule %>% filter(Date == schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min+1), by = "slugTeam") %>% select(Date.y)
+
+#Next Game+1
+next_game_date_one_teams <- schedule %>% filter(Date == schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min+1) %>% pull(slugTeam)
+
+next_team_batch_one <- lapply(next_game_date_one_teams, function(x){
+  
+   rosters %>% filter(slugTeam == x) %>% filter(Include == "Y") %>% select(idPlayer,namePlayer)
+  
+})
+
+next_team_batch_one <- bind_rows(next_team_batch_one)
+
+next_team_batch_one <- next_team_batch_one %>% left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer) %>% summarize(n = n()) %>% ungroup(), by = "idPlayer") %>% filter(n >=1)
+
+
 #next_team_batch <- next_team_batch %>% pull(namePlayer)
 
 #Previous Game
@@ -163,9 +181,9 @@ wix_jobs <- write.csv(as.data.frame(players) %>% rename(namePlayer = players) %>
 
 library(foreach)
 
-foreach(i = next_team_batch$namePlayer, j = next_team_batch$idPlayer) %do% {
+foreach(i = next_team_batch_one$namePlayer, j = next_team_batch_one$idPlayer) %do% {
   
-  rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/ML_Parlay_TBRv10_2025.Rmd',
+  rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/ML_Parlay_TBRv11_2025.Rmd',
                     output_file = paste0(i,j,substr(j,start = 1, stop =3),".html"),
                     output_dir = file.path('C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/sheets'),
                     params = list(player = i))

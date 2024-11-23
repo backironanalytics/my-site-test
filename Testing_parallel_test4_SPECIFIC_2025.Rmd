@@ -181,7 +181,7 @@ wix_jobs <- write.csv(as.data.frame(players) %>% rename(namePlayer = players) %>
 
 library(foreach)
 
-foreach(i = next_team_batch_one$namePlayer, j = next_team_batch_one$idPlayer) %do% {
+foreach(i = next_team_batch$namePlayer, j = next_team_batch$idPlayer) %do% {
   
   rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/ML_Parlay_TBRv11_2025.Rmd',
                     output_file = paste0(i,j,substr(j,start = 1, stop =3),".html"),

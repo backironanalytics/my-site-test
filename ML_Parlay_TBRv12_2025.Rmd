@@ -419,7 +419,7 @@ df2 <- replace(df2, is.na(df2),0)
 
 #print.data.frame(df2)
 
-formattable(df2,align = "c",list(Min = color_tile("white","gold"),PPG = color_tile("white","gold"),RPG = color_tile("white","gold"),APG = color_tile("white","gold"),SPG = color_tile("white","gold"),BPG = color_tile("white","gold"),TOV = color_tile("white","gold"),FGM = color_tile("white","gold"),FGA = color_tile("white","gold"),FG3M = color_tile("white","gold"),FG3A = color_tile("white","gold"),FTM = color_tile("white","gold"),`FG%` = color_tile("white","gold"),`3FG%`= color_tile("white","gold"), `Pts+Reb+Ast` = color_tile("white","gold"), `Pts+Ast` = color_tile("white","gold"), `Pts+Reb` = color_tile("white","gold"), `Reb+Ast` = color_tile("white","gold"),`Stl+Blk` = color_tile("white","gold"), `First Scorer Count` = color_tile("white","gold"), `Q1 PPG` = color_tile("white","gold"), `Q1 APG` = color_tile("white","gold"), `Q1 RPG` = color_tile("white","gold"), `Pts Per Attempt` = color_tile("white","gold")), caption = "Note: Last xx Games Played May Include Last Season's Data")
+formattable(df2,align = "c",list(Type = formatter("span",style = ~ style(font.weight = "bold")),Min = color_tile("white","gold"),PPG = color_tile("white","gold"),RPG = color_tile("white","gold"),APG = color_tile("white","gold"),SPG = color_tile("white","gold"),BPG = color_tile("white","gold"),TOV = color_tile("white","gold"),FGM = color_tile("white","gold"),FGA = color_tile("white","gold"),FG3M = color_tile("white","gold"),FG3A = color_tile("white","gold"),FTM = color_tile("white","gold"),`FG%` = color_tile("white","gold"),`3FG%`= color_tile("white","gold"), `Pts+Reb+Ast` = color_tile("white","gold"), `Pts+Ast` = color_tile("white","gold"), `Pts+Reb` = color_tile("white","gold"), `Reb+Ast` = color_tile("white","gold"),`Stl+Blk` = color_tile("white","gold"), `First Scorer Count` = color_tile("white","gold"), `Q1 PPG` = color_tile("white","gold"), `Q1 APG` = color_tile("white","gold"), `Q1 RPG` = color_tile("white","gold"), `Pts Per Attempt` = color_tile("white","gold")), caption = "Note: First Scorer Count Includes Free Throws")
 
 
 
@@ -430,7 +430,7 @@ formattable(df2,align = "c",list(Min = color_tile("white","gold"),PPG = color_ti
 
 
 
-Minutes {data-navmenu="Exploratory Stats" data-navmenu-icon="fa-signal" data-badge="badge bg-warning"}
+Minutes {data-navmenu="Exploratory Stats" data-navmenu-icon="fa-signal"}
 =======================================================================
 
 Row 

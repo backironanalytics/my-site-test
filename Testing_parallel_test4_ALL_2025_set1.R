@@ -110,9 +110,9 @@ all_players <- as.data.frame(players) %>% rename(namePlayer = players) %>%
 
 library(foreach)
 
-foreach(i = all_players$namePlayer[1:(length(all_players$namePlayer)/3)], j = all_players$idPlayer[1:(length(all_players$idPlayer)/3)]) %do% {
+foreach(i = all_players$namePlayer[1:(length(all_players$namePlayer)/2)], j = all_players$idPlayer[1:(length(all_players$idPlayer)/2)]) %do% {
   
-  rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/ML_Parlay_TBRv12_2025.Rmd',
+  rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/ML_Parlay_TBRv13_2025.Rmd',
                     output_file = paste0(i,j,substr(j,start = 1,stop=3),".html"),
                     output_dir = file.path('C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/sheets'),
                     params = list(id = j))

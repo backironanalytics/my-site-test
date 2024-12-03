@@ -157,6 +157,8 @@ wix_jobs <- write.csv(as.data.frame(players) %>% rename(namePlayer = players) %>
 all_players <- as.data.frame(players) %>% rename(namePlayer = players) %>% left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(namePlayer,idPlayer,slugTeam) %>% summarize(n = n()), by = "namePlayer") %>% select(namePlayer,idPlayer,n) %>% ungroup() 
 
 
+
+
 ```
 
 

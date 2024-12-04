@@ -120,8 +120,8 @@ all_players_previous_batch <- bind_rows(all_players_previous_batch)
 
 library(foreach)
 
-foreach(i = all_players_previous_batch$namePlayer, 
-        j = all_players_previous_batch$idPlayer) %do% {
+foreach(i = all_players_previous_batch$namePlayer[1:(length(all_players_previous_batch$namePlayer)/2)], 
+        j = all_players_previous_batch$idPlayer[1:(length(all_players_previous_batch$namePlayer)/2)]) %do% {
   
   rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/ML_Parlay_TBRv13_2025.Rmd',
                     output_file = paste0(i,j,substr(j,start = 1,stop=3),".html"),

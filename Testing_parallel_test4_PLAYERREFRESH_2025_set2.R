@@ -116,6 +116,11 @@ all_players_previous_batch <- lapply(all_players_previous, function(x){
 
 all_players_previous_batch <- bind_rows(all_players_previous_batch)
 
+all_players_previous_batch <- all_players_previous_batch %>% 
+  left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(namePlayer,idPlayer,slugTeam) %>% summarize(n = n()), by = "idPlayer") %>% select(idPlayer,namePlayer.y) %>% 
+  rename(namePlayer = namePlayer.y)
+
+
 
 
 library(foreach)

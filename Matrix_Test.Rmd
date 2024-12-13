@@ -13,379 +13,13 @@ output:
 ```{r setup, include=FALSE, echo = FALSE}
 
 
-##Pts Reb Ast
-
-
-ptrebast <- lapply(next_team_batch$idPlayer, function(x){
-  
-  hit_rate <- seq(10.5,60.5,1)
-  
-  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
-    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,pts_reb_ast)
-  
-  hit_rate_above <- lapply(hit_rate, function(x){
-    
-    df %>% mutate(test = mean(pts_reb_ast > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% ungroup()
-    
-  })
-  
-  hit_rate_above
-  
-})
-
-ptrebast <- bind_rows(ptrebast) %>% pivot_wider(names_from = OU, values_from = test)
-
-ptrebast_pivoted <- ptrebast %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
-                                     summarize(GP = n()), by = "idPlayer")  %>% 
-  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)   %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
-  relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
-
-
-
-
-
-##Pts
-
-
-pt <- lapply(next_team_batch$idPlayer, function(x){
-  
-  hit_rate <- seq(3.5,40.5,1)
-  
-  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
-    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,pts)
-  
-  hit_rate_above <- lapply(hit_rate, function(x){
-    
-    df %>% mutate(test = mean(pts > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% ungroup()
-    
-  })
-  
-  hit_rate_above
-  
-})
-
-pt <- bind_rows(pt) %>% pivot_wider(names_from = OU, values_from = test)
-
-pt_pivoted <- pt %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
-                                     summarize(GP = n()), by = "idPlayer")  %>% 
-  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
-  relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
-
-##Ast
-
-
-ast <- lapply(next_team_batch$idPlayer, function(x){
-  
-  hit_rate <- seq(0.5,13.5,1)
-  
-  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
-    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,ast)
-  
-  hit_rate_above <- lapply(hit_rate, function(x){
-    
-    df %>% mutate(test = mean(ast > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% ungroup()
-    
-  })
-  
-  hit_rate_above
-  
-})
-
-ast <- bind_rows(ast) %>% pivot_wider(names_from = OU, values_from = test)
-
-ast_pivoted <- ast %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
-                                     summarize(GP = n()), by = "idPlayer")  %>% 
-  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)   %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
-  relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
-
-
-##Reb
-
-
-reb <- lapply(next_team_batch$idPlayer, function(x){
-  
-  hit_rate <- seq(0.5,17.5,1)
-  
-  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
-    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,treb)
-  
-  hit_rate_above <- lapply(hit_rate, function(x){
-    
-    df %>% mutate(test = mean(treb > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% ungroup()
-    
-  })
-  
-  hit_rate_above
-  
-})
-
-reb <- bind_rows(reb) %>% pivot_wider(names_from = OU, values_from = test)
-
-reb_pivoted <- reb %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
-                                     summarize(GP = n()), by = "idPlayer")  %>% 
-  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
-  relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
-
-
-##Three Pointers Made
-
-
-fg3m <- lapply(next_team_batch$idPlayer, function(x){
-  
-  hit_rate <- seq(0.5,6.5,1)
-  
-  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
-    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,fg3m)
-  
-  hit_rate_above <- lapply(hit_rate, function(x){
-    
-    df %>% mutate(test = mean(fg3m > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% ungroup()
-    
-  })
-  
-  hit_rate_above
-  
-})
-
-fg3m <- bind_rows(fg3m) %>% pivot_wider(names_from = OU, values_from = test)
-
-fg3m_pivoted <- fg3m %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
-                                     summarize(GP = n()), by = "idPlayer")  %>% 
-  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
-  relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam)
-
-
-
-##Three Pointers Attempted
-
-
-fg3a <- lapply(next_team_batch$idPlayer, function(x){
-  
-  hit_rate <- seq(0.5,9.5,1)
-  
-  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
-    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,fg3a)
-  
-  hit_rate_above <- lapply(hit_rate, function(x){
-    
-    df %>% mutate(test = mean(fg3a > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% ungroup()
-    
-  })
-  
-  hit_rate_above
-  
-})
-
-fg3a <- bind_rows(fg3a) %>% pivot_wider(names_from = OU, values_from = test)
-
-fg3a_pivoted <- fg3a %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
-                                     summarize(GP = n()), by = "idPlayer")  %>% 
-  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
-  relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
-
-##Steals
-
-
-stl <- lapply(next_team_batch$idPlayer, function(x){
-  
-  hit_rate <- seq(0.5,5.5,1)
-  
-  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
-    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,stl)
-  
-  hit_rate_above <- lapply(hit_rate, function(x){
-    
-    df %>% mutate(test = mean(stl > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% ungroup()
-    
-  })
-  
-  hit_rate_above
-  
-})
-
-stl <- bind_rows(stl) %>% pivot_wider(names_from = OU, values_from = test)
-
-stl_pivoted <- stl %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
-                                     summarize(GP = n()), by = "idPlayer")  %>% 
-  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
-  relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
-
-
-
-##Blocks
-
-
-blk <- lapply(next_team_batch$idPlayer, function(x){
-  
-  hit_rate <- seq(0.5,5.5,1)
-  
-  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
-    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,blk)
-  
-  hit_rate_above <- lapply(hit_rate, function(x){
-    
-    df %>% mutate(test = mean(blk > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% ungroup()
-    
-  })
-  
-  hit_rate_above
-  
-})
-
-blk <- bind_rows(blk) %>% pivot_wider(names_from = OU, values_from = test)
-
-blk_pivoted <- blk %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
-                                     summarize(GP = n()), by = "idPlayer")  %>% 
-  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
-  relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
-
-
-
-##Turnovers
-
-
-tov <- lapply(next_team_batch$idPlayer, function(x){
-  
-  hit_rate <- seq(0.5,5.5,1)
-  
-  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
-    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,tov)
-  
-  hit_rate_above <- lapply(hit_rate, function(x){
-    
-    df %>% mutate(test = mean(tov > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% ungroup()
-    
-  })
-  
-  hit_rate_above
-  
-})
-
-tov <- bind_rows(tov) %>% pivot_wider(names_from = OU, values_from = test)
-
-tov_pivoted <- tov %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
-                                     summarize(GP = n()), by = "idPlayer")  %>% 
-  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
-  relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
-
-
-
-##Points + Assists
-
-
-pt_ast <- lapply(next_team_batch$idPlayer, function(x){
-  
-  hit_rate <- seq(10.5,60.5,1)
-  
-  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
-    mutate(pts_ast = pts+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,pts_ast)
-  
-  hit_rate_above <- lapply(hit_rate, function(x){
-    
-    df %>% mutate(test = mean(pts_ast > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% ungroup()
-    
-  })
-  
-  hit_rate_above
-  
-})
-
-pt_ast <- bind_rows(pt_ast) %>% pivot_wider(names_from = OU, values_from = test)
-
-pt_ast_pivoted <- pt_ast %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
-                                     summarize(GP = n()), by = "idPlayer")  %>% 
-  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
-  relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
-
-##Points + Rebounds
-
-
-pt_reb <- lapply(next_team_batch$idPlayer, function(x){
-  
-  hit_rate <- seq(10.5,60.5,1)
-  
-  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
-    mutate(pts_reb = pts+treb) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,pts_reb)
-  
-  hit_rate_above <- lapply(hit_rate, function(x){
-    
-    df %>% mutate(test = mean(pts_reb > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% ungroup()
-    
-  })
-  
-  hit_rate_above
-  
-})
-
-pt_reb <- bind_rows(pt_reb) %>% pivot_wider(names_from = OU, values_from = test)
-
-pt_reb_pivoted <- pt_reb %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
-                                     summarize(GP = n()), by = "idPlayer")  %>% 
-  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
-  relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
-
-
-
-##Assists + Rebounds
-
-
-ast_reb <- lapply(next_team_batch$idPlayer, function(x){
-  
-  hit_rate <- seq(5.5,25.5,1)
-  
-  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
-    mutate(ast_reb = ast+treb) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,ast_reb)
-  
-  hit_rate_above <- lapply(hit_rate, function(x){
-    
-    df %>% mutate(test = mean(ast_reb > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% ungroup()
-    
-  })
-  
-  hit_rate_above
-  
-})
-
-ast_reb <- bind_rows(ast_reb) %>% pivot_wider(names_from = OU, values_from = test)
-
-ast_reb_pivoted <- ast_reb %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
-                                     summarize(GP = n()), by = "idPlayer")  %>% 
-  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
-  relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
-
-
-##Steals + Blocks
-
-
-stl_blk <- lapply(next_team_batch$idPlayer, function(x){
-  
-  hit_rate <- seq(0.5,7.5,1)
-  
-  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
-    mutate(stl_blk = stl+blk) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,stl_blk)
-  
-  hit_rate_above <- lapply(hit_rate, function(x){
-    
-    df %>% mutate(test = mean(stl_blk > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% ungroup()
-    
-  })
-  
-  hit_rate_above
-  
-})
-
-stl_blk <- bind_rows(stl_blk) %>% pivot_wider(names_from = OU, values_from = test)
-
-stl_blk_pivoted <- stl_blk %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
-                                     summarize(GP = n()), by = "idPlayer")  %>% 
-  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)   %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
-  relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
 color_set <- c("#f7c844","#429460","#2e6d9e")
 
 
 
 ```
+
 
 
 > Percentages indicate how often player has hit the over
@@ -857,4 +491,78 @@ reactable(highlight = TRUE, striped = TRUE,stl_blk_pivoted, columns = list(Playe
                                                                         `7.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(stl_blk_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE))), 
            theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
 ```
+
+
+### First Quarter Points
+
+
+```{r firstqpts, echo = FALSE, warning = FALSE, message = FALSE}
+
+
+
+reactable(highlight = TRUE, striped = TRUE,firstqpoints_pivoted, columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqpoints_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqpoints_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqpoints_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqpoints_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqpoints_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqpoints_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `6.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqpoints_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `7.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqpoints_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `8.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqpoints_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `9.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqpoints_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `10.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqpoints_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+
+
+
+```
+
+
+### First Quarter Assists
+
+
+```{r firstqast, echo = FALSE, warning = FALSE, message = FALSE}
+
+
+
+reactable(highlight = TRUE, striped = TRUE,firstqassists_pivoted, columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqassists_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqassists_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqassists_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqassists_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqassists_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqassists_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `6.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqassists_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+
+
+
+```
+
+
+### First Quarter Rebounds
+
+
+```{r firstqreb, echo = FALSE, warning = FALSE, message = FALSE}
+
+
+
+reactable(highlight = TRUE, striped = TRUE,firstqrebounds_pivoted, columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqrebounds_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqrebounds_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqrebounds_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqrebounds_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqrebounds_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqrebounds_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `6.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqrebounds_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+
+
+
+```
+
 

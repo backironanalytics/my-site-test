@@ -1,0 +1,519 @@
+---
+title: "Dollar Data Science - Over Hit Rates"
+output: 
+  flexdashboard::flex_dashboard:
+    theme: cosmo
+    orientation: rows
+    logo: logo_simple.png
+    favicon: logo_simple.png
+
+
+---
+
+```{r setup, include=FALSE, echo = FALSE}
+
+
+
+color_set <- c("#f7c844","#429460","#2e6d9e")
+
+
+
+```
+
+Matrix
+=======================================================================
+
+
+Row  {.tabset .tabset-fade .tabset-pills}
+-----------------------------------------------------------------------
+
+
+
+
+### Points
+
+
+```{r pts, echo = FALSE, warning = FALSE, message = FALSE}
+reactable(highlight = TRUE, striped = TRUE,pt_df, groupBy = "Player", columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="40")),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `6.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `7.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `8.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `9.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `10.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `11.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `12.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `13.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `14.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `15.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `16.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `17.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `18.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `19.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `20.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `21.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `22.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `23.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `24.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `25.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `26.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `27.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `28.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `29.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `30.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `31.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `32.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `33.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `34.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `35.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `36.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `37.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `38.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `39.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `40.5` = colDef(format = colFormat(suffix = "%"))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+
+```
+
+### Assists
+
+
+```{r ast, echo = FALSE, warning = FALSE, message = FALSE}
+reactable(highlight = TRUE, striped = TRUE,ast_df, groupBy = "Player", columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="40")),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `6.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `7.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `8.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `9.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `10.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `11.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `12.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `13.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%"))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+
+```
+
+
+
+
+### Rebounds
+
+
+```{r reb, echo = FALSE, warning = FALSE, message = FALSE}
+reactable(highlight = TRUE, striped = TRUE,reb_df, groupBy = "Player", columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="40")),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `6.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `7.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `8.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `9.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `10.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `11.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `12.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `13.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `14.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `15.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `16.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `17.5` = colDef(format = colFormat(suffix = "%"))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+
+```
+
+
+### Three Pointers Made
+
+
+```{r fg3m, echo = FALSE, warning = FALSE, message = FALSE}
+reactable(highlight = TRUE, striped = TRUE,fg3m_df, groupBy = "Player", columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="40")),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `6.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%"))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+
+```
+
+
+### Three Pointers Attempted
+
+
+```{r fg3a, echo = FALSE, warning = FALSE, message = FALSE}
+reactable(highlight = TRUE, striped = TRUE,fg3a_df, groupBy = "Player", columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="40")),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `6.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%"))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+
+```
+
+
+### Steals
+
+
+```{r stl, echo = FALSE, warning = FALSE, message = FALSE}
+reactable(highlight = TRUE, striped = TRUE,stl_df, groupBy = "Player", columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="40")),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%"))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+
+```
+
+### Blocks
+
+
+```{r blk, echo = FALSE, warning = FALSE, message = FALSE}
+reactable(highlight = TRUE, striped = TRUE,blk_df, groupBy = "Player", columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="40")),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%"))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+
+```
+
+
+### Turnovers
+
+
+```{r tov, echo = FALSE, warning = FALSE, message = FALSE}
+reactable(highlight = TRUE, striped = TRUE,tov_df, groupBy = "Player", columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="40")),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%"))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+
+```
+
+
+### Points + Rebounds + Assists
+
+
+```{r output, echo = FALSE, warning = FALSE, message = FALSE}
+reactable(highlight = TRUE, striped = TRUE,ptreb_ast_df, groupBy = "Player", columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="40")),
+                                                                        GP = colDef(aggregate = "max"),
+                                                                        `10.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `11.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `12.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `13.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `14.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `15.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `16.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `17.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `18.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `19.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `20.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `21.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `22.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `23.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `24.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `25.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `26.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `27.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `28.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `29.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `30.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `31.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `32.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `33.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `34.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `35.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `36.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `37.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `38.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `39.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `40.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `41.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `42.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `43.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `44.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `45.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `46.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `47.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `48.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `49.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `50.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `51.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `52.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `53.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `54.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `55.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `56.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `57.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `58.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `59.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `60.5` = colDef(format = colFormat(suffix = "%"))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+```
+
+
+
+### Points + Assists
+
+
+```{r pt_ast, echo = FALSE, warning = FALSE, message = FALSE}
+reactable(highlight = TRUE, striped = TRUE,pts_ast_df, groupBy = "Player", columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="40")),
+                                                                        GP = colDef(aggregate = "max"),
+                                                                        `10.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `11.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `12.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `13.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `14.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `15.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `16.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `17.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `18.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `19.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `20.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `21.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `22.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `23.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `24.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `25.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `26.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `27.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `28.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `29.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `30.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `31.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `32.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `33.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `34.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `35.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `36.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `37.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `38.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `39.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `40.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `41.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `42.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `43.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `44.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `45.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `46.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `47.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `48.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `49.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `50.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `51.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `52.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `53.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `54.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `55.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `56.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `57.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `58.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `59.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `60.5` = colDef(format = colFormat(suffix = "%"))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+```
+
+
+### Points + Rebounds
+
+
+```{r pt_reb, echo = FALSE, warning = FALSE, message = FALSE}
+reactable(highlight = TRUE, striped = TRUE,pts_reb_df, groupBy = "Player", columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="40")),
+                                                                        GP = colDef(aggregate = "max"),
+                                                                        `10.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `11.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `12.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `13.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `14.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `15.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `16.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `17.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `18.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `19.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `20.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `21.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `22.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `23.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `24.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `25.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `26.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `27.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `28.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `29.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `30.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `31.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `32.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `33.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `34.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `35.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `36.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `37.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `38.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `39.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `40.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `41.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `42.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `43.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `44.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `45.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `46.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `47.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `48.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `49.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `50.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `51.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `52.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `53.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `54.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `55.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `56.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `57.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `58.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `59.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `60.5` = colDef(format = colFormat(suffix = "%"))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+```
+
+
+### Assists + Rebounds
+
+
+```{r ast_reb, echo = FALSE, warning = FALSE, message = FALSE}
+reactable(highlight = TRUE, striped = TRUE,ast_reb_df, groupBy = "Player", columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="40")),
+                                                                        GP = colDef(aggregate = "max"),
+                                                                        `10.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `11.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `12.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `13.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `14.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `15.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `16.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `17.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `18.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `19.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `20.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `21.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `22.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `23.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `24.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `25.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `6.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `7.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `8.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `9.5` = colDef(format = colFormat(suffix = "%"))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+```
+
+
+
+### Steals + Blocks
+
+
+```{r stl_blk, echo = FALSE, warning = FALSE, message = FALSE}
+reactable(highlight = TRUE, striped = TRUE,stl_blk_df, groupBy = "Player", columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="40")),
+                                                                        GP = colDef(aggregate = "max"),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `6.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `7.5` = colDef(format = colFormat(suffix = "%"))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+```
+
+
+### First Quarter Points
+
+
+```{r firstqpoints, echo = FALSE, warning = FALSE, message = FALSE}
+reactable(highlight = TRUE, striped = TRUE,firstqpoints_df, groupBy = "Player", columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="40")),
+                                                                        GP = colDef(aggregate = "max"),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `6.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `7.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `8.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `9.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `10.5` = colDef(format = colFormat(suffix = "%"))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+```
+
+
+### First Quarter Assists
+
+
+```{r firstqassists, echo = FALSE, warning = FALSE, message = FALSE}
+reactable(highlight = TRUE, striped = TRUE,firstqassists_df, groupBy = "Player", columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="40")),
+                                                                        GP = colDef(aggregate = "max"),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `6.5` = colDef(format = colFormat(suffix = "%"))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+```
+
+
+### First Quarter Rebounds
+
+
+```{r firstqrebounds, echo = FALSE, warning = FALSE, message = FALSE}
+reactable(highlight = TRUE, striped = TRUE,firstqrebounds_df, groupBy = "Player", columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="40")),
+                                                                        GP = colDef(aggregate = "max"),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%")),
+                                                                        `6.5` = colDef(format = colFormat(suffix = "%"))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+```
+
+

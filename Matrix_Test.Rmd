@@ -2,7 +2,7 @@
 title: "Dollar Data Science - Over Hit Rates"
 output: 
   flexdashboard::flex_dashboard:
-    theme: cosmo
+    theme: yeti
     orientation: rows
     logo: logo_simple.png
     favicon: logo_simple.png

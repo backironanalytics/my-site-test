@@ -110,7 +110,7 @@ all_players_previous_batch <- all_players_previous_batch %>%
 
 #Next Game
 
-next_game_date_teams <- schedule %>% filter(Date == schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min-1) %>% pull(slugTeam)
+next_game_date_teams <- schedule %>% filter(Date == schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min) %>% pull(slugTeam)
 
 next_team_batch <- lapply(next_game_date_teams, function(x){
   
@@ -120,7 +120,7 @@ next_team_batch <- lapply(next_game_date_teams, function(x){
 
 next_team_batch <- bind_rows(next_team_batch)
 
-next_team_batch_date <- schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min-1
+next_team_batch_date <- schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min
 
 
 # Play by Play

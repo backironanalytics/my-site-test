@@ -63,8 +63,7 @@ stopCluster(cl)
 
 teams <- nba_teams(league = "NBA")
 
-teams <- teams %>% filter(idLeague == 2, idConference != 0) %>% select(cityTeam, slugTeam, idTeam, nameTeam, urlThumbnailTeam) %>% rename(Opponent = cityTeam) %>% 
-  mutate(urlThumbnailTeam = ifelse(slugTeam == "GSW", "https://cdn.nba.com/logos/nba/1610612744/primary/L/logo.svg",urlThumbnailTeam))
+teams <- teams %>% filter(idLeague == 2, idConference != 0) %>% select(cityTeam, slugTeam, idTeam, nameTeam, urlThumbnailTeam) %>% rename(Opponent = cityTeam)
 
 
 slugteams <- teams %>% select(slugTeam)
@@ -121,40 +120,13 @@ all_players_previous_batch <- all_players_previous_batch %>%
   left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(namePlayer,idPlayer,slugTeam) %>% summarize(n = n()), by = "idPlayer") %>% select(idPlayer,namePlayer.y) %>% 
   rename(namePlayer = namePlayer.y)
 
-
-
-
 library(foreach)
 
-foreach(i = all_players_previous_batch$namePlayer[((length(all_players_previous_batch$namePlayer))/2+1):length(all_players_previous_batch$namePlayer)+1], 
-        j = all_players_previous_batch$idPlayer[((length(all_players_previous_batch$namePlayer))/2+1):length(all_players_previous_batch$namePlayer)+1]) %do% {
-  
-  rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/ML_Parlay_TBRv13_2025.Rmd',
-                    output_file = paste0(i,j,substr(j,start = 1,stop=3),".html"),
-                    output_dir = file.path('C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/sheets'),
-                    params = list(id = j))
+foreach(i = all_players_previous_batch$namePlayer[((length(all_players_previous_batch$namePlayer)/2)+1):(length(all_players_previous_batch$namePlayer))], 
+        j = all_players_previous_batch$idPlayer[((length(all_players_previous_batch$idPlayer)/2)+1):(length(all_players_previous_batch$idPlayer))]) %do% {
+          
+          rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/ML_Parlay_TBRv13_2025.Rmd',
+                            output_file = paste0(i,j,substr(j,start = 1,stop=3),".html"),
+                            output_dir = file.path('C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/sheets'),
+                            params = list(id = j))
         }
-
-
-#Next Game
-
-next_game_date_teams <- schedule %>% filter(Date == schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min) %>% pull(slugTeam)
-
-next_team_batch <- lapply(next_game_date_teams, function(x){
-  
-  playerdata %>% filter(slugTeam == x , typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer,namePlayer) %>% summarize(n = n())
-  
-})
-
-next_team_batch <- bind_rows(next_team_batch)
-
-next_team_batch_date <- schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min
-
-library(reactablefmtr)
-
-
-rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/Matrix_Test.Rmd',
-                                     output_file = "matrix.html",
-                                     output_dir = file.path('C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/Matrix'))
-
-

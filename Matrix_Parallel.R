@@ -23,6 +23,8 @@ playerdata_playoffs <- game_logs(seasons = 2024, result_types = "player", season
 
 playerdata <- bind_rows(playerdata, playerdata_playoffs)
 
+playerdata <- playerdata %>% filter(idPlayer != 203471)
+
 
 player_name <- function(x){
   
@@ -165,7 +167,7 @@ ptrebast <- lapply(next_team_batch$idPlayer, function(x){
   
 })
 
-ptrebast <- bind_rows(ptrebast) %>% pivot_wider(names_from = OU, values_from = test)
+ptrebast <- bind_rows(ptrebast) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
 ptrebast_pivoted <- ptrebast %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                              summarize(GP = n()), by = "idPlayer")  %>% 
@@ -188,7 +190,7 @@ pt <- lapply(next_team_batch$idPlayer, function(x){
   
   hit_rate_above <- lapply(hit_rate, function(x){
     
-    df %>% mutate(test = mean(pts > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% ungroup()
+    df %>% mutate(test = mean(pts > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% ungroup() 
     
   })
   
@@ -196,7 +198,7 @@ pt <- lapply(next_team_batch$idPlayer, function(x){
   
 })
 
-pt <- bind_rows(pt) %>% pivot_wider(names_from = OU, values_from = test)
+pt <- bind_rows(pt) %>% pivot_wider(names_from = OU, values_from = test) %>% unnest(cols = everything())
 
 pt_pivoted <- pt %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                  summarize(GP = n()), by = "idPlayer")  %>% 
@@ -223,7 +225,7 @@ ast <- lapply(next_team_batch$idPlayer, function(x){
   
 })
 
-ast <- bind_rows(ast) %>% pivot_wider(names_from = OU, values_from = test)
+ast <- bind_rows(ast) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
 ast_pivoted <- ast %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                    summarize(GP = n()), by = "idPlayer")  %>% 
@@ -251,7 +253,7 @@ reb <- lapply(next_team_batch$idPlayer, function(x){
   
 })
 
-reb <- bind_rows(reb) %>% pivot_wider(names_from = OU, values_from = test)
+reb <- bind_rows(reb) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
 reb_pivoted <- reb %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                    summarize(GP = n()), by = "idPlayer")  %>% 
@@ -279,7 +281,7 @@ fg3m <- lapply(next_team_batch$idPlayer, function(x){
   
 })
 
-fg3m <- bind_rows(fg3m) %>% pivot_wider(names_from = OU, values_from = test)
+fg3m <- bind_rows(fg3m) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
 fg3m_pivoted <- fg3m %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                      summarize(GP = n()), by = "idPlayer")  %>% 
@@ -308,7 +310,7 @@ fg3a <- lapply(next_team_batch$idPlayer, function(x){
   
 })
 
-fg3a <- bind_rows(fg3a) %>% pivot_wider(names_from = OU, values_from = test)
+fg3a <- bind_rows(fg3a) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
 fg3a_pivoted <- fg3a %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                      summarize(GP = n()), by = "idPlayer")  %>% 
@@ -335,7 +337,7 @@ stl <- lapply(next_team_batch$idPlayer, function(x){
   
 })
 
-stl <- bind_rows(stl) %>% pivot_wider(names_from = OU, values_from = test)
+stl <- bind_rows(stl) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
 stl_pivoted <- stl %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                    summarize(GP = n()), by = "idPlayer")  %>% 
@@ -364,7 +366,7 @@ blk <- lapply(next_team_batch$idPlayer, function(x){
   
 })
 
-blk <- bind_rows(blk) %>% pivot_wider(names_from = OU, values_from = test)
+blk <- bind_rows(blk) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
 blk_pivoted <- blk %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                    summarize(GP = n()), by = "idPlayer")  %>% 
@@ -393,7 +395,7 @@ tov <- lapply(next_team_batch$idPlayer, function(x){
   
 })
 
-tov <- bind_rows(tov) %>% pivot_wider(names_from = OU, values_from = test)
+tov <- bind_rows(tov) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
 tov_pivoted <- tov %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                    summarize(GP = n()), by = "idPlayer")  %>% 
@@ -422,7 +424,7 @@ pt_ast <- lapply(next_team_batch$idPlayer, function(x){
   
 })
 
-pt_ast <- bind_rows(pt_ast) %>% pivot_wider(names_from = OU, values_from = test)
+pt_ast <- bind_rows(pt_ast) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
 pt_ast_pivoted <- pt_ast %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                          summarize(GP = n()), by = "idPlayer")  %>% 
@@ -449,7 +451,7 @@ pt_reb <- lapply(next_team_batch$idPlayer, function(x){
   
 })
 
-pt_reb <- bind_rows(pt_reb) %>% pivot_wider(names_from = OU, values_from = test)
+pt_reb <- bind_rows(pt_reb) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
 pt_reb_pivoted <- pt_reb %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                          summarize(GP = n()), by = "idPlayer")  %>% 
@@ -478,7 +480,7 @@ ast_reb <- lapply(next_team_batch$idPlayer, function(x){
   
 })
 
-ast_reb <- bind_rows(ast_reb) %>% pivot_wider(names_from = OU, values_from = test)
+ast_reb <- bind_rows(ast_reb) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
 ast_reb_pivoted <- ast_reb %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                            summarize(GP = n()), by = "idPlayer")  %>% 
@@ -506,7 +508,7 @@ stl_blk <- lapply(next_team_batch$idPlayer, function(x){
   
 })
 
-stl_blk <- bind_rows(stl_blk) %>% pivot_wider(names_from = OU, values_from = test)
+stl_blk <- bind_rows(stl_blk) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
 stl_blk_pivoted <- stl_blk %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                            summarize(GP = n()), by = "idPlayer")  %>% 
@@ -547,7 +549,7 @@ firstqpoints <- lapply(next_team_batch$idPlayer, function(x){
   
 })
 
-firstqpoints <- bind_rows(firstqpoints) %>% pivot_wider(names_from = OU, values_from = test)
+firstqpoints <- bind_rows(firstqpoints) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
 firstqpoints_pivoted <- firstqpoints %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                                      summarize(GP = n()), by = "idPlayer")  %>% 
@@ -579,7 +581,7 @@ firstqassists <- lapply(next_team_batch$idPlayer, function(x){
   
 })
 
-firstqassists <- bind_rows(firstqassists) %>% pivot_wider(names_from = OU, values_from = test)
+firstqassists <- bind_rows(firstqassists) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
 firstqassists_pivoted <- firstqassists %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                                        summarize(GP = n()), by = "idPlayer")  %>% 
@@ -610,7 +612,7 @@ firstqrebounds <- lapply(next_team_batch$idPlayer, function(x){
   
 })
 
-firstqrebounds <- bind_rows(firstqrebounds) %>% pivot_wider(names_from = OU, values_from = test)
+firstqrebounds <- bind_rows(firstqrebounds) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
 firstqrebounds_pivoted <- firstqrebounds %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                                          summarize(GP = n()), by = "idPlayer")  %>% 

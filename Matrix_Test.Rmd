@@ -20,7 +20,7 @@ color_set <- c("#f7c844","#429460","#2e6d9e")
 
 ```
 
-`r next_team_batch_date`
+
 
 Row  {.tabset .tabset-fade .tabset-pills}
 -----------------------------------------------------------------------

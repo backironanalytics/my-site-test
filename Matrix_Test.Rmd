@@ -1,5 +1,5 @@
 ---
-title: "Dollar Data Science - Over Hit Rates"
+title: "Dollar Data Science - Over Hit Rates" 
 output: 
   flexdashboard::flex_dashboard:
     theme: yeti
@@ -20,9 +20,7 @@ color_set <- c("#f7c844","#429460","#2e6d9e")
 
 ```
 
-
-
-> Percentages indicate how often player has hit the over as of `r next_team_batch_date`
+`r next_team_batch_date`
 
 Row  {.tabset .tabset-fade .tabset-pills}
 -----------------------------------------------------------------------

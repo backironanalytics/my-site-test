@@ -5,7 +5,7 @@ library(flexdashboard)
 library(parallel)
 library(rvest)
 
-rosters <- read.csv("rosters.csv")
+rosters <- read.csv("C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/rosters.csv")
 rosters_id <- rosters %>% filter(Include == "Y") %>% pull(idPlayer) 
 rosters_names <- rosters %>% filter(Include == "Y") %>% pull(namePlayer)
 rosters_teams <- rosters %>% filter(Include == "Y") %>% pull(idTeam)
@@ -669,6 +669,8 @@ firstqrebounds_pivoted <- firstqrebounds %>% left_join(playerdata %>% filter(typ
 
 
 library(reactablefmtr)
+
+Sys.setenv(RSTUDIO_PANDOC="C:/Program Files/RStudio/resources/app/bin/quarto/bin/tools")
 
 
 rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/Matrix_Test.Rmd',

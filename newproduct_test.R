@@ -7,11 +7,10 @@ library(nbastatR)
 library(jsonlite)
 library(dplyr)
 library(parallel)
+library(stringi)
+library(reactablefmtr)
 
-error_log <- file("C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/error_log.R", open="wt")
-sink(error_log, type="message")
 
-try({
 
 rosters <- read.csv("C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/rosters.csv")
 rosters_id <- rosters %>% filter(Include == "Y") %>% pull(idPlayer) 
@@ -133,6 +132,25 @@ dk_fg3m <- unnest(dk_fg3m)
 dk_fg3m <- dk_fg3m %>% filter(selections.tags == "MainPointLine") %>% select(seoIdentifier,selections.label,american,selections.points) %>% 
   rename(namePlayer = seoIdentifier,label = selections.label,odds = american,OU = selections.points) %>% pivot_wider(names_from = label, values_from = odds)
 
+# First Quarter Assists
+
+
+json_file <- "https://sportsbook-nash.draftkings.com/api/sportscontent/dkusil/v1/leagues/42648/categories/1217/subcategories/16552"
+json_data <- fromJSON(txt=json_file)
+
+dk_firstqast <- json_data[5]
+
+dk_firstqast <- as.data.frame(dk_firstqast)
+
+dk_firstqast <- unnest(dk_firstqast)
+
+dk_firstqast <- dk_firstqast %>% filter(selections.tags == "SGP") %>% select(seoIdentifier,selections.label,american) %>% 
+  rename(namePlayer = seoIdentifier,label = selections.label,odds = american) 
+
+dk_firstqast <- dk_firstqast %>% 
+  mutate(label = ifelse(label == "3+",2.5,ifelse(label == "4+",3.5,ifelse(label == "5+",4.5,
+                                                                          ifelse(label == "6+",5.5,ifelse(label == "7+",6.5,
+                                                                                                          ifelse(label == "8+",7.5,ifelse(label == "9+",8.5,ifelse(label == "9+",8.5,ifelse(label == "10+",9.5,ifelse(label == "2+",1.5,label)))))))))))
 
 
 
@@ -416,10 +434,27 @@ ptrebast_ten <- bind_rows(ptrebast_ten) %>% mutate(Type = "Last 10")
 
 ptreb_ast_df <- bind_rows(ptrebast,ptrebast_away,ptrebast_home,ptrebast_five,ptrebast_ten)
 
+ptreb_ast_df$namePlayer <- stri_trans_general(str = ptreb_ast_df$namePlayer, id = "Latin-ASCII")
 
-ptreb_ast_df %>% left_join(dk_ptrebast, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test)
 
+ptreb_ast_df <- ptreb_ast_df %>% left_join(dk_ptrebast, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test)
 
+ptreb_ast_df_join <- ptreb_ast_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
+  group_by(namePlayer,idPlayer) %>% summarize(Ident = mean(Ident))
+
+ptrebast_picks <- ptreb_ast_df %>% left_join(ptreb_ast_df_join, by = c("namePlayer","idPlayer")) %>% 
+  filter(Ident != 0) %>% group_by(namePlayer, OU, slugTeam,Type) %>% 
+  summarize(season_hit) %>% ungroup() %>%pivot_wider(names_from = Type, values_from = season_hit)
+
+reactable(highlight = TRUE, striped = TRUE,ptrebast_picks, columns = list(namePlayer = colDef(sticky = "left", width = 110),
+          OU = colDef(width = 110),
+          slugTeam = colDef(width = 110),
+          `Away Games` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_picks, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+          `Home Games` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_picks, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+          `Last 10` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_picks, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+          `Last 5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_picks, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+          `Regular Season` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_picks, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE))),
+          theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE)
 
 
 ##1Q Points
@@ -548,6 +583,35 @@ fg3m <- bind_rows(fg3m) %>% unnest(cols = everything())
 fg3m %>% left_join(dk_fg3m, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test)
 
 
+##1Q Assists
 
 
+firstqassists <- lapply(next_team_batch$idPlayer, function(x){
+  slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)
+  
+  hit_rate <- seq(0.5,6.5,1)
+  
+  
+  play_play_player_assists <- play_play %>% filter(idPlayerNBA2 == x, str_detect(descriptionPlayHome,"AST") | str_detect(descriptionPlayVisitor,"AST"))
+  
+  play_play_assists <- play_play_player_assists %>% select(idGame,numberPeriod,descriptionPlayHome,descriptionPlayVisitor, namePlayer1,namePlayer2,slugTeamPlayer1) %>% rename(slugTeam = slugTeamPlayer1) %>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason,locationGame,slugTeam,slugSeason) %>% summarize(n = n()), by = c("idGame","slugTeam"))
+  
+  firstq_assists <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(dateGame,locationGame,typeSeason,slugOpponent,slugSeason, namePlayer,idPlayer,slugTeam) %>% summarize(n = n()) %>% left_join(play_play_assists %>% filter(numberPeriod == 1) %>% group_by(dateGame,typeSeason,locationGame) %>% summarize(assists = n()), by = "dateGame") %>% mutate(assists = replace_na(assists,0)) %>% rename(locationGame = locationGame.x, typeSeason = typeSeason.x)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    firstq_assists %>% ungroup() %>% mutate(test = mean(assists > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() %>% mutate(slugTeam = slug_team)
+    
+  })
+  
+  hit_rate_above
+  
 })
+
+firstqassists <- bind_rows(firstqassists) %>% unnest(cols = everything())
+
+
+dk_firstqast %>% left_join(firstqassists %>% rename(label = OU) %>% mutate(label = as.character(label)), by = c("namePlayer","label"))
+
+

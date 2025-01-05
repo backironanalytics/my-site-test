@@ -159,9 +159,9 @@ dk_firstqast <- dk_firstqast %>%
   
   
   
-  ##Date used for schedule
+##Date used for schedule
   
-  scheduleDate <- "2024-10-01"
+scheduleDate <- "2024-10-01"
 
 
 
@@ -270,7 +270,7 @@ all_players_previous_batch <- all_players_previous_batch %>%
 
 #Next Game
 
-next_game_date_teams <- schedule %>% filter(Date == schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min) %>% pull(slugTeam)
+next_game_date_teams <- schedule %>% filter(Date == schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min-1) %>% pull(slugTeam)
 
 next_team_batch <- lapply(next_game_date_teams, function(x){
   
@@ -280,13 +280,18 @@ next_team_batch <- lapply(next_game_date_teams, function(x){
 
 next_team_batch <- bind_rows(next_team_batch)
 
-next_team_batch_date <- schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min
+next_team_batch_date <- schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min -1
 
 ##Filter out players who have played this season but no longer on roster
 
 on_roster_filter <- all_rosters %>% filter(idPlayer %in% next_team_batch$idPlayer) %>% group_by(namePlayer,idPlayer,slugTeam) %>% summarize(n = n())
 
 next_team_batch <- on_roster_filter %>% select(idPlayer,namePlayer,n)
+
+##Matchup
+
+matchup <- schedule %>% filter(Date == schedule %>% filter(next_game == TRUE) %>% 
+                                 pull(Date) %>% min-1) %>% mutate(matchup = ifelse(location == "Away",paste("vs.",Team),paste("@",Team)))
 
 
 # Play by Play
@@ -316,17 +321,17 @@ stopCluster(cl)
 
 ptrebast <- lapply(next_team_batch$idPlayer, function(x){
   
-  slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)
+  slug_team <- all_rosters %>% filter(idPlayer == x) %>% select(idPlayer,slugTeam)
   
   hit_rate <- seq(10.5,60.5,1)
   
   df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
-    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,pts_reb_ast)
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,dateGame,locationGame,pts_reb_ast,urlPlayerHeadshot) %>% left_join(slug_team, by = "idPlayer")
   
   hit_rate_above <- lapply(hit_rate, function(x){
     
-    df %>% mutate(test = mean(pts_reb_ast > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test),average = mean(pts_reb_ast), .groups = 'drop') %>% 
-      ungroup() %>% mutate(slugTeam = slug_team)
+    df %>% mutate(test = mean(pts_reb_ast > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test),average = mean(pts_reb_ast), .groups = 'drop') %>% 
+      ungroup() 
     
   })
   
@@ -341,10 +346,12 @@ ptrebast <- bind_rows(ptrebast) %>% mutate(Type = "Regular Season")
 
 ptrebast_home <- lapply(next_team_batch$idPlayer, function(x){
   
+  slug_team <- all_rosters %>% filter(idPlayer == x) %>% select(idPlayer,slugTeam)
+  
   hit_rate <- seq(10.5,60.5,1)
   
   df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == "H") %>% 
-    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,pts_reb_ast)
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,dateGame,locationGame,pts_reb_ast) %>% left_join(slug_team, by = "idPlayer")
   
   hit_rate_above <- lapply(hit_rate, function(x){
     
@@ -365,10 +372,12 @@ ptrebast_home <- bind_rows(ptrebast_home) %>% mutate(Type = "Home Games")
 
 ptrebast_away <- lapply(next_team_batch$idPlayer, function(x){
   
+  slug_team <- all_rosters %>% filter(idPlayer == x) %>% select(idPlayer,slugTeam)
+  
   hit_rate <- seq(10.5,60.5,1)
   
   df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == "A") %>% 
-    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,pts_reb_ast)
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,dateGame,locationGame,pts_reb_ast) %>% left_join(slug_team, by = "idPlayer")
   
   hit_rate_above <- lapply(hit_rate, function(x){
     
@@ -390,10 +399,12 @@ ptrebast_away <- bind_rows(ptrebast_away) %>% mutate(Type = "Away Games")
 
 ptrebast_five <- lapply(next_team_batch$idPlayer, function(x){
   
+  slug_team <- all_rosters %>% filter(idPlayer == x) %>% select(idPlayer,slugTeam)
+  
   hit_rate <- seq(10.5,60.5,1)
   
   df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
-    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,pts_reb_ast) %>% arrange(desc(dateGame)) %>% head(5)
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,dateGame,locationGame,pts_reb_ast) %>% arrange(desc(dateGame)) %>% head(5) %>% left_join(slug_team, by = "idPlayer")
   
   hit_rate_above <- lapply(hit_rate, function(x){
     
@@ -415,10 +426,12 @@ ptrebast_five <- bind_rows(ptrebast_five) %>% mutate(Type = "Last 5")
 
 ptrebast_ten <- lapply(next_team_batch$idPlayer, function(x){
   
+  slug_team <- all_rosters %>% filter(idPlayer == x) %>% select(idPlayer,slugTeam)
+  
   hit_rate <- seq(10.5,60.5,1)
   
   df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
-    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,pts_reb_ast) %>% arrange(desc(dateGame)) %>% head(10)
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,dateGame,locationGame,pts_reb_ast) %>% arrange(desc(dateGame)) %>% head(10) %>% left_join(slug_team, by = "idPlayer")
   
   hit_rate_above <- lapply(hit_rate, function(x){
     
@@ -444,16 +457,48 @@ ptreb_ast_df_join <- ptreb_ast_df  %>% mutate(Ident = ifelse(season_hit < .30 & 
 
 ptrebast_picks <- ptreb_ast_df %>% left_join(ptreb_ast_df_join, by = c("namePlayer","idPlayer")) %>% 
   filter(Ident != 0) %>% group_by(namePlayer, OU, slugTeam,Type) %>% 
-  summarize(season_hit) %>% ungroup() %>%pivot_wider(names_from = Type, values_from = season_hit)
+  summarize(season_hit) %>% ungroup() %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
+  left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
+  relocate(urlThumbnailTeam, .after = OU) %>% relocate(matchup, .after = urlThumbnailTeam) %>% select(!slugTeam)
 
-reactable(highlight = TRUE, striped = TRUE,ptrebast_picks, columns = list(namePlayer = colDef(sticky = "left", width = 110),
+reactable(highlight = TRUE, striped = TRUE,ptrebast_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
+                                                                          urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
           OU = colDef(width = 110),
-          slugTeam = colDef(width = 110),
-          `Away Games` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_picks, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
-          `Home Games` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_picks, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
-          `Last 10` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_picks, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
-          `Last 5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_picks, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
-          `Regular Season` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_picks, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE))),
+          `Away Games` = colDef(cell = data_bars(ptrebast_picks, 
+                                                 fill_color = color_set, 
+                                                 background = '#F1F1F1', 
+                                                 min_value = 0, 
+                                                 max_value = 1, 
+                                                 text_position = 'outside-end',
+                                                 number_fmt = scales::percent)),
+          `Home Games` = colDef(cell = data_bars(ptrebast_picks, 
+                                                 fill_color = color_set, 
+                                                 background = '#F1F1F1', 
+                                                 min_value = 0, 
+                                                 max_value = 1, 
+                                                 text_position = 'outside-end',
+                                                 number_fmt = scales::percent)),
+          `Last 10` = colDef(cell = data_bars(ptrebast_picks, 
+                                              fill_color = color_set, 
+                                              background = '#F1F1F1', 
+                                              min_value = 0, 
+                                              max_value = 1, 
+                                              text_position = 'outside-end',
+                                              number_fmt = scales::percent)),
+          `Last 5` = colDef(cell = data_bars(ptrebast_picks, 
+                                             fill_color = color_set, 
+                                             background = '#F1F1F1', 
+                                             min_value = 0, 
+                                             max_value = 1, 
+                                             text_position = 'outside-end',
+                                             number_fmt = scales::percent)),
+          `Regular Season` = colDef(cell = data_bars(ptrebast_picks, 
+                                                     fill_color = color_set, 
+                                                     background = '#F1F1F1', 
+                                                     min_value = 0, 
+                                                     max_value = 1, 
+                                                     text_position = 'outside-end',
+                                                     number_fmt = scales::percent))),
           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE)
 
 
@@ -491,8 +536,161 @@ firstqpoints <- lapply(next_team_batch$idPlayer, function(x){
   
 })
 
-firstqpoints <- bind_rows(firstqpoints) %>% unnest(cols = everything())
+firstqpoints <- bind_rows(firstqpoints) %>% unnest(cols = everything()) %>% mutate(Type = "Regular Season")
 
+
+##1Q Points Home Games
+
+
+firstqpoints_home <- lapply(next_team_batch$idPlayer, function(x){
+  
+  slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)
+  
+  hit_rate <- seq(0.5,10.5,1)
+  
+  play_play_player <- play_play %>% filter(idPlayerNBA1 == x, !is.na(slugScore))
+  
+  play_play_makes <- play_play_player %>% select(idGame,numberPeriod, descriptionPlayHome,descriptionPlayNeutral,descriptionPlayVisitor, namePlayer1,slugScore,scoreHome,scoreAway,slugTeamPlayer1) %>% 
+    rename(slugTeam = slugTeamPlayer1) %>% mutate(description = ifelse(is.na(descriptionPlayHome),ifelse(is.na(descriptionPlayNeutral),descriptionPlayVisitor,descriptionPlayNeutral),descriptionPlayHome)) %>% 
+    mutate(free_throw_flag = str_detect(description,"Free Throw"), three_point_flag = str_detect(description,"3PT")) %>%
+    mutate(two_point_flag = ifelse(free_throw_flag == FALSE & three_point_flag == FALSE, TRUE,FALSE)) %>% 
+    left_join(gamedata %>% group_by(idGame,dateGame,typeSeason,locationGame,slugTeam,slugSeason) %>% 
+                summarize(n = n()), by = c("idGame","slugTeam")) %>% 
+    mutate(pts = ifelse(free_throw_flag == TRUE,1,ifelse(two_point_flag== TRUE,2,3)),score_type = ifelse(free_throw_flag == TRUE,"Free Throw",ifelse(two_point_flag== TRUE,"2 pt","3 pt")))
+  
+  firstq_makes <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == "H") %>% 
+    group_by(dateGame,locationGame,typeSeason,slugOpponent,slugSeason,namePlayer,idPlayer) %>% summarize(n = n()) %>% 
+    left_join(play_play_makes %>% filter(numberPeriod == 1) %>% group_by(dateGame) %>% summarize(pts = sum(pts)), by = "dateGame") %>% mutate(pts = replace_na(pts,0))
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    firstq_makes %>% ungroup() %>% mutate(test = mean(pts > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+firstqpoints_home <- bind_rows(firstqpoints_home) %>% unnest(cols = everything()) %>% mutate(Type = "Home Games")
+
+##1Q Points Away Games
+
+
+firstqpoints_away <- lapply(next_team_batch$idPlayer, function(x){
+  
+  slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)
+  
+  hit_rate <- seq(0.5,10.5,1)
+  
+  play_play_player <- play_play %>% filter(idPlayerNBA1 == x, !is.na(slugScore))
+  
+  play_play_makes <- play_play_player %>% select(idGame,numberPeriod, descriptionPlayHome,descriptionPlayNeutral,descriptionPlayVisitor, namePlayer1,slugScore,scoreHome,scoreAway,slugTeamPlayer1) %>% 
+    rename(slugTeam = slugTeamPlayer1) %>% mutate(description = ifelse(is.na(descriptionPlayHome),ifelse(is.na(descriptionPlayNeutral),descriptionPlayVisitor,descriptionPlayNeutral),descriptionPlayHome)) %>% 
+    mutate(free_throw_flag = str_detect(description,"Free Throw"), three_point_flag = str_detect(description,"3PT")) %>%
+    mutate(two_point_flag = ifelse(free_throw_flag == FALSE & three_point_flag == FALSE, TRUE,FALSE)) %>% 
+    left_join(gamedata %>% group_by(idGame,dateGame,typeSeason,locationGame,slugTeam,slugSeason) %>% 
+                summarize(n = n()), by = c("idGame","slugTeam")) %>% 
+    mutate(pts = ifelse(free_throw_flag == TRUE,1,ifelse(two_point_flag== TRUE,2,3)),score_type = ifelse(free_throw_flag == TRUE,"Free Throw",ifelse(two_point_flag== TRUE,"2 pt","3 pt")))
+  
+  firstq_makes <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == "A") %>% 
+    group_by(dateGame,locationGame,typeSeason,slugOpponent,slugSeason,namePlayer,idPlayer) %>% summarize(n = n()) %>% 
+    left_join(play_play_makes %>% filter(numberPeriod == 1) %>% group_by(dateGame) %>% summarize(pts = sum(pts)), by = "dateGame") %>% mutate(pts = replace_na(pts,0))
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    firstq_makes %>% ungroup() %>% mutate(test = mean(pts > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+firstqpoints_away <- bind_rows(firstqpoints_away) %>% unnest(cols = everything()) %>% mutate(Type = "Away Games")
+
+##1Q Points Last 10
+
+
+firstqpoints_ten <- lapply(next_team_batch$idPlayer, function(x){
+  
+  slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)
+  
+  hit_rate <- seq(0.5,10.5,1)
+  
+  play_play_player <- play_play %>% filter(idPlayerNBA1 == x, !is.na(slugScore))
+  
+  play_play_makes <- play_play_player %>% select(idGame,numberPeriod, descriptionPlayHome,descriptionPlayNeutral,descriptionPlayVisitor, namePlayer1,slugScore,scoreHome,scoreAway,slugTeamPlayer1) %>% 
+    rename(slugTeam = slugTeamPlayer1) %>% mutate(description = ifelse(is.na(descriptionPlayHome),ifelse(is.na(descriptionPlayNeutral),descriptionPlayVisitor,descriptionPlayNeutral),descriptionPlayHome)) %>% 
+    mutate(free_throw_flag = str_detect(description,"Free Throw"), three_point_flag = str_detect(description,"3PT")) %>%
+    mutate(two_point_flag = ifelse(free_throw_flag == FALSE & three_point_flag == FALSE, TRUE,FALSE)) %>% 
+    left_join(gamedata %>% group_by(idGame,dateGame,typeSeason,locationGame,slugTeam,slugSeason) %>% 
+                summarize(n = n()), by = c("idGame","slugTeam")) %>% 
+    mutate(pts = ifelse(free_throw_flag == TRUE,1,ifelse(two_point_flag== TRUE,2,3)),score_type = ifelse(free_throw_flag == TRUE,"Free Throw",ifelse(two_point_flag== TRUE,"2 pt","3 pt")))
+  
+  firstq_makes <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    group_by(dateGame,locationGame,typeSeason,slugOpponent,slugSeason,namePlayer,idPlayer) %>% summarize(n = n()) %>% arrange(desc(dateGame)) %>% head(10) %>% 
+    left_join(play_play_makes %>% filter(numberPeriod == 1) %>% group_by(dateGame) %>% summarize(pts = sum(pts)), by = "dateGame") %>% mutate(pts = replace_na(pts,0))
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    firstq_makes %>% ungroup() %>% mutate(test = mean(pts > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+firstqpoints_ten <- bind_rows(firstqpoints_ten) %>% unnest(cols = everything()) %>% mutate(Type = "Last 10")
+
+
+##1Q Points Last 5
+
+
+firstqpoints_five <- lapply(next_team_batch$idPlayer, function(x){
+  
+  slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)
+  
+  hit_rate <- seq(0.5,10.5,1)
+  
+  play_play_player <- play_play %>% filter(idPlayerNBA1 == x, !is.na(slugScore))
+  
+  play_play_makes <- play_play_player %>% select(idGame,numberPeriod, descriptionPlayHome,descriptionPlayNeutral,descriptionPlayVisitor, namePlayer1,slugScore,scoreHome,scoreAway,slugTeamPlayer1) %>% 
+    rename(slugTeam = slugTeamPlayer1) %>% mutate(description = ifelse(is.na(descriptionPlayHome),ifelse(is.na(descriptionPlayNeutral),descriptionPlayVisitor,descriptionPlayNeutral),descriptionPlayHome)) %>% 
+    mutate(free_throw_flag = str_detect(description,"Free Throw"), three_point_flag = str_detect(description,"3PT")) %>%
+    mutate(two_point_flag = ifelse(free_throw_flag == FALSE & three_point_flag == FALSE, TRUE,FALSE)) %>% 
+    left_join(gamedata %>% group_by(idGame,dateGame,typeSeason,locationGame,slugTeam,slugSeason) %>% 
+                summarize(n = n()), by = c("idGame","slugTeam")) %>% 
+    mutate(pts = ifelse(free_throw_flag == TRUE,1,ifelse(two_point_flag== TRUE,2,3)),score_type = ifelse(free_throw_flag == TRUE,"Free Throw",ifelse(two_point_flag== TRUE,"2 pt","3 pt")))
+  
+  firstq_makes <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    group_by(dateGame,locationGame,typeSeason,slugOpponent,slugSeason,namePlayer,idPlayer) %>% summarize(n = n()) %>% arrange(desc(dateGame)) %>% head(5) %>% 
+    left_join(play_play_makes %>% filter(numberPeriod == 1) %>% group_by(dateGame) %>% summarize(pts = sum(pts)), by = "dateGame") %>% mutate(pts = replace_na(pts,0))
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    firstq_makes %>% ungroup() %>% mutate(test = mean(pts > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+firstqpoints_five <- bind_rows(firstqpoints_five) %>% unnest(cols = everything()) %>% mutate(Type = "Last 5")
+
+firstqpoints_df <- bind_rows(firstqpoints,firstqpoints_home,firstqpoints_away,firstqpoints_ten,firstqpoints_five)
+
+firstqpoints_df$namePlayer <- stri_trans_general(str = firstqpoints_df$namePlayer, id = "Latin-ASCII")
+
+firstqpoints_df <- firstqpoints_df %>% left_join(dk_firstqpoints, by = c("namePlayer","OU")) %>% filter(!.isna(Over)) %>% rename(season_hit = test) 
+
+firstqpoints_df_join <- firstqpoints_df %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1, 0)) %>% group_by(namePlayer, idPlayer) %>% summarize(Ident = mean(Ident))
 
 
 dk_firstqpts %>% left_join(firstqpoints %>% rename(label = OU) %>% mutate(label = as.character(label)), by = c("namePlayer","label"))

@@ -1,44 +1,9 @@
-Error: unexpected end of input
-
-
-Warning messages:
-1: Supplying `...` without names was deprecated in tidyr 1.0.0.
-ℹ Please specify a name for each selection.
-ℹ Did you want `data = -c(slugLeague, typeResult, slugSeason, yearSeason)`?
-ℹ The deprecated feature was likely used in the nbastatR package.
-  Please report the issue at <https://github.com/abresler/nbastatR/issues>.
-This warning is displayed once every 8 hours.
-Call `lifecycle::last_lifecycle_warnings()` to see where this warning was generated. 
-2: `cols` is now required when using `unnest()`.
-ℹ Please use `cols = c(dataTables)`. 
-Warning message:
-`cols` is now required when using `unnest()`.
-ℹ Please use `cols = c(dataTables)`. 
-Warning messages:
-1: In serializedSize(x) :
-  'package:stats' may not be available when loading
-2: The `x` argument of `as_tibble.matrix()` must have unique column names if `.name_repair` is omitted as of tibble 2.0.0.
-ℹ Using compatibility `.name_repair`.
-ℹ The deprecated feature was likely used in the nbastatR package.
-  Please report the issue at <https://github.com/abresler/nbastatR/issues>.
-This warning is displayed once every 8 hours.
-Call `lifecycle::last_lifecycle_warnings()` to see where this warning was generated. 
-Warning message:
-`cols` is now required when using `unnest()`.
-ℹ Please use `cols = c(dataTables)`. 
-Warning message:
-`cols` is now required when using `unnest()`.
-ℹ Please use `cols = c(dataTables)`. 
-There were 18 warnings (use warnings() to see them)
 `summarise()` has grouped output by 'nameTeam'. You can override using the `.groups` argument.
 `summarise()` has grouped output by 'nameTeam'. You can override using the `.groups` argument.
 `summarise()` has grouped output by 'namePlayer', 'idPlayer'. You can override using the `.groups` argument.
 `summarise()` has grouped output by 'namePlayer', 'idPlayer'. You can override using the `.groups` argument.
-There were 16 warnings (use warnings() to see them)
-`summarise()` has grouped output by 'nameTeam'. You can override using the `.groups` argument.
-`summarise()` has grouped output by 'nameTeam'. You can override using the `.groups` argument.
-`summarise()` has grouped output by 'namePlayer', 'idPlayer'. You can override using the `.groups` argument.
-`summarise()` has grouped output by 'namePlayer', 'idPlayer'. You can override using the `.groups` argument.
+`summarise()` has grouped output by 'namePlayer'. You can override using the `.groups` argument.
+`summarise()` has grouped output by 'idPlayer'. You can override using the `.groups` argument.
 
 Attaching package: ‘foreach’
 
@@ -52,42 +17,453 @@ processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/1628997162.html
+Output created: sheets/1629627162.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/203954203.html
+Output created: sheets/1630529163.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/201935201.html
+Output created: sheets/203468203.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/1628964162.html
+Output created: sheets/1627749162.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/1629611162.html
+Output created: sheets/1627742162.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/1626181162.html
+Output created: sheets/1630530163.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1641783164.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1630591163.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1631094163.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/203484203.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1630532163.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1629048162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1630228163.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1627741162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/203952203.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/203110203.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/201939201.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/203903203.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1629012162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1641718164.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1628381162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1642271164.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1628374162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1628369162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/201950201.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1627759162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1628401162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/201143201.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1629673162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1628398162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1630224163.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1627832162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1628415162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1631095163.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/203500203.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1630578163.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1626156162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1626156162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/203076203.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1642261164.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1629629162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1630559163.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/2544254.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1629060162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1628370162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1628368162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/201942201.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1627734162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1631099163.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1628970162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1630163163.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1631109163.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1630182163.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1630544163.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1641706164.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/203552203.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/201959201.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1627747162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1630596163.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1629636162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1628386162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1628378162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1628983162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1631096163.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1627936162.html
+There were 25 warnings (use warnings() to see them)

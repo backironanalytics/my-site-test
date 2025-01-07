@@ -10,7 +10,7 @@ library(parallel)
 library(stringi)
 library(reactablefmtr)
 
-color_set <- c("#f7c844","#429460","#2e6d9e")
+color_set <- c("#f7c844","#2e6d9e","#429460")
 
 
 
@@ -174,6 +174,101 @@ dk_firstqreb <- dk_firstqreb %>%
   mutate(label = ifelse(label == "3+",2.5,ifelse(label == "4+",3.5,ifelse(label == "5+",4.5,
                                                                           ifelse(label == "6+",5.5,ifelse(label == "7+",6.5,
                                                                                                           ifelse(label == "8+",7.5,ifelse(label == "9+",8.5,ifelse(label == "9+",8.5,ifelse(label == "10+",9.5,ifelse(label == "2+",1.5,label)))))))))))
+
+
+# Steals
+
+
+json_file <- "https://sportsbook-nash.draftkings.com/api/sportscontent/dkusil/v1/leagues/42648/categories/1293/subcategories/13508"
+json_data <- fromJSON(txt=json_file)
+
+dk_stl <- json_data[5]
+
+dk_stl <- as.data.frame(dk_stl)
+
+dk_stl <- unnest(dk_stl)
+
+dk_stl <- dk_stl %>% filter(selections.tags == "MainPointLine") %>% select(seoIdentifier,selections.label,american,selections.points) %>% 
+  rename(namePlayer = seoIdentifier,label = selections.label,odds = american,OU = selections.points) %>% pivot_wider(names_from = label, values_from = odds)
+
+
+# Blocks
+
+
+json_file <- "https://sportsbook-nash.draftkings.com/api/sportscontent/dkusil/v1/leagues/42648/categories/1293/subcategories/13780"
+json_data <- fromJSON(txt=json_file)
+
+dk_blk <- json_data[5]
+
+dk_blk <- as.data.frame(dk_blk)
+
+dk_blk <- unnest(dk_blk)
+
+dk_blk <- dk_blk %>% filter(selections.tags == "MainPointLine") %>% select(seoIdentifier,selections.label,american,selections.points) %>% 
+  rename(namePlayer = seoIdentifier,label = selections.label,odds = american,OU = selections.points) %>% pivot_wider(names_from = label, values_from = odds)
+
+# Turnovers
+
+
+json_file <- "https://sportsbook-nash.draftkings.com/api/sportscontent/dkusil/v1/leagues/42648/categories/1293/subcategories/13780"
+json_data <- fromJSON(txt=json_file)
+
+dk_tov <- json_data[5]
+
+dk_tov <- as.data.frame(dk_tov)
+
+dk_tov <- unnest(dk_tov)
+
+dk_tov <- dk_tov %>% filter(selections.tags == "MainPointLine") %>% select(seoIdentifier,selections.label,american,selections.points) %>% 
+  rename(namePlayer = seoIdentifier,label = selections.label,odds = american,OU = selections.points) %>% pivot_wider(names_from = label, values_from = odds)
+
+
+# Points
+
+
+json_file <- "https://sportsbook-nash.draftkings.com/api/sportscontent/dkusil/v1/leagues/42648/categories/1215/subcategories/12488"
+json_data <- fromJSON(txt=json_file)
+
+dk_pts <- json_data[5]
+
+dk_pts <- as.data.frame(dk_pts)
+
+dk_pts <- unnest(dk_pts)
+
+dk_pts <- dk_pts %>% filter(selections.tags == "MainPointLine") %>% select(seoIdentifier,selections.label,american,selections.points) %>% 
+  rename(namePlayer = seoIdentifier,label = selections.label,odds = american,OU = selections.points) %>% pivot_wider(names_from = label, values_from = odds)
+
+# Assists
+
+
+json_file <- "https://sportsbook-nash.draftkings.com/api/sportscontent/dkusil/v1/leagues/42648/categories/1217/subcategories/12495"
+json_data <- fromJSON(txt=json_file)
+
+dk_ast <- json_data[5]
+
+dk_ast <- as.data.frame(dk_ast)
+
+dk_ast <- unnest(dk_ast)
+
+dk_ast <- dk_ast %>% filter(selections.tags == "MainPointLine") %>% select(seoIdentifier,selections.label,american,selections.points) %>% 
+  rename(namePlayer = seoIdentifier,label = selections.label,odds = american,OU = selections.points) %>% pivot_wider(names_from = label, values_from = odds)
+
+# Rebounds
+
+
+json_file <- "https://sportsbook-nash.draftkings.com/api/sportscontent/dkusil/v1/leagues/42648/categories/1216/subcategories/12492"
+json_data <- fromJSON(txt=json_file)
+
+dk_reb <- json_data[5]
+
+dk_reb <- as.data.frame(dk_reb)
+
+dk_reb <- unnest(dk_reb)
+
+dk_reb <- dk_reb %>% filter(selections.tags == "MainPointLine") %>% select(seoIdentifier,selections.label,american,selections.points) %>% 
+  rename(namePlayer = seoIdentifier,label = selections.label,odds = american,OU = selections.points) %>% pivot_wider(names_from = label, values_from = odds)
+
+
 
 
 
@@ -522,7 +617,7 @@ reactable(highlight = TRUE, striped = TRUE,ptrebast_picks, columns = list(namePl
                                                      max_value = 1, 
                                                      text_position = 'outside-end',
                                                      number_fmt = scales::percent))),
-          theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE)
+          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE) %>% add_title("Success Rates") %>% add_subtitle("2024/25 Regular Season")
 
 
 ##1Q Points
@@ -719,7 +814,8 @@ firstqpoints_df_join <- firstqpoints_df %>% mutate(favored_ident = substring(odd
   group_by(namePlayer, idPlayer, OU) %>% summarize(Ident = mean(Ident))
 
 firstqpoints_picks <- firstqpoints_df %>% 
-  left_join(firstqpoints_df_join, by = c("namePlayer","idPlayer","OU")) %>% filter(Ident!=0) %>% group_by(namePlayer,idPlayer,OU,Type) %>% summarize(season_hit) %>%ungroup() %>%
+  left_join(firstqpoints_df_join, by = c("namePlayer","idPlayer","OU")) %>% filter(Ident!=0) %>% group_by(namePlayer,idPlayer,OU,Type) %>% 
+  summarize(season_hit) %>%ungroup() %>%
   pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>%select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>%select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>% relocate(urlThumbnailTeam, .after = namePlayer) %>%
   relocate(matchup, .after = urlThumbnailTeam) %>% 
@@ -767,7 +863,7 @@ reactable(highlight = TRUE, striped = TRUE,firstqpoints_picks, columns = list(na
                                                                                                                      max_value = 1, 
                                                                                                                      text_position = 'outside-end',
                                                                                                                      number_fmt = scales::percent))),
-          theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE)
+          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE) %>% add_title("Success Rates") %>% add_subtitle("2024/25 Regular Season")
 
 
 
@@ -779,58 +875,10 @@ reactable(highlight = TRUE, striped = TRUE,firstqpoints_picks, columns = list(na
 
 
 
-##Steals + Blocks
 
 
-stl_blk <- lapply(next_team_batch$idPlayer, function(x){
-  slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)
-  
-  hit_rate <- seq(0.5,7.5,1)
-  
-  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
-    mutate(stl_blk = stl+blk) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,stl_blk)
-  
-  hit_rate_above <- lapply(hit_rate, function(x){
-    
-    df %>% mutate(test = mean(stl_blk > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
-      ungroup() %>% mutate(slugTeam = slug_team)
-    
-  })
-  
-  hit_rate_above
-  
-})
-
-stl_blk <- bind_rows(stl_blk) %>% unnest(cols = everything())
-
-stl_blk %>% left_join(dk_stlblk, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test)
 
 
-##Three Pointers Made
-
-
-fg3m <- lapply(next_team_batch$idPlayer, function(x){
-  slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)
-  
-  hit_rate <- seq(0.5,6.5,1)
-  
-  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
-    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,fg3m)
-  
-  hit_rate_above <- lapply(hit_rate, function(x){
-    
-    df %>% mutate(test = mean(fg3m > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
-      ungroup() %>% mutate(slugTeam = slug_team)
-    
-  })
-  
-  hit_rate_above
-  
-})
-
-fg3m <- bind_rows(fg3m) %>% unnest(cols = everything())
-
-fg3m %>% left_join(dk_fg3m, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test)
 
 
 ##1Q Assists
@@ -1335,7 +1383,7 @@ pt_reb_df_join <- pt_reb_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type =
 
 pt_reb_picks <- pt_reb_df %>% left_join(pt_reb_df_join, by = c("namePlayer","idPlayer")) %>% 
   filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type) %>% 
-  summarize(season_hit) %>% ungroup() %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
+  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1-season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
   relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>% select(-c(slugTeam,idPlayer))
@@ -1380,7 +1428,7 @@ reactable(highlight = TRUE, striped = TRUE,pt_reb_picks, columns = list(namePlay
                                                                                                                      max_value = 1, 
                                                                                                                      text_position = 'outside-end',
                                                                                                                      number_fmt = scales::percent))),
-          theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE)
+          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE) %>% add_title("Under Success Rates") %>% add_subtitle("2024/25 Regular Season")
 
 
 
@@ -1522,7 +1570,7 @@ ast_reb_df_join <- ast_reb_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type
 
 ast_reb_picks <- ast_reb_df %>% left_join(ast_reb_df_join, by = c("namePlayer","idPlayer")) %>% 
   filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type) %>% 
-  summarize(season_hit) %>% ungroup() %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
+  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
   relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>% select(-c(slugTeam,idPlayer))
@@ -1566,7 +1614,7 @@ reactable(highlight = TRUE, striped = TRUE,ast_reb_picks, columns = list(namePla
                                                                                                                    max_value = 1, 
                                                                                                                    text_position = 'outside-end',
                                                                                                                    number_fmt = scales::percent))),
-          theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE)
+          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE) %>% add_title("Under Success Rates") %>% add_subtitle("2024/25 Regular Season")
 
 
 
@@ -1711,7 +1759,7 @@ stl_blk_df_join <- stl_blk_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type
 
 stl_blk_picks <- stl_blk_df %>% left_join(stl_blk_df_join, by = c("namePlayer","idPlayer")) %>% 
   filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type) %>% 
-  summarize(season_hit) %>% ungroup() %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
+  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
   relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>% select(-c(slugTeam,idPlayer))
@@ -1757,4 +1805,1333 @@ reactable(highlight = TRUE, striped = TRUE,stl_blk_picks, columns = list(namePla
                                                                                                                     max_value = 1, 
                                                                                                                     text_position = 'outside-end',
                                                                                                                     number_fmt = scales::percent))),
-          theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE)
+          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE) %>% add_title("Under Success Rates") %>% add_subtitle("2024/25 Regular Season")
+
+
+##Three Pointers Made
+
+
+fg3m <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,6.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,fg3m)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(fg3m > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+fg3m <- bind_rows(fg3m) %>% unnest(cols = everything()) %>% mutate(Type = "Regular Season")
+
+
+##Three Pointers Made Home Games
+
+
+fg3m_home <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,6.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == "H") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,fg3m)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(fg3m > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+fg3m_home <- bind_rows(fg3m_home) %>% unnest(cols = everything()) %>% mutate(Type = "Home Games")
+
+
+##Three Pointers Made Away Games
+
+
+fg3m_away <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,6.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == "A") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,fg3m)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(fg3m > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+fg3m_away <- bind_rows(fg3m_away) %>% unnest(cols = everything()) %>% mutate(Type = "Away Games")
+
+
+
+##Three Pointers Made Last 10
+
+
+fg3m_ten <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,6.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,fg3m) %>% arrange(desc(dateGame)) %>% head(10)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(fg3m > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+fg3m_ten <- bind_rows(fg3m_ten) %>% unnest(cols = everything()) %>% mutate(Type = "Last 10")
+
+
+
+##Three Pointers Made Last 5
+
+
+fg3m_five <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,6.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,fg3m) %>% arrange(desc(dateGame)) %>% head(5)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(fg3m > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+fg3m_five <- bind_rows(fg3m_five) %>% unnest(cols = everything()) %>% mutate(Type = "Last 5")
+
+
+
+fg3m_df <- bind_rows(fg3m,fg3m_away,fg3m_home,fg3m_five,fg3m_ten)
+
+fg3m_df$namePlayer <- stri_trans_general(str = fg3m_df$namePlayer, id = "Latin-ASCII")
+
+
+fg3m_df <- fg3m_df %>% left_join(dk_fg3m, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test)
+
+fg3m_df_join <- fg3m_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
+  group_by(namePlayer,idPlayer) %>% summarize(Ident = mean(Ident))
+
+fg3m_picks <- fg3m_df %>% left_join(fg3m_df_join, by = c("namePlayer","idPlayer")) %>% 
+  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type) %>% 
+  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
+  left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
+  left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
+  relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>% select(-c(slugTeam,idPlayer))
+
+
+
+
+reactable(highlight = TRUE, striped = TRUE,fg3m_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
+                                                                         urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                         OU = colDef(name = "Total Threes Made O/U",width = 110),
+                                                                         `Away Games` = colDef(cell = data_bars(fg3m_picks, 
+                                                                                                                fill_color = color_set, 
+                                                                                                                background = '#F1F1F1', 
+                                                                                                                min_value = 0, 
+                                                                                                                max_value = 1, 
+                                                                                                                text_position = 'outside-end',
+                                                                                                                number_fmt = scales::percent)),
+                                                                         `Home Games` = colDef(cell = data_bars(fg3m_picks, 
+                                                                                                                fill_color = color_set, 
+                                                                                                                background = '#F1F1F1', 
+                                                                                                                min_value = 0, 
+                                                                                                                max_value = 1, 
+                                                                                                                text_position = 'outside-end',
+                                                                                                                number_fmt = scales::percent)),
+                                                                         `Last 10` = colDef(cell = data_bars(fg3m_picks, 
+                                                                                                             fill_color = color_set, 
+                                                                                                             background = '#F1F1F1', 
+                                                                                                             min_value = 0, 
+                                                                                                             max_value = 1, 
+                                                                                                             text_position = 'outside-end',
+                                                                                                             number_fmt = scales::percent)),
+                                                                         `Last 5` = colDef(cell = data_bars(fg3m_picks, 
+                                                                                                            fill_color = color_set, 
+                                                                                                            background = '#F1F1F1', 
+                                                                                                            min_value = 0, 
+                                                                                                            max_value = 1, 
+                                                                                                            text_position = 'outside-end',
+                                                                                                            number_fmt = scales::percent)),
+                                                                         `Regular Season` = colDef(cell = data_bars(fg3m_picks, 
+                                                                                                                    fill_color = color_set, 
+                                                                                                                    background = '#F1F1F1', 
+                                                                                                                    min_value = 0, 
+                                                                                                                    max_value = 1, 
+                                                                                                                    text_position = 'outside-end',
+                                                                                                                    number_fmt = scales::percent))),
+          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE) %>% add_title("Under Success Rates") %>% add_subtitle("2024/25 Regular Season")
+
+
+
+##Steals
+
+
+stl <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,5.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,stl)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(stl > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+stl <- bind_rows(stl) %>% unnest(cols = everything()) %>% mutate(Type = "Regular Season")
+
+
+##Steals Home Games
+
+
+stl_home <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,5.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == "H") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,stl)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(stl > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+stl_home <- bind_rows(stl_home) %>% unnest(cols = everything()) %>% mutate(Type = "Home Games")
+
+
+
+##Steals Away Games
+
+
+stl_away <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,5.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == "A") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,stl)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(stl > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+stl_away <- bind_rows(stl_home) %>% unnest(cols = everything()) %>% mutate(Type = "Away Games")
+
+
+##Steals Last 10
+
+
+stl_ten <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,5.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,stl) %>% arrange(desc(dateGame)) %>% head(10)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(stl > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+stl_ten <- bind_rows(stl_ten) %>% unnest(cols = everything()) %>% mutate(Type = "Last 10")
+
+
+
+##Steals Last 5
+
+
+stl_five <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,5.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,stl) %>% arrange(desc(dateGame)) %>% head(5)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(stl > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+stl_five <- bind_rows(stl_five) %>% unnest(cols = everything()) %>% mutate(Type = "Last 5")
+
+stl_df <- bind_rows(stl,stl_away,stl_home,stl_five,stl_ten)
+
+stl_df$namePlayer <- stri_trans_general(str = stl_df$namePlayer, id = "Latin-ASCII")
+
+
+stl_df <- stl_df %>% left_join(dk_stl, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test)
+
+stl_df_join <- stl_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
+  group_by(namePlayer,idPlayer) %>% summarize(Ident = mean(Ident))
+
+stl_picks <- stl_df %>% left_join(stl_df_join, by = c("namePlayer","idPlayer")) %>% 
+  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type) %>% 
+  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 -season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
+  left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
+  left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
+  relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>% select(-c(slugTeam,idPlayer))
+
+
+
+
+reactable(highlight = TRUE, striped = TRUE,stl_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
+                                                                      urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                      OU = colDef(name = "Total Steals O/U",width = 110),
+                                                                      `Away Games` = colDef(cell = data_bars(stl_picks, 
+                                                                                                             fill_color = color_set, 
+                                                                                                             background = '#F1F1F1', 
+                                                                                                             min_value = 0, 
+                                                                                                             max_value = 1, 
+                                                                                                             text_position = 'outside-end',
+                                                                                                             number_fmt = scales::percent)),
+                                                                      `Home Games` = colDef(cell = data_bars(stl_picks, 
+                                                                                                             fill_color = color_set, 
+                                                                                                             background = '#F1F1F1', 
+                                                                                                             min_value = 0, 
+                                                                                                             max_value = 1, 
+                                                                                                             text_position = 'outside-end',
+                                                                                                             number_fmt = scales::percent)),
+                                                                      `Last 10` = colDef(cell = data_bars(stl_picks, 
+                                                                                                          fill_color = color_set, 
+                                                                                                          background = '#F1F1F1', 
+                                                                                                          min_value = 0, 
+                                                                                                          max_value = 1, 
+                                                                                                          text_position = 'outside-end',
+                                                                                                          number_fmt = scales::percent)),
+                                                                      `Last 5` = colDef(cell = data_bars(stl_picks, 
+                                                                                                         fill_color = color_set, 
+                                                                                                         background = '#F1F1F1', 
+                                                                                                         min_value = 0, 
+                                                                                                         max_value = 1, 
+                                                                                                         text_position = 'outside-end',
+                                                                                                         number_fmt = scales::percent)),
+                                                                      `Regular Season` = colDef(cell = data_bars(stl_picks, 
+                                                                                                                 fill_color = color_set, 
+                                                                                                                 background = '#F1F1F1', 
+                                                                                                                 min_value = 0, 
+                                                                                                                 max_value = 1, 
+                                                                                                                 text_position = 'outside-end',
+                                                                                                                 number_fmt = scales::percent))),
+          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE) %>% add_title("Under Success Rates") %>% add_subtitle("2024/25 Regular Season")
+
+
+
+##Blocks
+
+
+blk <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,5.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,blk)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(blk > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+blk <- bind_rows(blk) %>% unnest(cols = everything()) %>% mutate(Type = "Regular Season")
+
+
+##Blocks Home Games
+
+
+blk_home <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,5.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == "H") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,blk)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(blk > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+blk_home <- bind_rows(blk_home) %>% unnest(cols = everything()) %>% mutate(Type = "Home Games")
+
+
+
+##Blocks Away Games
+
+
+blk_away <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,5.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == "A") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,blk)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(blk > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+blk_away <- bind_rows(blk_home) %>% unnest(cols = everything()) %>% mutate(Type = "Away Games")
+
+
+##Blocks Last 10
+
+
+blk_ten <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,5.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,blk) %>% arrange(desc(dateGame)) %>% head(10)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(blk > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+blk_ten <- bind_rows(blk_ten) %>% unnest(cols = everything()) %>% mutate(Type = "Last 10")
+
+
+
+##Blocks Last 5
+
+
+blk_five <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,5.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,blk) %>% arrange(desc(dateGame)) %>% head(5)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(blk > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+blk_five <- bind_rows(blk_five) %>% unnest(cols = everything()) %>% mutate(Type = "Last 5")
+
+blk_df <- bind_rows(blk,blk_away,blk_home,blk_five,blk_ten)
+
+blk_df$namePlayer <- stri_trans_general(str = blk_df$namePlayer, id = "Latin-ASCII")
+
+
+blk_df <- blk_df %>% left_join(dk_blk, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test)
+
+blk_df_join <- blk_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
+  group_by(namePlayer,idPlayer) %>% summarize(Ident = mean(Ident))
+
+blk_picks <- blk_df %>% left_join(blk_df_join, by = c("namePlayer","idPlayer")) %>% 
+  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type) %>% 
+  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
+  left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
+  left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
+  relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>% select(-c(slugTeam,idPlayer))
+
+
+
+
+reactable(highlight = TRUE, striped = TRUE,blk_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
+                                                                     urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                     OU = colDef(name = "Total Blocks O/U",width = 110),
+                                                                     `Away Games` = colDef(cell = data_bars(blk_picks, 
+                                                                                                            fill_color = color_set, 
+                                                                                                            background = '#F1F1F1', 
+                                                                                                            min_value = 0, 
+                                                                                                            max_value = 1, 
+                                                                                                            text_position = 'outside-end',
+                                                                                                            number_fmt = scales::percent)),
+                                                                     `Home Games` = colDef(cell = data_bars(blk_picks, 
+                                                                                                            fill_color = color_set, 
+                                                                                                            background = '#F1F1F1', 
+                                                                                                            min_value = 0, 
+                                                                                                            max_value = 1, 
+                                                                                                            text_position = 'outside-end',
+                                                                                                            number_fmt = scales::percent)),
+                                                                     `Last 10` = colDef(cell = data_bars(blk_picks, 
+                                                                                                         fill_color = color_set, 
+                                                                                                         background = '#F1F1F1', 
+                                                                                                         min_value = 0, 
+                                                                                                         max_value = 1, 
+                                                                                                         text_position = 'outside-end',
+                                                                                                         number_fmt = scales::percent)),
+                                                                     `Last 5` = colDef(cell = data_bars(blk_picks, 
+                                                                                                        fill_color = color_set, 
+                                                                                                        background = '#F1F1F1', 
+                                                                                                        min_value = 0, 
+                                                                                                        max_value = 1, 
+                                                                                                        text_position = 'outside-end',
+                                                                                                        number_fmt = scales::percent)),
+                                                                     `Regular Season` = colDef(cell = data_bars(blk_picks, 
+                                                                                                                fill_color = color_set, 
+                                                                                                                background = '#F1F1F1', 
+                                                                                                                min_value = 0, 
+                                                                                                                max_value = 1, 
+                                                                                                                text_position = 'outside-end',
+                                                                                                                number_fmt = scales::percent))),
+          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE) %>% add_title("Under Success Rates") %>% add_subtitle("2024/25 Regular Season")
+
+
+
+##Turnovers
+
+
+tov <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,5.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,tov)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(tov > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+tov <- bind_rows(tov) %>% unnest(cols = everything()) %>% mutate(Type = "Regular Season")
+
+
+##Turnovers Home Games
+
+
+tov_home <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,5.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == "H") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,tov)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(tov > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+tov_home <- bind_rows(tov_home) %>% unnest(cols = everything()) %>% mutate(Type = "Home Games")
+
+
+
+##Turnovers Away Games
+
+
+tov_away <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,5.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == "A") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,tov)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(tov > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+tov_away <- bind_rows(tov_home) %>% unnest(cols = everything()) %>% mutate(Type = "Away Games")
+
+
+##Turnovers Last 10
+
+
+tov_ten <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,5.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,tov) %>% arrange(desc(dateGame)) %>% head(10)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(tov > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+tov_ten <- bind_rows(tov_ten) %>% unnest(cols = everything()) %>% mutate(Type = "Last 10")
+
+
+
+##Turnovers Last 5
+
+
+tov_five <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,5.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,tov) %>% arrange(desc(dateGame)) %>% head(5)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(tov > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+tov_five <- bind_rows(tov_five) %>% unnest(cols = everything()) %>% mutate(Type = "Last 5")
+
+tov_df <- bind_rows(tov,tov_away,tov_home,tov_five,tov_ten)
+
+tov_df$namePlayer <- stri_trans_general(str = tov_df$namePlayer, id = "Latin-ASCII")
+
+
+tov_df <- tov_df %>% left_join(dk_tov, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test)
+
+tov_df_join <- tov_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
+  group_by(namePlayer,idPlayer) %>% summarize(Ident = mean(Ident))
+
+tov_picks <- tov_df %>% left_join(tov_df_join, by = c("namePlayer","idPlayer")) %>% 
+  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type) %>% 
+  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%
+  pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
+  left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
+  left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
+  relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>% select(-c(slugTeam,idPlayer))
+
+
+
+
+reactable(highlight = TRUE, striped = TRUE,tov_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
+                                                                     urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                     OU = colDef(name = "Total Turnovers O/U",width = 110),
+                                                                     `Away Games` = colDef(cell = data_bars(tov_picks, 
+                                                                                                            fill_color = color_set, 
+                                                                                                            background = '#F1F1F1', 
+                                                                                                            min_value = 0, 
+                                                                                                            max_value = 1, 
+                                                                                                            text_position = 'outside-end',
+                                                                                                            number_fmt = scales::percent)),
+                                                                     `Home Games` = colDef(cell = data_bars(tov_picks, 
+                                                                                                            fill_color = color_set, 
+                                                                                                            background = '#F1F1F1', 
+                                                                                                            min_value = 0, 
+                                                                                                            max_value = 1, 
+                                                                                                            text_position = 'outside-end',
+                                                                                                            number_fmt = scales::percent)),
+                                                                     `Last 10` = colDef(cell = data_bars(tov_picks, 
+                                                                                                         fill_color = color_set, 
+                                                                                                         background = '#F1F1F1', 
+                                                                                                         min_value = 0, 
+                                                                                                         max_value = 1, 
+                                                                                                         text_position = 'outside-end',
+                                                                                                         number_fmt = scales::percent)),
+                                                                     `Last 5` = colDef(cell = data_bars(tov_picks, 
+                                                                                                        fill_color = color_set, 
+                                                                                                        background = '#F1F1F1', 
+                                                                                                        min_value = 0, 
+                                                                                                        max_value = 1, 
+                                                                                                        text_position = 'outside-end',
+                                                                                                        number_fmt = scales::percent)),
+                                                                     `Regular Season` = colDef(cell = data_bars(tov_picks, 
+                                                                                                                fill_color = color_set, 
+                                                                                                                background = '#F1F1F1', 
+                                                                                                                min_value = 0, 
+                                                                                                                max_value = 1, 
+                                                                                                                text_position = 'outside-end',
+                                                                                                                number_fmt = scales::percent))),
+          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE) %>% add_title("Under Success Rates") %>% add_subtitle("2024/25 Regular Season")
+
+
+##Points
+
+
+pts <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(3.5,40.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,pts)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(pts > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+pts <- bind_rows(pts) %>% unnest(cols = everything()) %>% mutate(Type = "Regular Season")
+
+
+##Points Home Games
+
+
+pts_home <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(3.5,40.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == "H") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,pts)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(pts > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+pts_home <- bind_rows(pts_home) %>% unnest(cols = everything()) %>% mutate(Type = "Home Games")
+
+
+
+##Points Away Games
+
+
+pts_away <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(3.5,40.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == "A") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,pts)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(pts > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+pts_away <- bind_rows(pts_home) %>% unnest(cols = everything()) %>% mutate(Type = "Away Games")
+
+
+##Points Last 10
+
+
+pts_ten <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(3.5,40.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,pts) %>% arrange(desc(dateGame)) %>% head(10)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(pts > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+pts_ten <- bind_rows(pts_ten) %>% unnest(cols = everything()) %>% mutate(Type = "Last 10")
+
+
+
+##Points Last 5
+
+
+pts_five <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(3.5,40.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,pts) %>% arrange(desc(dateGame)) %>% head(5)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(pts > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+pts_five <- bind_rows(pts_five) %>% unnest(cols = everything()) %>% mutate(Type = "Last 5")
+
+pts_df <- bind_rows(pts,pts_away,pts_home,pts_five,pts_ten)
+
+pts_df$namePlayer <- stri_trans_general(str = pts_df$namePlayer, id = "Latin-ASCII")
+
+
+pts_df <- pts_df %>% left_join(dk_pts, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test)
+
+pts_df_join <- pts_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
+  group_by(namePlayer,idPlayer) %>% summarize(Ident = mean(Ident))
+
+pts_picks <- pts_df %>% left_join(pts_df_join, by = c("namePlayer","idPlayer")) %>% 
+  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type) %>% 
+  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1-season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
+  left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
+  left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
+  relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>% select(-c(slugTeam,idPlayer))
+
+
+
+
+reactable(highlight = TRUE, striped = TRUE,pts_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
+                                                                     urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                     OU = colDef(name = "Total Points O/U",width = 110),
+                                                                     `Away Games` = colDef(cell = data_bars(pts_picks, 
+                                                                                                            fill_color = color_set, 
+                                                                                                            background = '#F1F1F1', 
+                                                                                                            min_value = 0, 
+                                                                                                            max_value = 1, 
+                                                                                                            text_position = 'outside-end',
+                                                                                                            number_fmt = scales::percent)),
+                                                                     `Home Games` = colDef(cell = data_bars(pts_picks, 
+                                                                                                            fill_color = color_set, 
+                                                                                                            background = '#F1F1F1', 
+                                                                                                            min_value = 0, 
+                                                                                                            max_value = 1, 
+                                                                                                            text_position = 'outside-end',
+                                                                                                            number_fmt = scales::percent)),
+                                                                     `Last 10` = colDef(cell = data_bars(pts_picks, 
+                                                                                                         fill_color = color_set, 
+                                                                                                         background = '#F1F1F1', 
+                                                                                                         min_value = 0, 
+                                                                                                         max_value = 1, 
+                                                                                                         text_position = 'outside-end',
+                                                                                                         number_fmt = scales::percent)),
+                                                                     `Last 5` = colDef(cell = data_bars(pts_picks, 
+                                                                                                        fill_color = color_set, 
+                                                                                                        background = '#F1F1F1', 
+                                                                                                        min_value = 0, 
+                                                                                                        max_value = 1, 
+                                                                                                        text_position = 'outside-end',
+                                                                                                        number_fmt = scales::percent)),
+                                                                     `Regular Season` = colDef(cell = data_bars(pts_picks, 
+                                                                                                                fill_color = color_set, 
+                                                                                                                background = '#F1F1F1', 
+                                                                                                                min_value = 0, 
+                                                                                                                max_value = 1, 
+                                                                                                                text_position = 'outside-end',
+                                                                                                                number_fmt = scales::percent))),
+          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE) %>% add_title("Under Success Rates") %>% add_subtitle("2024/25 Regular Season")
+
+
+
+##Assists
+
+
+ast <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,13.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    mutate(ast_reb_ast = ast+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,ast)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(ast > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+ast <- bind_rows(ast) %>% unnest(cols = everything()) %>% mutate(Type = "Regular Season")
+
+
+##Assists Home Games
+
+
+ast_home <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,13.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == "H") %>% 
+    mutate(ast_reb_ast = ast+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,ast)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(ast > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+ast_home <- bind_rows(ast_home) %>% unnest(cols = everything()) %>% mutate(Type = "Home Games")
+
+
+
+##Assists Away Games
+
+
+ast_away <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,13.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == "A") %>% 
+    mutate(ast_reb_ast = ast+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,ast)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(ast > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+ast_away <- bind_rows(ast_home) %>% unnest(cols = everything()) %>% mutate(Type = "Away Games")
+
+
+##Assists Last 10
+
+
+ast_ten <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,13.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    mutate(ast_reb_ast = ast+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,ast) %>% arrange(desc(dateGame)) %>% head(10)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(ast > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+ast_ten <- bind_rows(ast_ten) %>% unnest(cols = everything()) %>% mutate(Type = "Last 10")
+
+
+
+##Assists Last 5
+
+
+ast_five <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,13.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    mutate(ast_reb_ast = ast+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,ast) %>% arrange(desc(dateGame)) %>% head(5)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(ast > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+ast_five <- bind_rows(ast_five) %>% unnest(cols = everything()) %>% mutate(Type = "Last 5")
+
+ast_df <- bind_rows(ast,ast_away,ast_home,ast_five,ast_ten)
+
+ast_df$namePlayer <- stri_trans_general(str = ast_df$namePlayer, id = "Latin-ASCII")
+
+
+ast_df <- ast_df %>% left_join(dk_ast, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test)
+
+ast_df_join <- ast_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
+  group_by(namePlayer,idPlayer) %>% summarize(Ident = mean(Ident))
+
+ast_picks <- ast_df %>% left_join(ast_df_join, by = c("namePlayer","idPlayer")) %>% 
+  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type) %>% 
+  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%
+  pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
+  left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
+  left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
+  relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>% select(-c(slugTeam,idPlayer))
+
+
+
+
+reactable(highlight = TRUE, striped = TRUE,ast_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
+                                                                     urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                     OU = colDef(name = "Total Assists O/U",width = 110),
+                                                                     `Away Games` = colDef(cell = data_bars(ast_picks, 
+                                                                                                            fill_color = color_set, 
+                                                                                                            background = '#F1F1F1', 
+                                                                                                            min_value = 0, 
+                                                                                                            max_value = 1, 
+                                                                                                            text_position = 'outside-end',
+                                                                                                            number_fmt = scales::percent)),
+                                                                     `Home Games` = colDef(cell = data_bars(ast_picks, 
+                                                                                                            fill_color = color_set, 
+                                                                                                            background = '#F1F1F1', 
+                                                                                                            min_value = 0, 
+                                                                                                            max_value = 1, 
+                                                                                                            text_position = 'outside-end',
+                                                                                                            number_fmt = scales::percent)),
+                                                                     `Last 10` = colDef(cell = data_bars(ast_picks, 
+                                                                                                         fill_color = color_set, 
+                                                                                                         background = '#F1F1F1', 
+                                                                                                         min_value = 0, 
+                                                                                                         max_value = 1, 
+                                                                                                         text_position = 'outside-end',
+                                                                                                         number_fmt = scales::percent)),
+                                                                     `Last 5` = colDef(cell = data_bars(ast_picks, 
+                                                                                                        fill_color = color_set, 
+                                                                                                        background = '#F1F1F1', 
+                                                                                                        min_value = 0, 
+                                                                                                        max_value = 1, 
+                                                                                                        text_position = 'outside-end',
+                                                                                                        number_fmt = scales::percent)),
+                                                                     `Regular Season` = colDef(cell = data_bars(ast_picks, 
+                                                                                                                fill_color = color_set, 
+                                                                                                                background = '#F1F1F1', 
+                                                                                                                min_value = 0, 
+                                                                                                                max_value = 1, 
+                                                                                                                text_position = 'outside-end',
+                                                                                                                number_fmt = scales::percent))),
+          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE) %>% add_title("Under Success Rates") %>% add_subtitle("2024/25 Regular Season")
+
+
+
+##Rebounds
+
+
+treb <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,17.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    mutate(treb_reb_treb = treb+treb+treb) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,treb)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(treb > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+treb <- bind_rows(treb) %>% unnest(cols = everything()) %>% mutate(Type = "Regular Season")
+
+
+##Rebounds Home Games
+
+
+treb_home <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,17.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == "H") %>% 
+    mutate(treb_reb_treb = treb+treb+treb) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,treb)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(treb > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+treb_home <- bind_rows(treb_home) %>% unnest(cols = everything()) %>% mutate(Type = "Home Games")
+
+
+
+##Rebounds Away Games
+
+
+treb_away <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,17.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == "A") %>% 
+    mutate(treb_reb_treb = treb+treb+treb) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,treb)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(treb > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+treb_away <- bind_rows(treb_home) %>% unnest(cols = everything()) %>% mutate(Type = "Away Games")
+
+
+##Rebounds Last 10
+
+
+treb_ten <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,17.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    mutate(treb_reb_treb = treb+treb+treb) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,treb) %>% arrange(desc(dateGame)) %>% head(10)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(treb > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+treb_ten <- bind_rows(treb_ten) %>% unnest(cols = everything()) %>% mutate(Type = "Last 10")
+
+
+
+##Rebounds Last 5
+
+
+treb_five <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  hit_rate <- seq(0.5,17.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    mutate(treb_reb_treb = treb+treb+treb) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,treb) %>% arrange(desc(dateGame)) %>% head(5)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(treb > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() 
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+treb_five <- bind_rows(treb_five) %>% unnest(cols = everything()) %>% mutate(Type = "Last 5")
+
+treb_df <- bind_rows(treb,treb_away,treb_home,treb_five,treb_ten)
+
+treb_df$namePlayer <- stri_trans_general(str = treb_df$namePlayer, id = "Latin-ASCII")
+
+
+treb_df <- treb_df %>% left_join(dk_reb, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test)
+
+treb_df_join <- treb_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
+  group_by(namePlayer,idPlayer) %>% summarize(Ident = mean(Ident))
+
+treb_picks <- treb_df %>% left_join(treb_df_join, by = c("namePlayer","idPlayer")) %>% 
+  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type) %>% 
+  summarize(season_hit) %>% ungroup() %>%
+  mutate(season_hit = 1-season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
+  left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
+  left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>% 
+  left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% summarize(GP = n()), by = "idPlayer") %>%
+  relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>% relocate(GP, .after = OU) %>% select(-c(slugTeam,idPlayer))
+
+
+
+
+reactable(highlight = TRUE,treb_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110,
+                                                                          style = cell_style(font_weight = "bold")),
+                                                                      urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                      OU = colDef(name = "Total Rebounds O/U",width = 110),
+                                                                      `Away Games` = colDef(cell = data_bars(treb_picks, 
+                                                                                                             fill_color = color_set, 
+                                                                                                             background = '#F1F1F1', 
+                                                                                                             min_value = 0, 
+                                                                                                             max_value = 1, 
+                                                                                                             text_position = 'outside-end',
+                                                                                                             number_fmt = scales::percent,
+                                                                                                             bold_text = TRUE)),
+                                                                      `Home Games` = colDef(cell = data_bars(treb_picks, 
+                                                                                                             fill_color = color_set, 
+                                                                                                             background = '#F1F1F1', 
+                                                                                                             min_value = 0, 
+                                                                                                             max_value = 1, 
+                                                                                                             text_position = 'outside-end',
+                                                                                                             number_fmt = scales::percent,
+                                                                                                             bold_text = TRUE)),
+                                                                      `Last 10` = colDef(cell = data_bars(treb_picks, 
+                                                                                                           fill_color = color_set, 
+                                                                                                           background = '#F1F1F1', 
+                                                                                                           min_value = 0, 
+                                                                                                           max_value = 1, 
+                                                                                                           text_position = 'outside-end',
+                                                                                                           number_fmt = scales::percent,
+                                                                                                          bold_text = TRUE)),
+                                                                      `Last 5` = colDef(cell = data_bars(treb_picks, 
+                                                                                                          fill_color = color_set, 
+                                                                                                          background = '#F1F1F1', 
+                                                                                                          min_value = 0, 
+                                                                                                          max_value = 1, 
+                                                                                                          text_position = 'outside-end',
+                                                                                                          number_fmt = scales::percent,
+                                                                                                         bold_text = TRUE)),
+                                                                      `Regular Season` = colDef(cell = data_bars(treb_picks, 
+                                                                                                                 fill_color = color_set, 
+                                                                                                                 background = '#F1F1F1', 
+                                                                                                                 min_value = 0, 
+                                                                                                                 max_value = 1, 
+                                                                                                                 text_position = 'outside-end',
+                                                                                                                 number_fmt = scales::percent,
+                                                                                                                 bold_text = TRUE))),
+          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE) %>% add_title("Under Success Rates") %>% add_subtitle("2024/25 Regular Season")
+
+
+

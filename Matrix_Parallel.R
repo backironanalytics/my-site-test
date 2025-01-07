@@ -209,7 +209,7 @@ pt <- lapply(next_team_batch$idPlayer, function(x){
   
   hit_rate_above <- lapply(hit_rate, function(x){
     
-    df %>% mutate(test = mean(pts > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+    df %>% mutate(test = mean(pts > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
       ungroup() %>% mutate(slugTeam = slug_team)
     
   })
@@ -222,7 +222,7 @@ pt <- bind_rows(pt) %>% pivot_wider(names_from = OU, values_from = test) %>% unn
 
 pt_pivoted <- pt %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                  summarize(GP = n()), by = "idPlayer")  %>% 
-  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
+  left_join(teams, by = "slugTeam")   %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
 ##Ast
@@ -238,7 +238,7 @@ ast <- lapply(next_team_batch$idPlayer, function(x){
   
   hit_rate_above <- lapply(hit_rate, function(x){
     
-    df %>% mutate(test = mean(ast > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+    df %>% mutate(test = mean(ast > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
       ungroup() %>% mutate(slugTeam = slug_team)
     
   })
@@ -250,8 +250,8 @@ ast <- lapply(next_team_batch$idPlayer, function(x){
 ast <- bind_rows(ast) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
 ast_pivoted <- ast %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
-                                   summarize(GP = n()), by = "idPlayer")  %>% 
-  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)   %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
+                                   summarize(GP = n()), by = "idPlayer")   %>% 
+  left_join(teams, by = "slugTeam")   %>% rename(Player = namePlayer, Team = slugTeam)   %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
 
@@ -268,7 +268,7 @@ reb <- lapply(next_team_batch$idPlayer, function(x){
   
   hit_rate_above <- lapply(hit_rate, function(x){
     
-    df %>% mutate(test = mean(treb > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+    df %>% mutate(test = mean(treb > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
       ungroup() %>% mutate(slugTeam = slug_team)
     
   })
@@ -281,7 +281,7 @@ reb <- bind_rows(reb) %>% pivot_wider(names_from = OU, values_from = test)%>% un
 
 reb_pivoted <- reb %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                    summarize(GP = n()), by = "idPlayer")  %>% 
-  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
+  left_join(teams, by = "slugTeam")   %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
 
@@ -298,7 +298,7 @@ fg3m <- lapply(next_team_batch$idPlayer, function(x){
   
   hit_rate_above <- lapply(hit_rate, function(x){
     
-    df %>% mutate(test = mean(fg3m > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+    df %>% mutate(test = mean(fg3m > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
       ungroup() %>% mutate(slugTeam = slug_team)
     
   })
@@ -329,7 +329,7 @@ fg3a <- lapply(next_team_batch$idPlayer, function(x){
   
   hit_rate_above <- lapply(hit_rate, function(x){
     
-    df %>% mutate(test = mean(fg3a > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+    df %>% mutate(test = mean(fg3a > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
       ungroup() %>% mutate(slugTeam = slug_team)
     
   })
@@ -341,7 +341,7 @@ fg3a <- lapply(next_team_batch$idPlayer, function(x){
 fg3a <- bind_rows(fg3a) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
 fg3a_pivoted <- fg3a %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
-                                     summarize(GP = n()), by = "idPlayer")  %>% 
+                                     summarize(GP = n()), by = "idPlayer")   %>% 
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
@@ -358,7 +358,7 @@ stl <- lapply(next_team_batch$idPlayer, function(x){
   
   hit_rate_above <- lapply(hit_rate, function(x){
     
-    df %>% mutate(test = mean(stl > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+    df %>% mutate(test = mean(stl > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
       ungroup() %>% mutate(slugTeam = slug_team)
     
   })
@@ -370,7 +370,7 @@ stl <- lapply(next_team_batch$idPlayer, function(x){
 stl <- bind_rows(stl) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
 stl_pivoted <- stl %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
-                                   summarize(GP = n()), by = "idPlayer")  %>% 
+                                   summarize(GP = n()), by = "idPlayer")   %>% 
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
@@ -389,7 +389,7 @@ blk <- lapply(next_team_batch$idPlayer, function(x){
   
   hit_rate_above <- lapply(hit_rate, function(x){
     
-    df %>% mutate(test = mean(blk > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+    df %>% mutate(test = mean(blk > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
       ungroup() %>% mutate(slugTeam = slug_team)
     
   })
@@ -401,7 +401,7 @@ blk <- lapply(next_team_batch$idPlayer, function(x){
 blk <- bind_rows(blk) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
 blk_pivoted <- blk %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
-                                   summarize(GP = n()), by = "idPlayer")  %>% 
+                                   summarize(GP = n()), by = "idPlayer")   %>% 
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
@@ -420,7 +420,7 @@ tov <- lapply(next_team_batch$idPlayer, function(x){
   
   hit_rate_above <- lapply(hit_rate, function(x){
     
-    df %>% mutate(test = mean(tov > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+    df %>% mutate(test = mean(tov > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
       ungroup() %>% mutate(slugTeam = slug_team)
     
   })

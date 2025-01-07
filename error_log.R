@@ -17,42 +17,259 @@ processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/1629627162.html
+Output created: sheets/203081203.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/1630529163.html
+Output created: sheets/1626171162.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/203468203.html
+Output created: sheets/203507203.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/1627749162.html
+Output created: sheets/1629632162.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/1627742162.html
+Output created: sheets/1628366162.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/1630530163.html
+Output created: sheets/1630581163.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/203897203.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/202696202.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1630172163.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1626179162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1631107163.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1628389162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1629639162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/202710202.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1629130162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1631105163.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1630595163.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1627736162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/203501203.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/202699202.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1630178163.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/200768200.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/202331202.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1626162162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1628997162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/203954203.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1626220162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1626164162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/203078203.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1628960162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/203994203.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/201142201.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/203486203.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1628404162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1628384162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1628973162.html
+
+
+processing file: ML_Parlay_TBRv15_2025.Rmd
+output file: ML_Parlay_TBRv15_2025.knit.md
+
+
+Output created: sheets/1626157162.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
@@ -101,224 +318,70 @@ processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/1630228163.html
+Output created: sheets/201935201.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/1627741162.html
+Output created: sheets/1628964162.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/203952203.html
+Output created: sheets/1629611162.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/203110203.html
+Output created: sheets/1626181162.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/201939201.html
+Output created: sheets/1627826162.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/203903203.html
+Output created: sheets/1641711164.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/1629012162.html
+Output created: sheets/1630567163.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/1641718164.html
+Output created: sheets/1629628162.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/1628381162.html
+Output created: sheets/1627751162.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/1642271164.html
-
-
-processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/1628374162.html
-
-
-processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/1628369162.html
-
-
-processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/201950201.html
-
-
-processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/1627759162.html
-
-
-processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/1628401162.html
-
-
-processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/201143201.html
-
-
-processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/1629673162.html
-
-
-processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/1628398162.html
-
-
-processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/1630224163.html
-
-
-processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/1627832162.html
-
-
-processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/1628415162.html
-
-
-processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/1631095163.html
-
-
-processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/203500203.html
-
-
-processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/1630578163.html
-
-
-processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/1626156162.html
-
-
-processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/1626156162.html
-
-
-processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/203076203.html
-
-
-processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/1642261164.html
-
-
-processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/1629629162.html
-
-
-processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/1630559163.html
-
-
-processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/2544254.html
-
-
-processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/1629060162.html
+Output created: sheets/1630534163.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
@@ -360,110 +423,77 @@ processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/1628970162.html
+Output created: sheets/1641726164.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/1630163163.html
+Output created: sheets/203939203.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/1631109163.html
+Output created: sheets/202681202.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/1630182163.html
+Output created: sheets/1630230163.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/1630544163.html
+Output created: sheets/1629655162.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/1641706164.html
+Output created: sheets/1629023162.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/203552203.html
+Output created: sheets/203915203.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/201959201.html
+Output created: sheets/202691202.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/1627747162.html
+Output created: sheets/1629029162.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/1630596163.html
+Output created: sheets/1628978162.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
 output file: ML_Parlay_TBRv15_2025.knit.md
 
 
-Output created: sheets/1629636162.html
+Output created: sheets/1630183163.html
 
 
 processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/1628386162.html
-
-
-processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/1628378162.html
-
-
-processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/1628983162.html
-
-
-processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/1631096163.html
-
-
-processing file: ML_Parlay_TBRv15_2025.Rmd
-output file: ML_Parlay_TBRv15_2025.knit.md
-
-
-Output created: sheets/1627936162.html
-There were 25 warnings (use warnings() to see them)

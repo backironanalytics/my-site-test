@@ -568,56 +568,66 @@ ptreb_ast_df <- bind_rows(ptrebast,ptrebast_away,ptrebast_home,ptrebast_five,ptr
 ptreb_ast_df$namePlayer <- stri_trans_general(str = ptreb_ast_df$namePlayer, id = "Latin-ASCII")
 
 
-ptreb_ast_df <- ptreb_ast_df %>% left_join(dk_ptrebast, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test)
+ptreb_ast_df <- ptreb_ast_df %>% left_join(dk_ptrebast, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test) %>% 
+  left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+              mutate(avg = pts+treb+ast) %>% group_by(idPlayer) %>% summarize(avg = mean(avg)), by = "idPlayer")
 
 ptreb_ast_df_join <- ptreb_ast_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
   group_by(namePlayer,idPlayer) %>% summarize(Ident = mean(Ident))
 
 ptrebast_picks <- ptreb_ast_df %>% left_join(ptreb_ast_df_join, by = c("namePlayer","idPlayer")) %>% 
-  filter(Ident != 0) %>% group_by(namePlayer, OU, slugTeam,Type) %>% 
-  summarize(season_hit) %>% ungroup() %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
+  filter(Ident != 0) %>% group_by(namePlayer, OU, slugTeam,Type, avg = as.character(round(avg,1))) %>% 
+  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1-season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% 
+  left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
   relocate(urlThumbnailTeam, .after = OU) %>% relocate(matchup, .after = urlThumbnailTeam) %>% select(!slugTeam)
 
-reactable(highlight = TRUE, striped = TRUE,ptrebast_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
+reactable(highlight = TRUE, ptrebast_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110,
+                                                                               style = cell_style(font_weight = "bold")),
                                                                           urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
-          OU = colDef(width = 110),
+                                                           avg = colDef(name = "Season Avg"),
+          OU = colDef(name = "Total Points, Rebounds, Assists OU",width = 110),
           `Away Games` = colDef(cell = data_bars(ptrebast_picks, 
                                                  fill_color = color_set, 
                                                  background = '#F1F1F1', 
                                                  min_value = 0, 
                                                  max_value = 1, 
                                                  text_position = 'outside-end',
-                                                 number_fmt = scales::percent)),
+                                                 number_fmt = scales::percent,
+                                                 bold_text = TRUE)),
           `Home Games` = colDef(cell = data_bars(ptrebast_picks, 
                                                  fill_color = color_set, 
                                                  background = '#F1F1F1', 
                                                  min_value = 0, 
                                                  max_value = 1, 
                                                  text_position = 'outside-end',
-                                                 number_fmt = scales::percent)),
+                                                 number_fmt = scales::percent,
+                                                 bold_text = TRUE)),
           `Last 10` = colDef(cell = data_bars(ptrebast_picks, 
                                               fill_color = color_set, 
                                               background = '#F1F1F1', 
                                               min_value = 0, 
                                               max_value = 1, 
                                               text_position = 'outside-end',
-                                              number_fmt = scales::percent)),
+                                              number_fmt = scales::percent,
+                                              bold_text = TRUE)),
           `Last 5` = colDef(cell = data_bars(ptrebast_picks, 
                                              fill_color = color_set, 
                                              background = '#F1F1F1', 
                                              min_value = 0, 
                                              max_value = 1, 
                                              text_position = 'outside-end',
-                                             number_fmt = scales::percent)),
+                                             number_fmt = scales::percent,
+                                             bold_text = TRUE)),
           `Regular Season` = colDef(cell = data_bars(ptrebast_picks, 
                                                      fill_color = color_set, 
                                                      background = '#F1F1F1', 
                                                      min_value = 0, 
                                                      max_value = 1, 
                                                      text_position = 'outside-end',
-                                                     number_fmt = scales::percent))),
-          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE) %>% add_title("Success Rates") %>% add_subtitle("2024/25 Regular Season")
+                                                     number_fmt = scales::percent,
+                                                     bold_text = TRUE))),
+          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE) %>% add_title("Under Success Rates") %>% add_subtitle("2024/25 Regular Season")
 
 
 ##1Q Points
@@ -825,7 +835,8 @@ firstqpoints_picks <- firstqpoints_df %>%
                                                                                                                                     ifelse(OU == "7.5","8+",ifelse(OU == "8.5","9+",OU)))))))))) %>% 
   select(-c(slugTeam,idPlayer))
 
-reactable(highlight = TRUE, striped = TRUE,firstqpoints_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
+reactable(highlight = TRUE, striped = TRUE,firstqpoints_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110,
+                                                                                                  style = cell_style(font_weight = "bold")),
                                                                           urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
                                                                           OU = colDef(name = "Total First Quarter Pts",width = 110),
                                                                           `Away Games` = colDef(cell = data_bars(firstqpoints_picks, 
@@ -1376,13 +1387,15 @@ pt_reb_df <- bind_rows(pt_reb,pt_reb_away,pt_reb_home,pt_reb_five,pt_reb_ten)
 pt_reb_df$namePlayer <- stri_trans_general(str = pt_reb_df$namePlayer, id = "Latin-ASCII")
 
 
-pt_reb_df <- pt_reb_df %>% left_join(dk_ptreb, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test)
+pt_reb_df <- pt_reb_df %>% left_join(dk_ptreb, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test) %>% 
+  left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+              mutate(avg = pts+treb) %>% group_by(idPlayer) %>% summarize(avg = mean(avg)), by = "idPlayer")
 
 pt_reb_df_join <- pt_reb_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
   group_by(namePlayer,idPlayer) %>% summarize(Ident = mean(Ident))
 
 pt_reb_picks <- pt_reb_df %>% left_join(pt_reb_df_join, by = c("namePlayer","idPlayer")) %>% 
-  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type) %>% 
+  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type, avg = as.character(round(avg,1))) %>% 
   summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1-season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
@@ -1392,6 +1405,7 @@ pt_reb_picks <- pt_reb_df %>% left_join(pt_reb_df_join, by = c("namePlayer","idP
 
 reactable(highlight = TRUE, striped = TRUE,pt_reb_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
                                                                           urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                        avg = colDef(name = "Season Avg"),
                                                                           OU = colDef(name = "Total Points & Rebounds O/U",width = 110),
                                                                           `Away Games` = colDef(cell = data_bars(pt_reb_picks, 
                                                                                                                  fill_color = color_set, 
@@ -1563,13 +1577,15 @@ ast_reb_df <- bind_rows(ast_reb,ast_reb_away,ast_reb_home,ast_reb_five,ast_reb_t
 ast_reb_df$namePlayer <- stri_trans_general(str = ast_reb_df$namePlayer, id = "Latin-ASCII")
 
 
-ast_reb_df <- ast_reb_df %>% left_join(dk_astreb, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test)
+ast_reb_df <- ast_reb_df %>% left_join(dk_astreb, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test) %>% 
+  left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+              mutate(avg = ast+treb) %>% group_by(idPlayer) %>% summarize(avg = mean(avg)), by = "idPlayer")
 
 ast_reb_df_join <- ast_reb_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
   group_by(namePlayer,idPlayer) %>% summarize(Ident = mean(Ident))
 
 ast_reb_picks <- ast_reb_df %>% left_join(ast_reb_df_join, by = c("namePlayer","idPlayer")) %>% 
-  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type) %>% 
+  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type, avg = as.character(round(avg,1))) %>% 
   summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
@@ -1578,6 +1594,7 @@ ast_reb_picks <- ast_reb_df %>% left_join(ast_reb_df_join, by = c("namePlayer","
 
 reactable(highlight = TRUE, striped = TRUE,ast_reb_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
                                                                         urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                        avg = colDef(name = "Season Avg"),
                                                                         OU = colDef(name = "Total Assists & Rebounds O/U",width = 110),
                                                                         `Away Games` = colDef(cell = data_bars(ast_reb_picks, 
                                                                                                                fill_color = color_set, 
@@ -1752,13 +1769,15 @@ stl_blk_df <- bind_rows(stl_blk,stl_blk_away,stl_blk_home,stl_blk_five,stl_blk_t
 stl_blk_df$namePlayer <- stri_trans_general(str = stl_blk_df$namePlayer, id = "Latin-ASCII")
 
 
-stl_blk_df <- stl_blk_df %>% left_join(dk_stlblk, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test)
+stl_blk_df <- stl_blk_df %>% left_join(dk_stlblk, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test) %>% 
+  left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+              mutate(avg = stl+blk) %>% group_by(idPlayer) %>% summarize(avg = mean(avg)), by = "idPlayer")
 
 stl_blk_df_join <- stl_blk_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
   group_by(namePlayer,idPlayer) %>% summarize(Ident = mean(Ident))
 
 stl_blk_picks <- stl_blk_df %>% left_join(stl_blk_df_join, by = c("namePlayer","idPlayer")) %>% 
-  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type) %>% 
+  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type, avg = as.character(round(avg,1))) %>% 
   summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
@@ -1769,6 +1788,7 @@ stl_blk_picks <- stl_blk_df %>% left_join(stl_blk_df_join, by = c("namePlayer","
 
 reactable(highlight = TRUE, striped = TRUE,stl_blk_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
                                                                          urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                         avg = colDef(name = "Season Avg"),
                                                                          OU = colDef(name = "Total Steals & Blocks O/U",width = 110),
                                                                          `Away Games` = colDef(cell = data_bars(stl_blk_picks, 
                                                                                                                 fill_color = color_set, 
@@ -1941,13 +1961,14 @@ fg3m_df <- bind_rows(fg3m,fg3m_away,fg3m_home,fg3m_five,fg3m_ten)
 fg3m_df$namePlayer <- stri_trans_general(str = fg3m_df$namePlayer, id = "Latin-ASCII")
 
 
-fg3m_df <- fg3m_df %>% left_join(dk_fg3m, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test)
+fg3m_df <- fg3m_df %>% left_join(dk_fg3m, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test) %>% 
+  left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% summarize(avg = mean(fg3m)), by = "idPlayer")
 
 fg3m_df_join <- fg3m_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
   group_by(namePlayer,idPlayer) %>% summarize(Ident = mean(Ident))
 
 fg3m_picks <- fg3m_df %>% left_join(fg3m_df_join, by = c("namePlayer","idPlayer")) %>% 
-  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type) %>% 
+  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type, avg = as.character(round(avg,1))) %>% 
   summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
@@ -1958,6 +1979,7 @@ fg3m_picks <- fg3m_df %>% left_join(fg3m_df_join, by = c("namePlayer","idPlayer"
 
 reactable(highlight = TRUE, striped = TRUE,fg3m_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
                                                                          urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                      avg = colDef(name = "Season Avg"),
                                                                          OU = colDef(name = "Total Threes Made O/U",width = 110),
                                                                          `Away Games` = colDef(cell = data_bars(fg3m_picks, 
                                                                                                                 fill_color = color_set, 
@@ -2129,13 +2151,14 @@ stl_df <- bind_rows(stl,stl_away,stl_home,stl_five,stl_ten)
 stl_df$namePlayer <- stri_trans_general(str = stl_df$namePlayer, id = "Latin-ASCII")
 
 
-stl_df <- stl_df %>% left_join(dk_stl, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test)
+stl_df <- stl_df %>% left_join(dk_stl, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test) %>% 
+  left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25")  %>% group_by(idPlayer) %>% summarize(avg = mean(stl)), by = "idPlayer")
 
 stl_df_join <- stl_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
   group_by(namePlayer,idPlayer) %>% summarize(Ident = mean(Ident))
 
 stl_picks <- stl_df %>% left_join(stl_df_join, by = c("namePlayer","idPlayer")) %>% 
-  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type) %>% 
+  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type, avg = as.character(round(avg,1))) %>% 
   summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 -season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
@@ -2146,6 +2169,7 @@ stl_picks <- stl_df %>% left_join(stl_df_join, by = c("namePlayer","idPlayer")) 
 
 reactable(highlight = TRUE, striped = TRUE,stl_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
                                                                       urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                     avg = colDef(name = "Season Avg"),
                                                                       OU = colDef(name = "Total Steals O/U",width = 110),
                                                                       `Away Games` = colDef(cell = data_bars(stl_picks, 
                                                                                                              fill_color = color_set, 
@@ -2317,13 +2341,14 @@ blk_df <- bind_rows(blk,blk_away,blk_home,blk_five,blk_ten)
 blk_df$namePlayer <- stri_trans_general(str = blk_df$namePlayer, id = "Latin-ASCII")
 
 
-blk_df <- blk_df %>% left_join(dk_blk, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test)
+blk_df <- blk_df %>% left_join(dk_blk, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test) %>% 
+  left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25")  %>% group_by(idPlayer) %>% summarize(avg = mean(blk)), by = "idPlayer")
 
 blk_df_join <- blk_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
   group_by(namePlayer,idPlayer) %>% summarize(Ident = mean(Ident))
 
 blk_picks <- blk_df %>% left_join(blk_df_join, by = c("namePlayer","idPlayer")) %>% 
-  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type) %>% 
+  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type, avg = as.character(round(avg,1))) %>% 
   summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
@@ -2334,6 +2359,7 @@ blk_picks <- blk_df %>% left_join(blk_df_join, by = c("namePlayer","idPlayer")) 
 
 reactable(highlight = TRUE, striped = TRUE,blk_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
                                                                      urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                     avg = colDef(name = "Season Avg"),
                                                                      OU = colDef(name = "Total Blocks O/U",width = 110),
                                                                      `Away Games` = colDef(cell = data_bars(blk_picks, 
                                                                                                             fill_color = color_set, 
@@ -2505,13 +2531,14 @@ tov_df <- bind_rows(tov,tov_away,tov_home,tov_five,tov_ten)
 tov_df$namePlayer <- stri_trans_general(str = tov_df$namePlayer, id = "Latin-ASCII")
 
 
-tov_df <- tov_df %>% left_join(dk_tov, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test)
+tov_df <- tov_df %>% left_join(dk_tov, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test) %>% 
+  left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% summarize(avg = mean(tov)), by = "idPlayer")
 
 tov_df_join <- tov_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
   group_by(namePlayer,idPlayer) %>% summarize(Ident = mean(Ident))
 
 tov_picks <- tov_df %>% left_join(tov_df_join, by = c("namePlayer","idPlayer")) %>% 
-  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type) %>% 
+  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type, avg = as.character(round(avg,1))) %>% 
   summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%
   pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
@@ -2523,6 +2550,7 @@ tov_picks <- tov_df %>% left_join(tov_df_join, by = c("namePlayer","idPlayer")) 
 
 reactable(highlight = TRUE, striped = TRUE,tov_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
                                                                      urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                     avg = colDef(name = "Season Avg"),
                                                                      OU = colDef(name = "Total Turnovers O/U",width = 110),
                                                                      `Away Games` = colDef(cell = data_bars(tov_picks, 
                                                                                                             fill_color = color_set, 
@@ -2693,13 +2721,14 @@ pts_df <- bind_rows(pts,pts_away,pts_home,pts_five,pts_ten)
 pts_df$namePlayer <- stri_trans_general(str = pts_df$namePlayer, id = "Latin-ASCII")
 
 
-pts_df <- pts_df %>% left_join(dk_pts, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test)
+pts_df <- pts_df %>% left_join(dk_pts, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test) %>% 
+  left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% summarize(avg = mean(pts)), by = "idPlayer")
 
 pts_df_join <- pts_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
   group_by(namePlayer,idPlayer) %>% summarize(Ident = mean(Ident))
 
 pts_picks <- pts_df %>% left_join(pts_df_join, by = c("namePlayer","idPlayer")) %>% 
-  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type) %>% 
+  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type, avg = as.character(round(avg,1))) %>% 
   summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1-season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
@@ -2710,6 +2739,7 @@ pts_picks <- pts_df %>% left_join(pts_df_join, by = c("namePlayer","idPlayer")) 
 
 reactable(highlight = TRUE, striped = TRUE,pts_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
                                                                      urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                     avg = colDef(name = "Season Avg"),
                                                                      OU = colDef(name = "Total Points O/U",width = 110),
                                                                      `Away Games` = colDef(cell = data_bars(pts_picks, 
                                                                                                             fill_color = color_set, 
@@ -2881,13 +2911,14 @@ ast_df <- bind_rows(ast,ast_away,ast_home,ast_five,ast_ten)
 ast_df$namePlayer <- stri_trans_general(str = ast_df$namePlayer, id = "Latin-ASCII")
 
 
-ast_df <- ast_df %>% left_join(dk_ast, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test)
+ast_df <- ast_df %>% left_join(dk_ast, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test) %>% 
+  left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25")  %>% group_by(idPlayer) %>% summarize(avg = mean(ast)), by = "idPlayer")
 
 ast_df_join <- ast_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
   group_by(namePlayer,idPlayer) %>% summarize(Ident = mean(Ident))
 
 ast_picks <- ast_df %>% left_join(ast_df_join, by = c("namePlayer","idPlayer")) %>% 
-  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type) %>% 
+  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type, avg = as.character(round(avg,1))) %>% 
   summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%
   pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
@@ -2899,6 +2930,7 @@ ast_picks <- ast_df %>% left_join(ast_df_join, by = c("namePlayer","idPlayer")) 
 
 reactable(highlight = TRUE, striped = TRUE,ast_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
                                                                      urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                     avg= colDef(name = "Season Avg"),
                                                                      OU = colDef(name = "Total Assists O/U",width = 110),
                                                                      `Away Games` = colDef(cell = data_bars(ast_picks, 
                                                                                                             fill_color = color_set, 
@@ -3070,13 +3102,14 @@ treb_df <- bind_rows(treb,treb_away,treb_home,treb_five,treb_ten)
 treb_df$namePlayer <- stri_trans_general(str = treb_df$namePlayer, id = "Latin-ASCII")
 
 
-treb_df <- treb_df %>% left_join(dk_reb, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test)
+treb_df <- treb_df %>% left_join(dk_reb, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test) %>% 
+  left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% summarize(avg = mean(treb)), by = "idPlayer")
 
 treb_df_join <- treb_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
   group_by(namePlayer,idPlayer) %>% summarize(Ident = mean(Ident))
 
 treb_picks <- treb_df %>% left_join(treb_df_join, by = c("namePlayer","idPlayer")) %>% 
-  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type) %>% 
+  filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Type, avg = as.character(round(avg,1))) %>% 
   summarize(season_hit) %>% ungroup() %>%
   mutate(season_hit = 1-season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
@@ -3090,6 +3123,7 @@ treb_picks <- treb_df %>% left_join(treb_df_join, by = c("namePlayer","idPlayer"
 reactable(highlight = TRUE,treb_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110,
                                                                           style = cell_style(font_weight = "bold")),
                                                                       urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                      avg = colDef(name = "Season Avg"),
                                                                       OU = colDef(name = "Total Rebounds O/U",width = 110),
                                                                       `Away Games` = colDef(cell = data_bars(treb_picks, 
                                                                                                              fill_color = color_set, 
@@ -3132,6 +3166,7 @@ reactable(highlight = TRUE,treb_picks, columns = list(namePlayer = colDef(name =
                                                                                                                  number_fmt = scales::percent,
                                                                                                                  bold_text = TRUE))),
           theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE) %>% add_title("Under Success Rates") %>% add_subtitle("2024/25 Regular Season")
+
 
 
 

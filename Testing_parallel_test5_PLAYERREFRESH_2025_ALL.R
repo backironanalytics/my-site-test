@@ -86,6 +86,8 @@ players <- player_name
 players <- unlist(players)
 
 
+
+
 gameids<- playerdata %>% group_by(idGame) %>% summarize(n = n()) %>% pull(idGame)
 
 numcores <- parallelly::availableCores()
@@ -164,7 +166,7 @@ all_players_previous <- schedule %>% filter(Date == schedule %>% filter(next_gam
 
 all_players_previous_batch <- lapply(all_players_previous, function(x){
   
-  rosters %>% filter(slugTeam == x) %>% filter(Include == "Y") %>% select(idPlayer,namePlayer)
+  rosters %>% left_join(all_rosters %>% select(slugTeam,idPlayer), by = "idPlayer") %>% filter(slugTeam.y == x) %>% filter(Include == "Y") %>% select(idPlayer,namePlayer)
   
 })
 
@@ -172,7 +174,7 @@ all_players_previous_batch <- bind_rows(all_players_previous_batch)
 
 all_players_previous_batch <- all_players_previous_batch %>% 
   left_join(playerdata %>% filter(slugSeason == current_season) %>% group_by(namePlayer,idPlayer,slugTeam) %>% summarize(n = n()), by = "idPlayer") %>% select(idPlayer,namePlayer.y) %>% 
-  rename(namePlayer = namePlayer.y)
+  rename(namePlayer = namePlayer.y) %>% group_by(idPlayer,namePlayer) %>% summarize(n = n()) %>% as.data.frame()
 
 wix_jobs <- write.csv(as.data.frame(players) %>% rename(namePlayer = players) %>% 
                         left_join(playerdata %>% filter(slugSeason == current_season) %>% group_by(namePlayer,idPlayer) %>% 

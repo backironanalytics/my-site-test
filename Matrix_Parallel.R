@@ -96,23 +96,7 @@ schedule <- schedule %>% filter(!is.na(Date))
 
 
 
-all_players <- as.data.frame(players) %>% rename(namePlayer = players) %>% 
-  left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(namePlayer,idPlayer,slugTeam) %>% summarize(n = n()), by = "namePlayer") %>% 
-  select(namePlayer,idPlayer,n) %>% ungroup()
 
-all_players_previous <- schedule %>% filter(Date == schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min -1) %>% pull(slugTeam)
-
-all_players_previous_batch <- lapply(all_players_previous, function(x){
-  
-  rosters %>% filter(slugTeam == x) %>% filter(Include == "Y") %>% select(idPlayer,namePlayer)
-  
-})
-
-all_players_previous_batch <- bind_rows(all_players_previous_batch)
-
-all_players_previous_batch <- all_players_previous_batch %>% 
-  left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(namePlayer,idPlayer,slugTeam) %>% summarize(n = n()), by = "idPlayer") %>% select(idPlayer,namePlayer.y) %>% 
-  rename(namePlayer = namePlayer.y)
 
 
 
@@ -432,6 +416,64 @@ tov <- lapply(next_team_batch$idPlayer, function(x){
 tov <- bind_rows(tov) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
 tov_pivoted <- tov %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
+                                   summarize(GP = n()), by = "idPlayer")  %>% 
+  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
+  relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
+
+##Free Throws Made
+
+
+ftm <- lapply(next_team_batch$idPlayer, function(x){
+  slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)
+  
+  hit_rate <- seq(0.5,5.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,ftm)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(ftm > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() %>% mutate(slugTeam = slug_team)
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+ftm <- bind_rows(ftm) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
+
+ftm_pivoted <- ftm %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
+                                   summarize(GP = n()), by = "idPlayer")  %>% 
+  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
+  relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
+
+##Field Goals Made
+
+
+fgm <- lapply(next_team_batch$idPlayer, function(x){
+  slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)
+  
+  hit_rate <- seq(0.5,11.5,1)
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,fgm)
+  
+  hit_rate_above <- lapply(hit_rate, function(x){
+    
+    df %>% mutate(test = mean(fgm > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() %>% mutate(slugTeam = slug_team)
+    
+  })
+  
+  hit_rate_above
+  
+})
+
+fgm <- bind_rows(fgm) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
+
+fgm_pivoted <- fgm %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                    summarize(GP = n()), by = "idPlayer")  %>% 
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 

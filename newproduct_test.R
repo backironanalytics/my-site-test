@@ -38,7 +38,8 @@ dk_firstqpts <- dk_firstqpts %>% filter(selections.tags == "SGP") %>% select(seo
 dk_firstqpts <- dk_firstqpts %>% 
   mutate(label = ifelse(label == "3+",2.5,ifelse(label == "4+",3.5,ifelse(label == "5+",4.5,
                                                                           ifelse(label == "6+",5.5,ifelse(label == "7+",6.5,
-                                                                                                          ifelse(label == "8+",7.5,ifelse(label == "9+",8.5,ifelse(label == "9+",8.5,ifelse(label == "10+",9.5,label))))))))))
+                                                                                                          ifelse(label == "8+",7.5,ifelse(label == "9+",8.5,ifelse(label == "9+",8.5,ifelse(label == "10+",9.5,label)))))))))) %>%
+  mutate(odds = as.numeric(str_replace(odds,"−","-")))
 
 # Pts Reb Ast O/U
 
@@ -152,7 +153,8 @@ dk_firstqast <- dk_firstqast %>% filter(selections.tags == "SGP") %>% select(seo
 dk_firstqast <- dk_firstqast %>% 
   mutate(label = ifelse(label == "3+",2.5,ifelse(label == "4+",3.5,ifelse(label == "5+",4.5,
                                                                           ifelse(label == "6+",5.5,ifelse(label == "7+",6.5,
-                                                                                                          ifelse(label == "8+",7.5,ifelse(label == "9+",8.5,ifelse(label == "9+",8.5,ifelse(label == "10+",9.5,ifelse(label == "2+",1.5,label)))))))))))
+                                                                                                          ifelse(label == "8+",7.5,ifelse(label == "9+",8.5,ifelse(label == "9+",8.5,ifelse(label == "10+",9.5,ifelse(label == "2+",1.5,label))))))))))) %>%
+  mutate(odds = as.numeric(str_replace(odds,"−","-")))
 
 
 # First Quarter Rebounds
@@ -857,12 +859,13 @@ firstqpoints_df$namePlayer <- stri_trans_general(str = firstqpoints_df$namePlaye
 firstqpoints_df <- firstqpoints_df %>% mutate(OU = as.character(OU)) %>% left_join(dk_firstqpts %>% rename(OU = label), by = c("namePlayer","OU")) %>% 
   filter(!is.na(odds)) %>% rename(season_hit = test) 
 
-firstqpoints_df_join <- firstqpoints_df %>% mutate(favored_ident = substring(odds,1,1)) %>% mutate(odds = as.numeric(str_remove(odds,"."))) %>% 
+firstqpoints_df_join <- firstqpoints_df %>% filter(odds >=-140)  %>% 
   mutate(Ident = ifelse(season_hit >= .75 & Type == "Regular Season", 1, 0)) %>% 
-  group_by(namePlayer, idPlayer, OU) %>% summarize(Ident = mean(Ident))
+  group_by(namePlayer, idPlayer,odds, OU) %>% summarize(Ident = mean(Ident))
 
 firstqpoints_picks <- firstqpoints_df %>% 
-  left_join(firstqpoints_df_join, by = c("namePlayer","idPlayer","OU")) %>% filter(Ident!=0) %>% group_by(namePlayer,idPlayer,OU,Type) %>% 
+  left_join(as.data.frame(firstqpoints_df_join) %>% select(-odds), by = c("namePlayer","idPlayer","OU")) %>% filter(Ident!=0) %>% 
+  group_by(namePlayer,idPlayer,OU,odds,Type) %>% 
   summarize(season_hit) %>%ungroup() %>%
   pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>%select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>%select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>% relocate(urlThumbnailTeam, .after = namePlayer) %>%
@@ -1094,10 +1097,11 @@ firstqassists_df <- bind_rows(firstqassists,firstqassists_home,firstqassists_awa
 
 firstqassists_df$namePlayer <- stri_trans_general(str = firstqassists_df$namePlayer, id = "Latin-ASCII")
 
-firstqassists_df <- firstqassists_df %>% mutate(OU = as.character(OU)) %>% left_join(dk_firstqast %>% rename(OU = label), by = c("namePlayer","OU")) %>% 
+firstqassists_df <- firstqassists_df %>% mutate(OU = as.character(OU)) %>% left_join(dk_firstqast %>% 
+                                                                                       rename(OU = label), by = c("namePlayer","OU")) %>% 
   filter(!is.na(odds)) %>% rename(season_hit = test) 
 
-firstqassists_df_join <- firstqassists_df %>% mutate(favored_ident = substring(odds,1,1)) %>% mutate(odds = as.numeric(str_remove(odds,"."))) %>% 
+firstqassists_df_join <- firstqassists_df %>% filter(odds >= -140) %>% 
   mutate(Ident = ifelse(season_hit >= .75 & Type == "Regular Season", 1, 0)) %>% 
   group_by(namePlayer, idPlayer, OU) %>% summarize(Ident = mean(Ident))
 
@@ -1111,6 +1115,9 @@ firstqassists_picks <- firstqassists_df %>%
                                                                                                      ifelse(OU == "5.5","6+",ifelse(OU == "6.5","7+",
                                                                                                                                     ifelse(OU == "7.5","8+",ifelse(OU == "8.5","9+",OU)))))))))) %>% 
   select(-c(slugTeam,idPlayer))
+
+
+
 
 
 # First Quarter Rebounds

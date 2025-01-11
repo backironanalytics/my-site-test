@@ -201,3 +201,49 @@ foreach(i = all_players_previous_batch$namePlayer,
         }
 
 })
+
+
+doParallel::registerDoParallel(cl)
+  
+foreach(j = all_players_previous_batch$idPlayer,.packages = c("flexdashboard",
+                                                              "tidyverse",
+                                                              "dplyr",
+                                                              "knitr",
+                                                              "ggplot2",
+                                                              "stringr",
+                                                              "caret",
+                                                              "reactablefmtr",
+                                                              "formattable",
+                                                              "markdown",
+                                                              "magick",
+                                                              "highcharter",
+                                                              "cowplot",
+                                                              "extrafont",
+                                                              "data.table",
+                                                              "broom",
+                                                              "grid",
+                                                              "gridExtra",
+                                                              "grDevices",
+                                                              "fmsb",
+                                                              "fontawesome",
+                                                              "bslib",
+                                                              "plotly",
+                                                              "ggbreak",
+                                                              "nbastatR",
+                                                              "rvest",
+                                                              "ggpubr"
+                                                              ),.export = ls(globalenv())) %dopar% {
+
+          
+          rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/ML_Parlay_TBRv15_2025.Rmd',
+                            output_file = paste0(j,substr(j,start = 1,stop=3),".html"),
+                            output_dir = file.path('C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/Test Files'),
+                            params = list(id = j))
+        }
+
+stopCluster(cl)
+
+
+ 
+ 
+  

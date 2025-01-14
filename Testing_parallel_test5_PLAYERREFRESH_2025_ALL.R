@@ -206,7 +206,7 @@ cl <- makeCluster(5)
 
 doParallel::registerDoParallel(cl)
   
-foreach(j = all_players_previous_batch$idPlayer,.packages = c("flexdashboard",
+foreach(j = all_players_previous_batch$idPlayer[1:(length(all_players_previous_batch$idPlayer))],.packages = c("flexdashboard",
                                                               "tidyverse",
                                                               "dplyr",
                                                               "knitr",

@@ -3324,7 +3324,7 @@ treb_ten <- lapply(next_team_batch$idPlayer, function(x){
   
 })
 
-treb_ten <- bind_rows(treb_ten) %>% unnest(cols = everything()) %>% mutate(Type = "Ltreb 10")
+treb_ten <- bind_rows(treb_ten) %>% unnest(cols = everything()) %>% mutate(Type = "Last 10")
 
 
 
@@ -3353,7 +3353,7 @@ treb_five <- lapply(next_team_batch$idPlayer, function(x){
   
 })
 
-treb_five <- bind_rows(treb_five) %>% unnest(cols = everything()) %>% mutate(Type = "Ltreb 5")
+treb_five <- bind_rows(treb_five) %>% unnest(cols = everything()) %>% mutate(Type = "Last 5")
 
 treb_df <- bind_rows(treb,treb_away,treb_home,treb_five,treb_ten)
 
@@ -3401,14 +3401,14 @@ reactable(highlight = TRUE, striped = TRUE,treb_picks, columns = list(namePlayer
                                                                                                              max_value = 1, 
                                                                                                              text_position = 'outside-end',
                                                                                                              number_fmt = scales::percent)),
-                                                                      `Ltreb 10` = colDef(cell = data_bars(treb_picks, 
+                                                                      `Last 10` = colDef(cell = data_bars(treb_picks, 
                                                                                                            fill_color = color_set, 
                                                                                                            background = '#F1F1F1', 
                                                                                                            min_value = 0, 
                                                                                                            max_value = 1, 
                                                                                                            text_position = 'outside-end',
                                                                                                            number_fmt = scales::percent)),
-                                                                      `Ltreb 5` = colDef(cell = data_bars(treb_picks, 
+                                                                      `Last 5` = colDef(cell = data_bars(treb_picks, 
                                                                                                           fill_color = color_set, 
                                                                                                           background = '#F1F1F1', 
                                                                                                           min_value = 0, 

@@ -274,14 +274,13 @@ dk_reb <- dk_reb %>% filter(selections.tags == "MainPointLine") %>% select(seoId
 
 
 
---
   
   
   
   
 ##Date used for schedule
   
-scheduleDate <- "2024-10-01"
+scheduleDate = "2024-10-01"
 
 
 

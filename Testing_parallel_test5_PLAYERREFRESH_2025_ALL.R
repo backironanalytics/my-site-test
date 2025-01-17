@@ -236,7 +236,7 @@ foreach(j = all_players_previous_batch$idPlayer[1:(length(all_players_previous_b
                                                               ),.export = ls(globalenv())) %dopar% {
 
           
-          rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/ML_Parlay_TBRv15_2025.Rmd',
+          rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/ML_Parlay_TBRv16_2025.Rmd',
                             output_file = paste0(j,substr(j,start = 1,stop=3),".html"),
                             output_dir = file.path('C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/sheets'),
                             params = list(id = j))
@@ -246,5 +246,16 @@ stopCluster(cl)
 
 
  
- 
+test2 <- function(x) {
   
+  file.info(paste0("C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/sheets/",x,substr(x,start = 1,stop=3),".html"))
+
+  }
+  
+test2 <- lapply(all_players_previous_batch$idPlayer, test2)
+
+test2 <-bind_rows(test2)
+
+test2 <- test2%>% rownames_to_column('File')
+
+test2 %>% select(File,ctime)

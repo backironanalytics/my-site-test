@@ -1670,13 +1670,14 @@ ast_reb_df <- ast_reb_df %>% left_join(dk_astreb, by = c("namePlayer","OU")) %>%
               mutate(avg = ast+treb) %>% group_by(idPlayer) %>% summarize(avg = mean(avg)), by = "idPlayer") %>% 
   left_join(ast_reb_df %>% filter(Type == "Regular Season") %>% group_by(idPlayer) %>% summarize(variation_regular = mean(sd)), by = "idPlayer")
 
-ast_reb_df_join <- ast_reb_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
+ast_reb_df_join <- ast_reb_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Last 5", 1,0)) %>% 
   group_by(namePlayer,idPlayer) %>% summarize(Ident = mean(Ident))
 
 ast_reb_picks <- ast_reb_df %>% left_join(ast_reb_df_join, by = c("namePlayer","idPlayer")) %>% 
   filter(Ident != 0) %>% group_by(namePlayer,idPlayer, OU, Under, Type, avg = round(avg,1),
                                   variation_regular = round(variation_regular,1)) %>% 
-  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
+  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% 
+  left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
   relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>% select(-c(slugTeam,idPlayer))

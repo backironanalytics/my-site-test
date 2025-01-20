@@ -9,6 +9,8 @@ library(dplyr)
 library(parallel)
 library(stringi)
 library(reactablefmtr)
+library(sparkline)
+library(rlist)
 
 color_set <- c("#f7c844","#2e6d9e","#429460")
 
@@ -589,6 +591,19 @@ ptrebast_ten <- lapply(next_team_batch$idPlayer, function(x){
 
 ptrebast_ten <- bind_rows(ptrebast_ten) %>% mutate(Type = "Last 10")
 
+##Minutes Last 10
+
+
+min_ten <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    arrange(desc(dateGame)) %>% head(10)
+  
+})
+
+min_ten <- bind_rows(min_ten) 
+
 ptreb_ast_df <- bind_rows(ptrebast,ptrebast_away,ptrebast_home,ptrebast_five,ptrebast_ten)
 
 ptreb_ast_df$namePlayer <- stri_trans_general(str = ptreb_ast_df$namePlayer, id = "Latin-ASCII")
@@ -603,29 +618,39 @@ ptreb_ast_df <- ptreb_ast_df %>% left_join(dk_ptrebast, by = c("namePlayer","OU"
   left_join(ptreb_ast_df %>% filter(Type == "Last 10") %>% group_by(idPlayer) %>% summarize(variation_ten = mean(sd)), by = "idPlayer") %>%
   left_join(ptreb_ast_df %>% filter(Type == "Last 5") %>% group_by(idPlayer) %>% summarize(variation_five = mean(sd)), by = "idPlayer")
 
-ptreb_ast_df_join <- ptreb_ast_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
+ptreb_ast_df_join <- ptreb_ast_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Last 10", 1,0)) %>% 
   group_by(namePlayer,idPlayer) %>% summarize(Ident = mean(Ident))
 
-ptrebast_picks <- ptreb_ast_df %>% left_join(ptreb_ast_df_join, by = c("namePlayer","idPlayer")) %>% 
-  filter(Ident != 0) %>% group_by(namePlayer, OU,Under, slugTeam,Type, avg = round(avg,1),
+ptrebast_picks <- ptreb_ast_df %>% left_join(ptreb_ast_df_join, by = c("namePlayer","idPlayer")) %>%
+  left_join(min_ten %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(minutes = list(minutes)), by = "idPlayer") %>%
+  left_join(min_ten %>% 
+              mutate(pts_reb_ast = pts+treb+ast) %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(pts_reb_ast = list(pts_reb_ast)), by = "idPlayer") %>% 
+  group_by(namePlayer, OU,Under, slugTeam,Type, avg = round(avg,1),
                                   variation_regular = round(variation_regular,1),
                                   variation_home = as.character(round(variation_home,1)),
                                   variation_away = as.character(round(variation_away,1)),
                                   variation_five = as.character(round(variation_five,1)),
-                                  variation_ten = as.character(round(variation_ten,1))) %>% 
+                                  variation_ten = as.character(round(variation_ten,1)),
+           minutes, pts_reb_ast) %>% 
   summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1-season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
-  left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
-  relocate(urlThumbnailTeam, .after = OU) %>% relocate(matchup, .after = urlThumbnailTeam) %>% 
-  select(!c(slugTeam,variation_home,variation_away,variation_ten,variation_five))
+  left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam")  %>%
+  relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>%  relocate(minutes, .after = Under) %>%
+  relocate(pts_reb_ast, .after = minutes) %>%
+  select(!c(slugTeam,variation_home,variation_away,variation_ten,variation_five,variation_regular))
 
 reactable(highlight = TRUE, ptrebast_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110,
                                                                                style = cell_style(font_weight = "bold")),
                                                                           urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
                                                            avg = colDef(name = "Season Avg"),
-                                                           variation_regular = colDef(name = "Season SD"),
                                                            Under = colDef(name = "Odds"),
           OU = colDef(name = "Total Points, Rebounds, Assists OU",width = 110),
+          minutes = colDef(name = "Minutes Last 10 GP",cell = function(value,index) {
+            sparkline(ptrebast_picks$minutes[[index]], height = 50)
+          }),
+          pts_reb_ast = colDef(name = "Points, Rebounds, Assists Last 10 GP",cell = function(value,index) {
+            sparkline(ptrebast_picks$pts_reb_ast[[index]], type = "bar", height = 50)
+          }),
           `Away Games` = colDef(cell = data_bars(ptrebast_picks, 
                                                  fill_color = color_set, 
                                                  background = '#F1F1F1', 
@@ -666,7 +691,8 @@ reactable(highlight = TRUE, ptrebast_picks, columns = list(namePlayer = colDef(n
                                                      text_position = 'outside-end',
                                                      number_fmt = scales::percent,
                                                      bold_text = TRUE))),
-          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE) %>% add_title("Under Success Rates") %>% add_subtitle("2024/25 Regular Season")
+          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"),
+          paginationType = "simple")
 
 
 ##1Q Points

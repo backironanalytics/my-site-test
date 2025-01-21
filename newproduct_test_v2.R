@@ -11,6 +11,9 @@ library(stringi)
 library(reactablefmtr)
 library(sparkline)
 library(rlist)
+library(htmlwidgets)
+library(webshot)
+library(webshot2)
 
 color_set <- viridis::magma(5)
 
@@ -611,7 +614,7 @@ ptreb_ast_df$namePlayer <- stri_trans_general(str = ptreb_ast_df$namePlayer, id 
 
 ptreb_ast_df <- ptreb_ast_df %>% left_join(dk_ptrebast, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test) %>% 
   left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
-              mutate(avg = pts+treb+ast) %>% group_by(idPlayer) %>% summarize(avg = mean(avg)), by = "idPlayer") %>% 
+              mutate(avg = pts+treb+ast) %>% group_by(idPlayer) %>% summarize(avg = mean(avg), GP = n()), by = "idPlayer") %>% 
   left_join(ptreb_ast_df %>% filter(Type == "Regular Season") %>% group_by(idPlayer) %>% summarize(variation_regular = mean(sd)), by = "idPlayer") %>%
   left_join(ptreb_ast_df %>% filter(Type == "Home Games") %>% group_by(idPlayer) %>% summarize(variation_home = mean(sd)), by = "idPlayer") %>%
   left_join(ptreb_ast_df %>% filter(Type == "Away Games") %>% group_by(idPlayer) %>% summarize(variation_away = mean(sd)), by = "idPlayer") %>%
@@ -631,69 +634,70 @@ ptrebast_picks <- ptreb_ast_df %>% left_join(ptreb_ast_df_join, by = c("namePlay
                                   variation_away = as.character(round(variation_away,1)),
                                   variation_five = as.character(round(variation_five,1)),
                                   variation_ten = as.character(round(variation_ten,1)),
-           minutes, pts_reb_ast) %>% 
+           minutes, pts_reb_ast, GP) %>% 
   summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1-season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam")  %>%
   relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>%  relocate(minutes, .after = Under) %>%
-  relocate(pts_reb_ast, .after = minutes) %>%
+  relocate(pts_reb_ast, .after = minutes) %>% relocate(GP, .after = pts_reb_ast) %>%
   select(!c(slugTeam,variation_home,variation_away,variation_ten,variation_five,variation_regular))
 
-reactable(highlight = TRUE, ptrebast_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110,
-                                                                               style = cell_style(font_weight = "bold")),
-                                                                          urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
-                                                           avg = colDef(name = "Season Avg"),
-                                                           Under = colDef(name = "Odds"),
-          OU = colDef(name = "Total Points, Rebounds, Assists OU",width = 110),
-          minutes = colDef(name = "Minutes Last 10 GP",cell = function(value,index) {
-            sparkline(ptrebast_picks$minutes[[index]], height = 50)
-          }),
-          pts_reb_ast = colDef(name = "Points, Rebounds, Assists Last 10 GP",cell = function(value,index) {
-            sparkline(ptrebast_picks$pts_reb_ast[[index]], type = "bar", height = 50)
-          }),
-          `Away Games` = colDef(cell = data_bars(ptrebast_picks, 
-                                                 fill_color = color_set, 
-                                                 background = '#F1F1F1', 
-                                                 min_value = 0, 
-                                                 max_value = 1, 
-                                                 text_position = 'outside-end',
-                                                 number_fmt = scales::percent,
-                                                 bold_text = TRUE)),
-          `Home Games` = colDef(cell = data_bars(ptrebast_picks, 
-                                                 fill_color = color_set, 
-                                                 background = '#F1F1F1', 
-                                                 min_value = 0, 
-                                                 max_value = 1, 
-                                                 text_position = 'outside-end',
-                                                 number_fmt = scales::percent,
-                                                 bold_text = TRUE)),
-          `Last 10` = colDef(cell = data_bars(ptrebast_picks, 
-                                              fill_color = color_set, 
-                                              background = '#F1F1F1', 
-                                              min_value = 0, 
-                                              max_value = 1, 
-                                              text_position = 'outside-end',
-                                              number_fmt = scales::percent,
-                                              bold_text = TRUE)),
-          `Last 5` = colDef(cell = data_bars(ptrebast_picks, 
-                                             fill_color = color_set, 
-                                             background = '#F1F1F1', 
-                                             min_value = 0, 
-                                             max_value = 1, 
-                                             text_position = 'outside-end',
-                                             number_fmt = scales::percent,
-                                             bold_text = TRUE)),
-          `Regular Season` = colDef(cell = data_bars(ptrebast_picks, 
-                                                     fill_color = color_set, 
-                                                     background = '#F1F1F1', 
-                                                     min_value = 0, 
-                                                     max_value = 1, 
-                                                     text_position = 'outside-end',
-                                                     number_fmt = scales::percent,
-                                                     bold_text = TRUE))),
-          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"),
-          paginationType = "simple")
-
+# reactable(highlight = TRUE, ptrebast_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110,
+#                                                                                style = cell_style(font_weight = "bold")),
+#                                                                           urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+#                                                            avg = colDef(name = "Season Avg"),
+#                                                            GP = colDef(name = "Games Played"),
+#                                                            Under = colDef(name = "Odds"),
+#           OU = colDef(name = "Total Points, Rebounds, Assists O/U",width = 110),
+#           minutes = colDef(name = "Minutes Last 10 GP",cell = function(value,index) {
+#             sparkline(ptrebast_picks$minutes[[index]], height = 50)
+#           }),
+#           pts_reb_ast = colDef(name = "Total Points, Rebounds, Assists Last 10 GP",cell = function(value,index) {
+#             sparkline(ptrebast_picks$pts_reb_ast[[index]], type = "bar", height = 50)
+#           }),
+#           `Away Games` = colDef(cell = data_bars(ptrebast_picks, 
+#                                                  fill_color = color_set, 
+#                                                  background = '#F1F1F1', 
+#                                                  min_value = 0, 
+#                                                  max_value = 1, 
+#                                                  text_position = 'outside-end',
+#                                                  number_fmt = scales::percent,
+#                                                  bold_text = TRUE)),
+#           `Home Games` = colDef(cell = data_bars(ptrebast_picks, 
+#                                                  fill_color = color_set, 
+#                                                  background = '#F1F1F1', 
+#                                                  min_value = 0, 
+#                                                  max_value = 1, 
+#                                                  text_position = 'outside-end',
+#                                                  number_fmt = scales::percent,
+#                                                  bold_text = TRUE)),
+#           `Last 10` = colDef(cell = data_bars(ptrebast_picks, 
+#                                               fill_color = color_set, 
+#                                               background = '#F1F1F1', 
+#                                               min_value = 0, 
+#                                               max_value = 1, 
+#                                               text_position = 'outside-end',
+#                                               number_fmt = scales::percent,
+#                                               bold_text = TRUE)),
+#           `Last 5` = colDef(cell = data_bars(ptrebast_picks, 
+#                                              fill_color = color_set, 
+#                                              background = '#F1F1F1', 
+#                                              min_value = 0, 
+#                                              max_value = 1, 
+#                                              text_position = 'outside-end',
+#                                              number_fmt = scales::percent,
+#                                              bold_text = TRUE)),
+#           `Regular Season` = colDef(cell = data_bars(ptrebast_picks, 
+#                                                      fill_color = color_set, 
+#                                                      background = '#F1F1F1', 
+#                                                      min_value = 0, 
+#                                                      max_value = 1, 
+#                                                      text_position = 'outside-end',
+#                                                      number_fmt = scales::percent,
+#                                                      bold_text = TRUE))),
+#           theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"),
+#           paginationType = "simple")
+# 
 
 
 
@@ -855,7 +859,7 @@ pt_reb_df$namePlayer <- stri_trans_general(str = pt_reb_df$namePlayer, id = "Lat
 
 pt_reb_df <- pt_reb_df %>% left_join(dk_ptreb, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test) %>% 
   left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
-              mutate(avg = pts+treb) %>% group_by(idPlayer) %>% summarize(avg = mean(avg)), by = "idPlayer") %>% 
+              mutate(avg = pts+treb) %>% group_by(idPlayer) %>% summarize(avg = mean(avg), GP = n()), by = "idPlayer") %>% 
   left_join(pt_reb_df %>% filter(Type == "Regular Season") %>% group_by(idPlayer) %>% summarize(variation_regular = mean(sd)), by = "idPlayer")
 
 pt_reb_df_join <- pt_reb_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
@@ -865,66 +869,69 @@ pt_reb_picks <- pt_reb_df %>% left_join(pt_reb_df_join, by = c("namePlayer","idP
   left_join(min_ten %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(minutes = list(minutes)), by = "idPlayer") %>%
   left_join(min_ten %>% mutate(pts_reb = pts+treb) %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(pts_reb = list(pts_reb)), by = "idPlayer") %>% 
   group_by(namePlayer,idPlayer, OU,Under, Type, avg = round(avg,1),
-                                  variation_regular = round(variation_regular,1), minutes, pts_reb) %>% 
-  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1-season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
+                                  variation_regular = round(variation_regular,1), minutes, pts_reb, GP) %>% 
+  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1-season_hit) %>% pivot_wider(names_from = Type, values_from = season_hit) %>% 
+  left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
   relocate(urlThumbnailTeam, .after = namePlayer) %>% 
-  relocate(matchup, .after = urlThumbnailTeam) %>% relocate(minutes, .after = Under) %>% relocate(pts_reb, .after = minutes) %>% 
+  relocate(matchup, .after = urlThumbnailTeam) %>% relocate(minutes, .after = Under) %>% relocate(pts_reb, .after = minutes) %>% relocate(GP, .after = pts_reb) %>% 
   select(-c(slugTeam,idPlayer, variation_regular))
 
 
 
-reactable(highlight = TRUE, striped = TRUE,pt_reb_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
-                                                                          urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
-                                                                        avg = colDef(name = "Season Avg"),
-                                                                        Under = colDef(name = "Odds"),
-                                                                        minutes = colDef(name = "Minutes Last 10 GP",cell = function(value,index) {
-                                                                          sparkline(pt_reb_picks$minutes[[index]], height = 50)
-                                                                        }),
-                                                                        pts_reb = colDef(name = "Points, Rebounds Last 10 GP",cell = function(value,index) {
-                                                                          sparkline(pt_reb_picks$pts_reb[[index]], type = "bar", height = 50)
-                                                                        }),
-                                                                          OU = colDef(name = "Total Points & Rebounds O/U",width = 110),
-                                                                          `Away Games` = colDef(cell = data_bars(pt_reb_picks, 
-                                                                                                                 fill_color = color_set, 
-                                                                                                                 background = '#F1F1F1', 
-                                                                                                                 min_value = 0, 
-                                                                                                                 max_value = 1, 
-                                                                                                                 text_position = 'outside-end',
-                                                                                                                 number_fmt = scales::percent)),
-                                                                          `Home Games` = colDef(cell = data_bars(pt_reb_picks, 
-                                                                                                                 fill_color = color_set, 
-                                                                                                                 background = '#F1F1F1', 
-                                                                                                                 min_value = 0, 
-                                                                                                                 max_value = 1, 
-                                                                                                                 text_position = 'outside-end',
-                                                                                                                 number_fmt = scales::percent)),
-                                                                          `Last 10` = colDef(cell = data_bars(pt_reb_picks, 
-                                                                                                              fill_color = color_set, 
-                                                                                                              background = '#F1F1F1', 
-                                                                                                              min_value = 0, 
-                                                                                                              max_value = 1, 
-                                                                                                              text_position = 'outside-end',
-                                                                                                              number_fmt = scales::percent)),
-                                                                          `Last 5` = colDef(cell = data_bars(pt_reb_picks, 
-                                                                                                             fill_color = color_set, 
-                                                                                                             background = '#F1F1F1', 
-                                                                                                             min_value = 0, 
-                                                                                                             max_value = 1, 
-                                                                                                             text_position = 'outside-end',
-                                                                                                             number_fmt = scales::percent)),
-                                                                          `Regular Season` = colDef(cell = data_bars(pt_reb_picks, 
-                                                                                                                     fill_color = color_set, 
-                                                                                                                     background = '#F1F1F1', 
-                                                                                                                     min_value = 0, 
-                                                                                                                     max_value = 1, 
-                                                                                                                     text_position = 'outside-end',
-                                                                                                                     number_fmt = scales::percent))),
-          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"),
-          paginationType = "simple") 
-
-
+# reactable(highlight = TRUE, striped = TRUE,pt_reb_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110,
+#                                                                                             style = cell_style(font_weight = "bold")),
+#                                                                           urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+#                                                                         avg = colDef(name = "Season Avg"),
+#                                                                         Under = colDef(name = "Odds"),
+#                                                                         GP = colDef(name = "Games Played"),
+#                                                                         minutes = colDef(name = "Minutes Last 10 GP",cell = function(value,index) {
+#                                                                           sparkline(pt_reb_picks$minutes[[index]], height = 50)
+#                                                                         }),
+#                                                                         pts_reb = colDef(name = "Points, Rebounds Last 10 GP",cell = function(value,index) {
+#                                                                           sparkline(pt_reb_picks$pts_reb[[index]], type = "bar", height = 50)
+#                                                                         }),
+#                                                                           OU = colDef(name = "Total Points & Rebounds O/U",width = 110),
+#                                                                           `Away Games` = colDef(cell = data_bars(pt_reb_picks, 
+#                                                                                                                  fill_color = color_set, 
+#                                                                                                                  background = '#F1F1F1', 
+#                                                                                                                  min_value = 0, 
+#                                                                                                                  max_value = 1, 
+#                                                                                                                  text_position = 'outside-end',
+#                                                                                                                  number_fmt = scales::percent)),
+#                                                                           `Home Games` = colDef(cell = data_bars(pt_reb_picks, 
+#                                                                                                                  fill_color = color_set, 
+#                                                                                                                  background = '#F1F1F1', 
+#                                                                                                                  min_value = 0, 
+#                                                                                                                  max_value = 1, 
+#                                                                                                                  text_position = 'outside-end',
+#                                                                                                                  number_fmt = scales::percent)),
+#                                                                           `Last 10` = colDef(cell = data_bars(pt_reb_picks, 
+#                                                                                                               fill_color = color_set, 
+#                                                                                                               background = '#F1F1F1', 
+#                                                                                                               min_value = 0, 
+#                                                                                                               max_value = 1, 
+#                                                                                                               text_position = 'outside-end',
+#                                                                                                               number_fmt = scales::percent)),
+#                                                                           `Last 5` = colDef(cell = data_bars(pt_reb_picks, 
+#                                                                                                              fill_color = color_set, 
+#                                                                                                              background = '#F1F1F1', 
+#                                                                                                              min_value = 0, 
+#                                                                                                              max_value = 1, 
+#                                                                                                              text_position = 'outside-end',
+#                                                                                                              number_fmt = scales::percent)),
+#                                                                           `Regular Season` = colDef(cell = data_bars(pt_reb_picks, 
+#                                                                                                                      fill_color = color_set, 
+#                                                                                                                      background = '#F1F1F1', 
+#                                                                                                                      min_value = 0, 
+#                                                                                                                      max_value = 1, 
+#                                                                                                                      text_position = 'outside-end',
+#                                                                                                                      number_fmt = scales::percent))),
+#           theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"),
+#           paginationType = "simple") 
+# 
+# 
 
 ##Assists + Rebounds
 
@@ -1078,7 +1085,7 @@ ast_reb_df$namePlayer <- stri_trans_general(str = ast_reb_df$namePlayer, id = "L
 
 ast_reb_df <- ast_reb_df %>% left_join(dk_astreb, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test) %>% 
   left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
-              mutate(avg = ast+treb) %>% group_by(idPlayer) %>% summarize(avg = mean(avg)), by = "idPlayer") %>% 
+              mutate(avg = ast+treb) %>% group_by(idPlayer) %>% summarize(avg = mean(avg), GP = n()), by = "idPlayer") %>% 
   left_join(ast_reb_df %>% filter(Type == "Regular Season") %>% group_by(idPlayer) %>% summarize(variation_regular = mean(sd)), by = "idPlayer")
 
 ast_reb_df_join <- ast_reb_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Last 5", 1,0)) %>% 
@@ -1088,64 +1095,66 @@ ast_reb_picks <- ast_reb_df %>% left_join(ast_reb_df_join, by = c("namePlayer","
   left_join(min_ten %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(minutes = list(minutes)), by = "idPlayer") %>%
   left_join(min_ten %>% mutate(ast_reb = ast+treb) %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(ast_reb = list(ast_reb)), by = "idPlayer")  %>% 
   group_by(namePlayer,idPlayer, OU, Under, Type, avg = round(avg,1),
-                                  variation_regular = round(variation_regular,1), minutes, ast_reb) %>% 
+                                  variation_regular = round(variation_regular,1), minutes, ast_reb, GP) %>% 
   summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% 
   left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
   relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>%
-  relocate(minutes, .after = Under) %>% relocate(ast_reb, .after = minutes) %>% select(-c(slugTeam,idPlayer, variation_regular))
+  relocate(minutes, .after = Under) %>% relocate(ast_reb, .after = minutes) %>% relocate(GP, .after = ast_reb) %>% select(-c(slugTeam,idPlayer, variation_regular))
 
 
-reactable(highlight = TRUE, striped = TRUE,ast_reb_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
-                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
-                                                                        avg = colDef(name = "Season Avg"),
-                                                                        minutes = colDef(name = "Minutes Last 10 GP",cell = function(value,index) {
-                                                                          sparkline(ast_reb_picks$minutes[[index]], height = 50)
-                                                                        }),
-                                                                        ast_reb = colDef(name = "Total Assists & Rebounds Last 10 GP",cell = function(value,index) {
-                                                                          sparkline(ast_reb_picks$ast_reb[[index]], type = "bar", height = 50)
-                                                                        }),
-                                                                        Under = colDef(name = "Odds"),
-                                                                        OU = colDef(name = "Total Assists & Rebounds O/U",width = 110),
-                                                                        `Away Games` = colDef(cell = data_bars(ast_reb_picks, 
-                                                                                                               fill_color = color_set, 
-                                                                                                               background = '#F1F1F1', 
-                                                                                                               min_value = 0, 
-                                                                                                               max_value = 1, 
-                                                                                                               text_position = 'outside-end',
-                                                                                                               number_fmt = scales::percent)),
-                                                                        `Home Games` = colDef(cell = data_bars(ast_reb_picks, 
-                                                                                                               fill_color = color_set, 
-                                                                                                               background = '#F1F1F1', 
-                                                                                                               min_value = 0, 
-                                                                                                               max_value = 1, 
-                                                                                                               text_position = 'outside-end',
-                                                                                                               number_fmt = scales::percent)),
-                                                                        `Last 10` = colDef(cell = data_bars(ast_reb_picks, 
-                                                                                                            fill_color = color_set, 
-                                                                                                            background = '#F1F1F1', 
-                                                                                                            min_value = 0, 
-                                                                                                            max_value = 1, 
-                                                                                                            text_position = 'outside-end',
-                                                                                                            number_fmt = scales::percent)),
-                                                                        `Last 5` = colDef(cell = data_bars(ast_reb_picks, 
-                                                                                                           fill_color = color_set, 
-                                                                                                           background = '#F1F1F1', 
-                                                                                                           min_value = 0, 
-                                                                                                           max_value = 1, 
-                                                                                                           text_position = 'outside-end',
-                                                                                                           number_fmt = scales::percent)),
-                                                                        `Regular Season` = colDef(cell = data_bars(ast_reb_picks, 
-                                                                                                                   fill_color = color_set, 
-                                                                                                                   background = '#F1F1F1', 
-                                                                                                                   min_value = 0, 
-                                                                                                                   max_value = 1, 
-                                                                                                                   text_position = 'outside-end',
-                                                                                                                   number_fmt = scales::percent))),
-          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"),
-          paginationType = "simple") 
-
+# reactable(highlight = TRUE, striped = TRUE,ast_reb_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110,
+#                                                                                              style = cell_style(font_weight = "bold")),
+#                                                                         urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+#                                                                         avg = colDef(name = "Season Avg"),
+#                                                                         GP = colDef(name = "Games Played"),
+#                                                                         minutes = colDef(name = "Minutes Last 10 GP",cell = function(value,index) {
+#                                                                           sparkline(ast_reb_picks$minutes[[index]], height = 50)
+#                                                                         }),
+#                                                                         ast_reb = colDef(name = "Total Assists & Rebounds Last 10 GP",cell = function(value,index) {
+#                                                                           sparkline(ast_reb_picks$ast_reb[[index]], type = "bar", height = 50)
+#                                                                         }),
+#                                                                         Under = colDef(name = "Odds"),
+#                                                                         OU = colDef(name = "Total Assists & Rebounds O/U",width = 110),
+#                                                                         `Away Games` = colDef(cell = data_bars(ast_reb_picks, 
+#                                                                                                                fill_color = color_set, 
+#                                                                                                                background = '#F1F1F1', 
+#                                                                                                                min_value = 0, 
+#                                                                                                                max_value = 1, 
+#                                                                                                                text_position = 'outside-end',
+#                                                                                                                number_fmt = scales::percent)),
+#                                                                         `Home Games` = colDef(cell = data_bars(ast_reb_picks, 
+#                                                                                                                fill_color = color_set, 
+#                                                                                                                background = '#F1F1F1', 
+#                                                                                                                min_value = 0, 
+#                                                                                                                max_value = 1, 
+#                                                                                                                text_position = 'outside-end',
+#                                                                                                                number_fmt = scales::percent)),
+#                                                                         `Last 10` = colDef(cell = data_bars(ast_reb_picks, 
+#                                                                                                             fill_color = color_set, 
+#                                                                                                             background = '#F1F1F1', 
+#                                                                                                             min_value = 0, 
+#                                                                                                             max_value = 1, 
+#                                                                                                             text_position = 'outside-end',
+#                                                                                                             number_fmt = scales::percent)),
+#                                                                         `Last 5` = colDef(cell = data_bars(ast_reb_picks, 
+#                                                                                                            fill_color = color_set, 
+#                                                                                                            background = '#F1F1F1', 
+#                                                                                                            min_value = 0, 
+#                                                                                                            max_value = 1, 
+#                                                                                                            text_position = 'outside-end',
+#                                                                                                            number_fmt = scales::percent)),
+#                                                                         `Regular Season` = colDef(cell = data_bars(ast_reb_picks, 
+#                                                                                                                    fill_color = color_set, 
+#                                                                                                                    background = '#F1F1F1', 
+#                                                                                                                    min_value = 0, 
+#                                                                                                                    max_value = 1, 
+#                                                                                                                    text_position = 'outside-end',
+#                                                                                                                    number_fmt = scales::percent))),
+#           theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"),
+#           paginationType = "simple") 
+# 
 
 
 
@@ -1303,7 +1312,7 @@ stl_blk_df$namePlayer <- stri_trans_general(str = stl_blk_df$namePlayer, id = "L
 
 stl_blk_df <- stl_blk_df %>% left_join(dk_stlblk, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test) %>% 
   left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
-              mutate(avg = stl+blk) %>% group_by(idPlayer) %>% summarize(avg = mean(avg)), by = "idPlayer") %>% 
+              mutate(avg = stl+blk) %>% group_by(idPlayer) %>% summarize(avg = mean(avg), GP = n()), by = "idPlayer") %>% 
   left_join(stl_blk_df %>% filter(Type == "Regular Season") %>% group_by(idPlayer) %>% 
               summarize(variation_regular = mean(sd)), by = "idPlayer")
 
@@ -1314,66 +1323,68 @@ stl_blk_picks <- stl_blk_df %>% left_join(stl_blk_df_join, by = c("namePlayer","
   left_join(min_ten %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(minutes = list(minutes)), by = "idPlayer") %>%
   left_join(min_ten %>% mutate(stl_blk = stl+blk) %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(stl_blk = list(stl_blk)), by = "idPlayer") %>% 
   group_by(namePlayer,idPlayer, OU, Under, Type, avg = round(avg,1),
-                                  variation_regular = round(variation_regular,1), minutes, stl_blk) %>% 
+                                  variation_regular = round(variation_regular,1), minutes, stl_blk, GP) %>% 
   summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% 
   left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
   relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>%
-  relocate(minutes, .after = Under) %>% relocate(stl_blk, .after = minutes) %>% select(-c(slugTeam,idPlayer, variation_regular))
+  relocate(minutes, .after = Under) %>% relocate(stl_blk, .after = minutes) %>% relocate(GP, .after = stl_blk)  %>% select(-c(slugTeam,idPlayer, variation_regular))
 
 
 
 
-reactable(highlight = TRUE, striped = TRUE,stl_blk_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
-                                                                         urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
-                                                                         avg = colDef(name = "Season Avg"),
-                                                                         Under = colDef(name = "Odds"),
-                                                                         minutes = colDef(name = "Minutes Last 10 GP",cell = function(value,index) {
-                                                                           sparkline(stl_blk_picks$minutes[[index]], height = 50)
-                                                                         }),
-                                                                         stl_blk = colDef(name = "Total Steals & Blocks Last 10 GP",cell = function(value,index) {
-                                                                           sparkline(stl_blk_picks$stl_blk[[index]], type = "bar", height = 50)
-                                                                         }),
-                                                                         OU = colDef(name = "Total Steals & Blocks O/U",width = 110),
-                                                                         `Away Games` = colDef(cell = data_bars(stl_blk_picks, 
-                                                                                                                fill_color = color_set, 
-                                                                                                                background = '#F1F1F1', 
-                                                                                                                min_value = 0, 
-                                                                                                                max_value = 1, 
-                                                                                                                text_position = 'outside-end',
-                                                                                                                number_fmt = scales::percent)),
-                                                                         `Home Games` = colDef(cell = data_bars(stl_blk_picks, 
-                                                                                                                fill_color = color_set, 
-                                                                                                                background = '#F1F1F1', 
-                                                                                                                min_value = 0, 
-                                                                                                                max_value = 1, 
-                                                                                                                text_position = 'outside-end',
-                                                                                                                number_fmt = scales::percent)),
-                                                                         `Last 10` = colDef(cell = data_bars(stl_blk_picks, 
-                                                                                                             fill_color = color_set, 
-                                                                                                             background = '#F1F1F1', 
-                                                                                                             min_value = 0, 
-                                                                                                             max_value = 1, 
-                                                                                                             text_position = 'outside-end',
-                                                                                                             number_fmt = scales::percent)),
-                                                                         `Last 5` = colDef(cell = data_bars(stl_blk_picks, 
-                                                                                                            fill_color = color_set, 
-                                                                                                            background = '#F1F1F1', 
-                                                                                                            min_value = 0, 
-                                                                                                            max_value = 1, 
-                                                                                                            text_position = 'outside-end',
-                                                                                                            number_fmt = scales::percent)),
-                                                                         `Regular Season` = colDef(cell = data_bars(stl_blk_picks, 
-                                                                                                                    fill_color = color_set, 
-                                                                                                                    background = '#F1F1F1', 
-                                                                                                                    min_value = 0, 
-                                                                                                                    max_value = 1, 
-                                                                                                                    text_position = 'outside-end',
-                                                                                                                    number_fmt = scales::percent))),
-          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"),
-          paginationType = "simple")
-
+# reactable(highlight = TRUE, striped = TRUE,stl_blk_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110,
+#                                                                                              style = cell_style(font_weight = "bold")),
+#                                                                          urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+#                                                                          avg = colDef(name = "Season Avg"),
+#                                                                          GP = colDef(name = "Games Played"),
+#                                                                          Under = colDef(name = "Odds"),
+#                                                                          minutes = colDef(name = "Minutes Last 10 GP",cell = function(value,index) {
+#                                                                            sparkline(stl_blk_picks$minutes[[index]], height = 50)
+#                                                                          }),
+#                                                                          stl_blk = colDef(name = "Total Steals & Blocks Last 10 GP",cell = function(value,index) {
+#                                                                            sparkline(stl_blk_picks$stl_blk[[index]], type = "bar", height = 50)
+#                                                                          }),
+#                                                                          OU = colDef(name = "Total Steals & Blocks O/U",width = 110),
+#                                                                          `Away Games` = colDef(cell = data_bars(stl_blk_picks, 
+#                                                                                                                 fill_color = color_set, 
+#                                                                                                                 background = '#F1F1F1', 
+#                                                                                                                 min_value = 0, 
+#                                                                                                                 max_value = 1, 
+#                                                                                                                 text_position = 'outside-end',
+#                                                                                                                 number_fmt = scales::percent)),
+#                                                                          `Home Games` = colDef(cell = data_bars(stl_blk_picks, 
+#                                                                                                                 fill_color = color_set, 
+#                                                                                                                 background = '#F1F1F1', 
+#                                                                                                                 min_value = 0, 
+#                                                                                                                 max_value = 1, 
+#                                                                                                                 text_position = 'outside-end',
+#                                                                                                                 number_fmt = scales::percent)),
+#                                                                          `Last 10` = colDef(cell = data_bars(stl_blk_picks, 
+#                                                                                                              fill_color = color_set, 
+#                                                                                                              background = '#F1F1F1', 
+#                                                                                                              min_value = 0, 
+#                                                                                                              max_value = 1, 
+#                                                                                                              text_position = 'outside-end',
+#                                                                                                              number_fmt = scales::percent)),
+#                                                                          `Last 5` = colDef(cell = data_bars(stl_blk_picks, 
+#                                                                                                             fill_color = color_set, 
+#                                                                                                             background = '#F1F1F1', 
+#                                                                                                             min_value = 0, 
+#                                                                                                             max_value = 1, 
+#                                                                                                             text_position = 'outside-end',
+#                                                                                                             number_fmt = scales::percent)),
+#                                                                          `Regular Season` = colDef(cell = data_bars(stl_blk_picks, 
+#                                                                                                                     fill_color = color_set, 
+#                                                                                                                     background = '#F1F1F1', 
+#                                                                                                                     min_value = 0, 
+#                                                                                                                     max_value = 1, 
+#                                                                                                                     text_position = 'outside-end',
+#                                                                                                                     number_fmt = scales::percent))),
+#           theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"),
+#           paginationType = "simple")
+# 
 
 ##Three Pointers Made
 
@@ -1525,7 +1536,7 @@ fg3m_df$namePlayer <- stri_trans_general(str = fg3m_df$namePlayer, id = "Latin-A
 
 fg3m_df <- fg3m_df %>% left_join(dk_fg3m, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test) %>% 
   left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
-              summarize(avg = mean(fg3m)), by = "idPlayer") %>% 
+              summarize(avg = mean(fg3m), GP = n()), by = "idPlayer") %>% 
   left_join(fg3m_df %>% filter(Type == "Regular Season") %>% group_by(idPlayer) %>% summarize(variation_regular = mean(sd)), by = "idPlayer")
 
 fg3m_df_join <- fg3m_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
@@ -1535,64 +1546,69 @@ fg3m_picks <- fg3m_df %>% left_join(fg3m_df_join, by = c("namePlayer","idPlayer"
   left_join(min_ten %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(minutes = list(minutes)), by = "idPlayer") %>%
   left_join(min_ten  %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(fg3m = list(fg3m)), by = "idPlayer") %>% 
   group_by(namePlayer,idPlayer, OU, Under, Type, avg = round(avg,1),
-                                  variation_regular = round(variation_regular,1), minutes, fg3m) %>% 
-  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
+                                  variation_regular = round(variation_regular,1), minutes, fg3m, GP) %>% 
+  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% 
+  left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
-  relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>% select(-c(slugTeam,idPlayer, variation_regular))
+  relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>%
+  relocate(minutes, .after = Under) %>% relocate(fg3m, .after = minutes)%>% relocate(avg, .after = GP) %>% 
+  select(-c(slugTeam,idPlayer, variation_regular))
 
 
 
 
-reactable(highlight = TRUE, striped = TRUE,fg3m_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
-                                                                         urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
-                                                                      avg = colDef(name = "Season Avg"),
-                                                                      minutes = colDef(name = "Minutes Last 10 GP",cell = function(value,index) {
-                                                                        sparkline(fg3m_picks$minutes[[index]], height = 50)
-                                                                      }),
-                                                                      fg3m = colDef(name = "Total Threes Made Last 10 GP",cell = function(value,index) {
-                                                                        sparkline(fg3m_picks$fg3m[[index]], type = "bar", height = 50)
-                                                                      }),
-                                                                      Under = colDef(name = "Odds"),
-                                                                         OU = colDef(name = "Total Threes Made O/U",width = 110),
-                                                                         `Away Games` = colDef(cell = data_bars(fg3m_picks, 
-                                                                                                                fill_color = color_set, 
-                                                                                                                background = '#F1F1F1', 
-                                                                                                                min_value = 0, 
-                                                                                                                max_value = 1, 
-                                                                                                                text_position = 'outside-end',
-                                                                                                                number_fmt = scales::percent)),
-                                                                         `Home Games` = colDef(cell = data_bars(fg3m_picks, 
-                                                                                                                fill_color = color_set, 
-                                                                                                                background = '#F1F1F1', 
-                                                                                                                min_value = 0, 
-                                                                                                                max_value = 1, 
-                                                                                                                text_position = 'outside-end',
-                                                                                                                number_fmt = scales::percent)),
-                                                                         `Last 10` = colDef(cell = data_bars(fg3m_picks, 
-                                                                                                             fill_color = color_set, 
-                                                                                                             background = '#F1F1F1', 
-                                                                                                             min_value = 0, 
-                                                                                                             max_value = 1, 
-                                                                                                             text_position = 'outside-end',
-                                                                                                             number_fmt = scales::percent)),
-                                                                         `Last 5` = colDef(cell = data_bars(fg3m_picks, 
-                                                                                                            fill_color = color_set, 
-                                                                                                            background = '#F1F1F1', 
-                                                                                                            min_value = 0, 
-                                                                                                            max_value = 1, 
-                                                                                                            text_position = 'outside-end',
-                                                                                                            number_fmt = scales::percent)),
-                                                                         `Regular Season` = colDef(cell = data_bars(fg3m_picks, 
-                                                                                                                    fill_color = color_set, 
-                                                                                                                    background = '#F1F1F1', 
-                                                                                                                    min_value = 0, 
-                                                                                                                    max_value = 1, 
-                                                                                                                    text_position = 'outside-end',
-                                                                                                                    number_fmt = scales::percent))),
-          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"),
-          paginationType = "simple") 
-
+# reactable(highlight = TRUE, striped = TRUE,fg3m_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110,
+#                                                                                           style = cell_style(font_weight = "bold")),
+#                                                                          urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+#                                                                       avg = colDef(name = "Season Avg"),
+#                                                                       GP = colDef(name = "Games Played"),
+#                                                                       minutes = colDef(name = "Minutes Last 10 GP",cell = function(value,index) {
+#                                                                         sparkline(fg3m_picks$minutes[[index]], height = 50)
+#                                                                       }),
+#                                                                       fg3m = colDef(name = "Total Threes Made Last 10 GP",cell = function(value,index) {
+#                                                                         sparkline(fg3m_picks$fg3m[[index]], type = "bar", height = 50)
+#                                                                       }),
+#                                                                       Under = colDef(name = "Odds"),
+#                                                                          OU = colDef(name = "Total Threes Made O/U",width = 110),
+#                                                                          `Away Games` = colDef(cell = data_bars(fg3m_picks, 
+#                                                                                                                 fill_color = color_set, 
+#                                                                                                                 background = '#F1F1F1', 
+#                                                                                                                 min_value = 0, 
+#                                                                                                                 max_value = 1, 
+#                                                                                                                 text_position = 'outside-end',
+#                                                                                                                 number_fmt = scales::percent)),
+#                                                                          `Home Games` = colDef(cell = data_bars(fg3m_picks, 
+#                                                                                                                 fill_color = color_set, 
+#                                                                                                                 background = '#F1F1F1', 
+#                                                                                                                 min_value = 0, 
+#                                                                                                                 max_value = 1, 
+#                                                                                                                 text_position = 'outside-end',
+#                                                                                                                 number_fmt = scales::percent)),
+#                                                                          `Last 10` = colDef(cell = data_bars(fg3m_picks, 
+#                                                                                                              fill_color = color_set, 
+#                                                                                                              background = '#F1F1F1', 
+#                                                                                                              min_value = 0, 
+#                                                                                                              max_value = 1, 
+#                                                                                                              text_position = 'outside-end',
+#                                                                                                              number_fmt = scales::percent)),
+#                                                                          `Last 5` = colDef(cell = data_bars(fg3m_picks, 
+#                                                                                                             fill_color = color_set, 
+#                                                                                                             background = '#F1F1F1', 
+#                                                                                                             min_value = 0, 
+#                                                                                                             max_value = 1, 
+#                                                                                                             text_position = 'outside-end',
+#                                                                                                             number_fmt = scales::percent)),
+#                                                                          `Regular Season` = colDef(cell = data_bars(fg3m_picks, 
+#                                                                                                                     fill_color = color_set, 
+#                                                                                                                     background = '#F1F1F1', 
+#                                                                                                                     min_value = 0, 
+#                                                                                                                     max_value = 1, 
+#                                                                                                                     text_position = 'outside-end',
+#                                                                                                                     number_fmt = scales::percent))),
+#           theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"),
+#           paginationType = "simple") 
+# 
 
 
 ##Steals
@@ -1745,7 +1761,7 @@ stl_df$namePlayer <- stri_trans_general(str = stl_df$namePlayer, id = "Latin-ASC
 
 stl_df <- stl_df %>% left_join(dk_stl, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test) %>% 
   left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
-              summarize(avg = mean(stl)), by = "idPlayer") %>% 
+              summarize(avg = mean(stl), GP = n()), by = "idPlayer") %>% 
   left_join(stl_df %>% filter(Type == "Regular Season") %>% group_by(idPlayer) %>% summarize(variation_regular = mean(sd)), by = "idPlayer")
 
 stl_df_join <- stl_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
@@ -1755,63 +1771,66 @@ stl_picks <- stl_df %>% left_join(stl_df_join, by = c("namePlayer","idPlayer")) 
   left_join(min_ten %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(minutes = list(minutes)), by = "idPlayer") %>%
   left_join(min_ten  %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(stl = list(stl)), by = "idPlayer") %>% 
   group_by(namePlayer,idPlayer, OU, Under, Type, avg = round(avg,1),
-           variation_regular = round(variation_regular,1), minutes, stl) %>% 
+           variation_regular = round(variation_regular,1), minutes, stl, GP) %>% 
   summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
-  relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>% select(-c(slugTeam,idPlayer, variation_regular))
+  relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>%
+  relocate(minutes, .after = Under) %>% relocate(stl, .after = minutes) %>% relocate(GP, .after = stl)%>% select(-c(slugTeam,idPlayer, variation_regular))
 
 
 
 
-reactable(highlight = TRUE, striped = TRUE,stl_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
-                                                                     urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
-                                                                     avg = colDef(name = "Season Avg"),
-                                                                     minutes = colDef(name = "Minutes Last 10 GP",cell = function(value,index) {
-                                                                       sparkline(stl_picks$minutes[[index]], height = 50)
-                                                                     }),
-                                                                     stl = colDef(name = "Total Steals Last 10 GP",cell = function(value,index) {
-                                                                       sparkline(stl_picks$stl[[index]], type = "bar", height = 50)
-                                                                     }),
-                                                                     Under = colDef(name = "Odds"),
-                                                                     OU = colDef(name = "Total Steals O/U",width = 110),
-                                                                     `Away Games` = colDef(cell = data_bars(stl_picks, 
-                                                                                                            fill_color = color_set, 
-                                                                                                            background = '#F1F1F1', 
-                                                                                                            min_value = 0, 
-                                                                                                            max_value = 1, 
-                                                                                                            text_position = 'outside-end',
-                                                                                                            number_fmt = scales::percent)),
-                                                                     `Home Games` = colDef(cell = data_bars(stl_picks, 
-                                                                                                            fill_color = color_set, 
-                                                                                                            background = '#F1F1F1', 
-                                                                                                            min_value = 0, 
-                                                                                                            max_value = 1, 
-                                                                                                            text_position = 'outside-end',
-                                                                                                            number_fmt = scales::percent)),
-                                                                     `Last 10` = colDef(cell = data_bars(stl_picks, 
-                                                                                                         fill_color = color_set, 
-                                                                                                         background = '#F1F1F1', 
-                                                                                                         min_value = 0, 
-                                                                                                         max_value = 1, 
-                                                                                                         text_position = 'outside-end',
-                                                                                                         number_fmt = scales::percent)),
-                                                                     `Last 5` = colDef(cell = data_bars(stl_picks, 
-                                                                                                        fill_color = color_set, 
-                                                                                                        background = '#F1F1F1', 
-                                                                                                        min_value = 0, 
-                                                                                                        max_value = 1, 
-                                                                                                        text_position = 'outside-end',
-                                                                                                        number_fmt = scales::percent)),
-                                                                     `Regular Season` = colDef(cell = data_bars(stl_picks, 
-                                                                                                                fill_color = color_set, 
-                                                                                                                background = '#F1F1F1', 
-                                                                                                                min_value = 0, 
-                                                                                                                max_value = 1, 
-                                                                                                                text_position = 'outside-end',
-                                                                                                                number_fmt = scales::percent))),
-          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"),
-          paginationType = "simple") 
+# reactable(highlight = TRUE, striped = TRUE,stl_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110,
+#                                                                                          style = cell_style(font_weight = "bold")),
+#                                                                      urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+#                                                                      avg = colDef(name = "Season Avg"),
+#                                                                      GP = colDef(name = "Games Played"),
+#                                                                      minutes = colDef(name = "Minutes Last 10 GP",cell = function(value,index) {
+#                                                                        sparkline(stl_picks$minutes[[index]], height = 50)
+#                                                                      }),
+#                                                                      stl = colDef(name = "Total Steals Last 10 GP",cell = function(value,index) {
+#                                                                        sparkline(stl_picks$stl[[index]], type = "bar", height = 50)
+#                                                                      }),
+#                                                                      Under = colDef(name = "Odds"),
+#                                                                      OU = colDef(name = "Total Steals O/U",width = 110),
+#                                                                      `Away Games` = colDef(cell = data_bars(stl_picks, 
+#                                                                                                             fill_color = color_set, 
+#                                                                                                             background = '#F1F1F1', 
+#                                                                                                             min_value = 0, 
+#                                                                                                             max_value = 1, 
+#                                                                                                             text_position = 'outside-end',
+#                                                                                                             number_fmt = scales::percent)),
+#                                                                      `Home Games` = colDef(cell = data_bars(stl_picks, 
+#                                                                                                             fill_color = color_set, 
+#                                                                                                             background = '#F1F1F1', 
+#                                                                                                             min_value = 0, 
+#                                                                                                             max_value = 1, 
+#                                                                                                             text_position = 'outside-end',
+#                                                                                                             number_fmt = scales::percent)),
+#                                                                      `Last 10` = colDef(cell = data_bars(stl_picks, 
+#                                                                                                          fill_color = color_set, 
+#                                                                                                          background = '#F1F1F1', 
+#                                                                                                          min_value = 0, 
+#                                                                                                          max_value = 1, 
+#                                                                                                          text_position = 'outside-end',
+#                                                                                                          number_fmt = scales::percent)),
+#                                                                      `Last 5` = colDef(cell = data_bars(stl_picks, 
+#                                                                                                         fill_color = color_set, 
+#                                                                                                         background = '#F1F1F1', 
+#                                                                                                         min_value = 0, 
+#                                                                                                         max_value = 1, 
+#                                                                                                         text_position = 'outside-end',
+#                                                                                                         number_fmt = scales::percent)),
+#                                                                      `Regular Season` = colDef(cell = data_bars(stl_picks, 
+#                                                                                                                 fill_color = color_set, 
+#                                                                                                                 background = '#F1F1F1', 
+#                                                                                                                 min_value = 0, 
+#                                                                                                                 max_value = 1, 
+#                                                                                                                 text_position = 'outside-end',
+#                                                                                                                 number_fmt = scales::percent))),
+#           theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"),
+#           paginationType = "simple") 
 
 ##Blocks
 
@@ -1963,7 +1982,7 @@ blk_df$namePlayer <- stri_trans_general(str = blk_df$namePlayer, id = "Latin-ASC
 
 blk_df <- blk_df %>% left_join(dk_blk, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test) %>% 
   left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
-              summarize(avg = mean(blk)), by = "idPlayer") %>% 
+              summarize(avg = mean(blk), GP = n()), by = "idPlayer") %>% 
   left_join(blk_df %>% filter(Type == "Regular Season") %>% group_by(idPlayer) %>% summarize(variation_regular = mean(sd)), by = "idPlayer")
 
 blk_df_join <- blk_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
@@ -1973,63 +1992,66 @@ blk_picks <- blk_df %>% left_join(blk_df_join, by = c("namePlayer","idPlayer")) 
   left_join(min_ten %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(minutes = list(minutes)), by = "idPlayer") %>%
   left_join(min_ten  %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(blk = list(blk)), by = "idPlayer") %>% 
   group_by(namePlayer,idPlayer, OU, Under, Type, avg = round(avg,1),
-           variation_regular = round(variation_regular,1), minutes, blk) %>% 
+           variation_regular = round(variation_regular,1), minutes, blk, GP) %>% 
   summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
-  relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>% select(-c(slugTeam,idPlayer, variation_regular))
+  relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>% 
+  relocate(minutes, .after = Under) %>% relocate(blk, .after = minutes) %>% relocate(GP, .after = blk) %>% select(-c(slugTeam,idPlayer, variation_regular))
 
 
 
 
-reactable(highlight = TRUE, striped = TRUE,blk_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
-                                                                     urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
-                                                                     avg = colDef(name = "Season Avg"),
-                                                                     minutes = colDef(name = "Minutes Last 10 GP",cell = function(value,index) {
-                                                                       sparkline(blk_picks$minutes[[index]], height = 50)
-                                                                     }),
-                                                                     blk = colDef(name = "Total Blocks Last 10 GP",cell = function(value,index) {
-                                                                       sparkline(blk_picks$blk[[index]], type = "bar", height = 50)
-                                                                     }),
-                                                                     Under = colDef(name = "Odds"),
-                                                                     OU = colDef(name = "Total Blocks O/U",width = 110),
-                                                                     `Away Games` = colDef(cell = data_bars(blk_picks, 
-                                                                                                            fill_color = color_set, 
-                                                                                                            background = '#F1F1F1', 
-                                                                                                            min_value = 0, 
-                                                                                                            max_value = 1, 
-                                                                                                            text_position = 'outside-end',
-                                                                                                            number_fmt = scales::percent)),
-                                                                     `Home Games` = colDef(cell = data_bars(blk_picks, 
-                                                                                                            fill_color = color_set, 
-                                                                                                            background = '#F1F1F1', 
-                                                                                                            min_value = 0, 
-                                                                                                            max_value = 1, 
-                                                                                                            text_position = 'outside-end',
-                                                                                                            number_fmt = scales::percent)),
-                                                                     `Last 10` = colDef(cell = data_bars(blk_picks, 
-                                                                                                         fill_color = color_set, 
-                                                                                                         background = '#F1F1F1', 
-                                                                                                         min_value = 0, 
-                                                                                                         max_value = 1, 
-                                                                                                         text_position = 'outside-end',
-                                                                                                         number_fmt = scales::percent)),
-                                                                     `Last 5` = colDef(cell = data_bars(blk_picks, 
-                                                                                                        fill_color = color_set, 
-                                                                                                        background = '#F1F1F1', 
-                                                                                                        min_value = 0, 
-                                                                                                        max_value = 1, 
-                                                                                                        text_position = 'outside-end',
-                                                                                                        number_fmt = scales::percent)),
-                                                                     `Regular Season` = colDef(cell = data_bars(blk_picks, 
-                                                                                                                fill_color = color_set, 
-                                                                                                                background = '#F1F1F1', 
-                                                                                                                min_value = 0, 
-                                                                                                                max_value = 1, 
-                                                                                                                text_position = 'outside-end',
-                                                                                                                number_fmt = scales::percent))),
-          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"),
-          paginationType = "simple") 
+# reactable(highlight = TRUE, striped = TRUE,blk_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110,
+#                                                                                          style = cell_style(font_weight = "bold")),
+#                                                                      urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+#                                                                      avg = colDef(name = "Season Avg"),
+#                                                                      GP = colDef(name = "Games Played"),
+#                                                                      minutes = colDef(name = "Minutes Last 10 GP",cell = function(value,index) {
+#                                                                        sparkline(blk_picks$minutes[[index]], height = 50)
+#                                                                      }),
+#                                                                      blk = colDef(name = "Total Blocks Last 10 GP",cell = function(value,index) {
+#                                                                        sparkline(blk_picks$blk[[index]], type = "bar", height = 50)
+#                                                                      }),
+#                                                                      Under = colDef(name = "Odds"),
+#                                                                      OU = colDef(name = "Total Blocks O/U",width = 110),
+#                                                                      `Away Games` = colDef(cell = data_bars(blk_picks, 
+#                                                                                                             fill_color = color_set, 
+#                                                                                                             background = '#F1F1F1', 
+#                                                                                                             min_value = 0, 
+#                                                                                                             max_value = 1, 
+#                                                                                                             text_position = 'outside-end',
+#                                                                                                             number_fmt = scales::percent)),
+#                                                                      `Home Games` = colDef(cell = data_bars(blk_picks, 
+#                                                                                                             fill_color = color_set, 
+#                                                                                                             background = '#F1F1F1', 
+#                                                                                                             min_value = 0, 
+#                                                                                                             max_value = 1, 
+#                                                                                                             text_position = 'outside-end',
+#                                                                                                             number_fmt = scales::percent)),
+#                                                                      `Last 10` = colDef(cell = data_bars(blk_picks, 
+#                                                                                                          fill_color = color_set, 
+#                                                                                                          background = '#F1F1F1', 
+#                                                                                                          min_value = 0, 
+#                                                                                                          max_value = 1, 
+#                                                                                                          text_position = 'outside-end',
+#                                                                                                          number_fmt = scales::percent)),
+#                                                                      `Last 5` = colDef(cell = data_bars(blk_picks, 
+#                                                                                                         fill_color = color_set, 
+#                                                                                                         background = '#F1F1F1', 
+#                                                                                                         min_value = 0, 
+#                                                                                                         max_value = 1, 
+#                                                                                                         text_position = 'outside-end',
+#                                                                                                         number_fmt = scales::percent)),
+#                                                                      `Regular Season` = colDef(cell = data_bars(blk_picks, 
+#                                                                                                                 fill_color = color_set, 
+#                                                                                                                 background = '#F1F1F1', 
+#                                                                                                                 min_value = 0, 
+#                                                                                                                 max_value = 1, 
+#                                                                                                                 text_position = 'outside-end',
+#                                                                                                                 number_fmt = scales::percent))),
+#           theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"),
+#           paginationType = "simple") 
 
 ##Turnovers
 
@@ -2181,7 +2203,7 @@ tov_df$namePlayer <- stri_trans_general(str = tov_df$namePlayer, id = "Latin-ASC
 
 tov_df <- tov_df %>% left_join(dk_tov, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test) %>% 
   left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
-              summarize(avg = mean(tov)), by = "idPlayer") %>% 
+              summarize(avg = mean(tov), GP = n()), by = "idPlayer") %>% 
   left_join(tov_df %>% filter(Type == "Regular Season") %>% group_by(idPlayer) %>% summarize(variation_regular = mean(sd)), by = "idPlayer")
 
 tov_df_join <- tov_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
@@ -2191,63 +2213,66 @@ tov_picks <- tov_df %>% left_join(tov_df_join, by = c("namePlayer","idPlayer")) 
   left_join(min_ten %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(minutes = list(minutes)), by = "idPlayer") %>%
   left_join(min_ten  %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(tov = list(tov)), by = "idPlayer") %>% 
   group_by(namePlayer,idPlayer, OU, Under, Type, avg = round(avg,1),
-           variation_regular = round(variation_regular,1), minutes, tov) %>% 
+           variation_regular = round(variation_regular,1), minutes, tov, GP) %>% 
   summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
-  relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>% select(-c(slugTeam,idPlayer, variation_regular))
+  relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam)  %>% 
+  relocate(minutes, .after = Under) %>% relocate(tov, .after = minutes) %>% relocate(GP, .after = tov)  %>% select(-c(slugTeam,idPlayer, variation_regular))
 
 
 
 
-reactable(highlight = TRUE, striped = TRUE,tov_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
-                                                                     urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
-                                                                     avg = colDef(name = "Season Avg"),
-                                                                     minutes = colDef(name = "Minutes Last 10 GP",cell = function(value,index) {
-                                                                       sparkline(tov_picks$minutes[[index]], height = 50)
-                                                                     }),
-                                                                     tov = colDef(name = "Total Turnovers Last 10 GP",cell = function(value,index) {
-                                                                       sparkline(tov_picks$tov[[index]], type = "bar", height = 50)
-                                                                     }),
-                                                                     Under = colDef(name = "Odds"),
-                                                                     OU = colDef(name = "Total Turnovers O/U",width = 110),
-                                                                     `Away Games` = colDef(cell = data_bars(tov_picks, 
-                                                                                                            fill_color = color_set, 
-                                                                                                            background = '#F1F1F1', 
-                                                                                                            min_value = 0, 
-                                                                                                            max_value = 1, 
-                                                                                                            text_position = 'outside-end',
-                                                                                                            number_fmt = scales::percent)),
-                                                                     `Home Games` = colDef(cell = data_bars(tov_picks, 
-                                                                                                            fill_color = color_set, 
-                                                                                                            background = '#F1F1F1', 
-                                                                                                            min_value = 0, 
-                                                                                                            max_value = 1, 
-                                                                                                            text_position = 'outside-end',
-                                                                                                            number_fmt = scales::percent)),
-                                                                     `Last 10` = colDef(cell = data_bars(tov_picks, 
-                                                                                                         fill_color = color_set, 
-                                                                                                         background = '#F1F1F1', 
-                                                                                                         min_value = 0, 
-                                                                                                         max_value = 1, 
-                                                                                                         text_position = 'outside-end',
-                                                                                                         number_fmt = scales::percent)),
-                                                                     `Last 5` = colDef(cell = data_bars(tov_picks, 
-                                                                                                        fill_color = color_set, 
-                                                                                                        background = '#F1F1F1', 
-                                                                                                        min_value = 0, 
-                                                                                                        max_value = 1, 
-                                                                                                        text_position = 'outside-end',
-                                                                                                        number_fmt = scales::percent)),
-                                                                     `Regular Season` = colDef(cell = data_bars(tov_picks, 
-                                                                                                                fill_color = color_set, 
-                                                                                                                background = '#F1F1F1', 
-                                                                                                                min_value = 0, 
-                                                                                                                max_value = 1, 
-                                                                                                                text_position = 'outside-end',
-                                                                                                                number_fmt = scales::percent))),
-          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"),
-          paginationType = "simple") 
+# reactable(highlight = TRUE, striped = TRUE,tov_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110,
+#                                                                                          style = cell_style(font_weight = "bold")),
+#                                                                      urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+#                                                                      avg = colDef(name = "Season Avg"),
+#                                                                      GP = colDef(name = "Games Played"),
+#                                                                      minutes = colDef(name = "Minutes Last 10 GP",cell = function(value,index) {
+#                                                                        sparkline(tov_picks$minutes[[index]], height = 50)
+#                                                                      }),
+#                                                                      tov = colDef(name = "Total Turnovers Last 10 GP",cell = function(value,index) {
+#                                                                        sparkline(tov_picks$tov[[index]], type = "bar", height = 50)
+#                                                                      }),
+#                                                                      Under = colDef(name = "Odds"),
+#                                                                      OU = colDef(name = "Total Turnovers O/U",width = 110),
+#                                                                      `Away Games` = colDef(cell = data_bars(tov_picks, 
+#                                                                                                             fill_color = color_set, 
+#                                                                                                             background = '#F1F1F1', 
+#                                                                                                             min_value = 0, 
+#                                                                                                             max_value = 1, 
+#                                                                                                             text_position = 'outside-end',
+#                                                                                                             number_fmt = scales::percent)),
+#                                                                      `Home Games` = colDef(cell = data_bars(tov_picks, 
+#                                                                                                             fill_color = color_set, 
+#                                                                                                             background = '#F1F1F1', 
+#                                                                                                             min_value = 0, 
+#                                                                                                             max_value = 1, 
+#                                                                                                             text_position = 'outside-end',
+#                                                                                                             number_fmt = scales::percent)),
+#                                                                      `Last 10` = colDef(cell = data_bars(tov_picks, 
+#                                                                                                          fill_color = color_set, 
+#                                                                                                          background = '#F1F1F1', 
+#                                                                                                          min_value = 0, 
+#                                                                                                          max_value = 1, 
+#                                                                                                          text_position = 'outside-end',
+#                                                                                                          number_fmt = scales::percent)),
+#                                                                      `Last 5` = colDef(cell = data_bars(tov_picks, 
+#                                                                                                         fill_color = color_set, 
+#                                                                                                         background = '#F1F1F1', 
+#                                                                                                         min_value = 0, 
+#                                                                                                         max_value = 1, 
+#                                                                                                         text_position = 'outside-end',
+#                                                                                                         number_fmt = scales::percent)),
+#                                                                      `Regular Season` = colDef(cell = data_bars(tov_picks, 
+#                                                                                                                 fill_color = color_set, 
+#                                                                                                                 background = '#F1F1F1', 
+#                                                                                                                 min_value = 0, 
+#                                                                                                                 max_value = 1, 
+#                                                                                                                 text_position = 'outside-end',
+#                                                                                                                 number_fmt = scales::percent))),
+#           theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"),
+#           paginationType = "simple") 
 
 ##Points
 
@@ -2399,7 +2424,7 @@ pts_df$namePlayer <- stri_trans_general(str = pts_df$namePlayer, id = "Latin-ASC
 
 pts_df <- pts_df %>% left_join(dk_pts, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test) %>% 
   left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
-              summarize(avg = mean(pts)), by = "idPlayer") %>% 
+              summarize(avg = mean(pts), GP = n()), by = "idPlayer") %>% 
   left_join(pts_df %>% filter(Type == "Regular Season") %>% group_by(idPlayer) %>% summarize(variation_regular = mean(sd)), by = "idPlayer")
 
 pts_df_join <- pts_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
@@ -2409,63 +2434,66 @@ pts_picks <- pts_df %>% left_join(pts_df_join, by = c("namePlayer","idPlayer")) 
   left_join(min_ten %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(minutes = list(minutes)), by = "idPlayer") %>%
   left_join(min_ten  %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(pts = list(pts)), by = "idPlayer") %>% 
   group_by(namePlayer,idPlayer, OU, Under, Type, avg = round(avg,1),
-           variation_regular = round(variation_regular,1), minutes, pts) %>% 
+           variation_regular = round(variation_regular,1), minutes, pts, GP) %>% 
   summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
-  relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>% select(-c(slugTeam,idPlayer, variation_regular))
+  relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam)  %>% 
+  relocate(minutes, .after = Under) %>% relocate(pts, .after = minutes) %>% relocate(GP, .after = pts)  %>% select(-c(slugTeam,idPlayer, variation_regular))
 
 
 
 
-reactable(highlight = TRUE, striped = TRUE,pts_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
-                                                                     urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
-                                                                     avg = colDef(name = "Season Avg"),
-                                                                     minutes = colDef(name = "Minutes Last 10 GP",cell = function(value,index) {
-                                                                       sparkline(pts_picks$minutes[[index]], height = 50)
-                                                                     }),
-                                                                     pts = colDef(name = "Total Points Last 10 GP",cell = function(value,index) {
-                                                                       sparkline(pts_picks$pts[[index]], type = "bar", height = 50)
-                                                                     }),
-                                                                     Under = colDef(name = "Odds"),
-                                                                     OU = colDef(name = "Total Points O/U",width = 110),
-                                                                     `Away Games` = colDef(cell = data_bars(pts_picks, 
-                                                                                                            fill_color = color_set, 
-                                                                                                            background = '#F1F1F1', 
-                                                                                                            min_value = 0, 
-                                                                                                            max_value = 1, 
-                                                                                                            text_position = 'outside-end',
-                                                                                                            number_fmt = scales::percent)),
-                                                                     `Home Games` = colDef(cell = data_bars(pts_picks, 
-                                                                                                            fill_color = color_set, 
-                                                                                                            background = '#F1F1F1', 
-                                                                                                            min_value = 0, 
-                                                                                                            max_value = 1, 
-                                                                                                            text_position = 'outside-end',
-                                                                                                            number_fmt = scales::percent)),
-                                                                     `Last 10` = colDef(cell = data_bars(pts_picks, 
-                                                                                                         fill_color = color_set, 
-                                                                                                         background = '#F1F1F1', 
-                                                                                                         min_value = 0, 
-                                                                                                         max_value = 1, 
-                                                                                                         text_position = 'outside-end',
-                                                                                                         number_fmt = scales::percent)),
-                                                                     `Last 5` = colDef(cell = data_bars(pts_picks, 
-                                                                                                        fill_color = color_set, 
-                                                                                                        background = '#F1F1F1', 
-                                                                                                        min_value = 0, 
-                                                                                                        max_value = 1, 
-                                                                                                        text_position = 'outside-end',
-                                                                                                        number_fmt = scales::percent)),
-                                                                     `Regular Season` = colDef(cell = data_bars(pts_picks, 
-                                                                                                                fill_color = color_set, 
-                                                                                                                background = '#F1F1F1', 
-                                                                                                                min_value = 0, 
-                                                                                                                max_value = 1, 
-                                                                                                                text_position = 'outside-end',
-                                                                                                                number_fmt = scales::percent))),
-          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"),
-          paginationType = "simple") 
+# reactable(highlight = TRUE, striped = TRUE,pts_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110,
+#                                                                                          style = cell_style(font_weight = "bold")),
+#                                                                      urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+#                                                                      avg = colDef(name = "Season Avg"),
+#                                                                      GP = colDef(name = "Games Played"),
+#                                                                      minutes = colDef(name = "Minutes Last 10 GP",cell = function(value,index) {
+#                                                                        sparkline(pts_picks$minutes[[index]], height = 50)
+#                                                                      }),
+#                                                                      pts = colDef(name = "Total Points Last 10 GP",cell = function(value,index) {
+#                                                                        sparkline(pts_picks$pts[[index]], type = "bar", height = 50)
+#                                                                      }),
+#                                                                      Under = colDef(name = "Odds"),
+#                                                                      OU = colDef(name = "Total Points O/U",width = 110),
+#                                                                      `Away Games` = colDef(cell = data_bars(pts_picks, 
+#                                                                                                             fill_color = color_set, 
+#                                                                                                             background = '#F1F1F1', 
+#                                                                                                             min_value = 0, 
+#                                                                                                             max_value = 1, 
+#                                                                                                             text_position = 'outside-end',
+#                                                                                                             number_fmt = scales::percent)),
+#                                                                      `Home Games` = colDef(cell = data_bars(pts_picks, 
+#                                                                                                             fill_color = color_set, 
+#                                                                                                             background = '#F1F1F1', 
+#                                                                                                             min_value = 0, 
+#                                                                                                             max_value = 1, 
+#                                                                                                             text_position = 'outside-end',
+#                                                                                                             number_fmt = scales::percent)),
+#                                                                      `Last 10` = colDef(cell = data_bars(pts_picks, 
+#                                                                                                          fill_color = color_set, 
+#                                                                                                          background = '#F1F1F1', 
+#                                                                                                          min_value = 0, 
+#                                                                                                          max_value = 1, 
+#                                                                                                          text_position = 'outside-end',
+#                                                                                                          number_fmt = scales::percent)),
+#                                                                      `Last 5` = colDef(cell = data_bars(pts_picks, 
+#                                                                                                         fill_color = color_set, 
+#                                                                                                         background = '#F1F1F1', 
+#                                                                                                         min_value = 0, 
+#                                                                                                         max_value = 1, 
+#                                                                                                         text_position = 'outside-end',
+#                                                                                                         number_fmt = scales::percent)),
+#                                                                      `Regular Season` = colDef(cell = data_bars(pts_picks, 
+#                                                                                                                 fill_color = color_set, 
+#                                                                                                                 background = '#F1F1F1', 
+#                                                                                                                 min_value = 0, 
+#                                                                                                                 max_value = 1, 
+#                                                                                                                 text_position = 'outside-end',
+#                                                                                                                 number_fmt = scales::percent))),
+#           theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"),
+#           paginationType = "simple") 
 
 ##Assists
 
@@ -2617,7 +2645,7 @@ ast_df$namePlayer <- stri_trans_general(str = ast_df$namePlayer, id = "Latin-ASC
 
 ast_df <- ast_df %>% left_join(dk_ast, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test) %>% 
   left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
-              summarize(avg = mean(ast)), by = "idPlayer") %>% 
+              summarize(avg = mean(ast), GP = n()), by = "idPlayer") %>% 
   left_join(ast_df %>% filter(Type == "Regular Season") %>% group_by(idPlayer) %>% summarize(variation_regular = mean(sd)), by = "idPlayer")
 
 ast_df_join <- ast_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
@@ -2627,63 +2655,66 @@ ast_picks <- ast_df %>% left_join(ast_df_join, by = c("namePlayer","idPlayer")) 
   left_join(min_ten %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(minutes = list(minutes)), by = "idPlayer") %>%
   left_join(min_ten  %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(ast = list(ast)), by = "idPlayer") %>% 
   group_by(namePlayer,idPlayer, OU, Under, Type, avg = round(avg,1),
-           variation_regular = round(variation_regular,1), minutes, ast) %>% 
+           variation_regular = round(variation_regular,1), minutes, ast, GP) %>% 
   summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
-  relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>% select(-c(slugTeam,idPlayer, variation_regular))
+  relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam)  %>% 
+  relocate(minutes, .after = Under) %>% relocate(ast, .after = minutes) %>% relocate(GP, .after = ast)  %>% select(-c(slugTeam,idPlayer, variation_regular))
 
 
 
 
-reactable(highlight = TRUE, striped = TRUE,ast_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
-                                                                     urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
-                                                                     avg = colDef(name = "Season Avg"),
-                                                                     minutes = colDef(name = "Minutes Last 10 GP",cell = function(value,index) {
-                                                                       sparkline(ast_picks$minutes[[index]], height = 50)
-                                                                     }),
-                                                                     ast = colDef(name = "Total Assists Last 10 GP",cell = function(value,index) {
-                                                                       sparkline(ast_picks$ast[[index]], type = "bar", height = 50)
-                                                                     }),
-                                                                     Under = colDef(name = "Odds"),
-                                                                     OU = colDef(name = "Total Assists O/U",width = 110),
-                                                                     `Away Games` = colDef(cell = data_bars(ast_picks, 
-                                                                                                            fill_color = color_set, 
-                                                                                                            background = '#F1F1F1', 
-                                                                                                            min_value = 0, 
-                                                                                                            max_value = 1, 
-                                                                                                            text_position = 'outside-end',
-                                                                                                            number_fmt = scales::percent)),
-                                                                     `Home Games` = colDef(cell = data_bars(ast_picks, 
-                                                                                                            fill_color = color_set, 
-                                                                                                            background = '#F1F1F1', 
-                                                                                                            min_value = 0, 
-                                                                                                            max_value = 1, 
-                                                                                                            text_position = 'outside-end',
-                                                                                                            number_fmt = scales::percent)),
-                                                                     `Last 10` = colDef(cell = data_bars(ast_picks, 
-                                                                                                         fill_color = color_set, 
-                                                                                                         background = '#F1F1F1', 
-                                                                                                         min_value = 0, 
-                                                                                                         max_value = 1, 
-                                                                                                         text_position = 'outside-end',
-                                                                                                         number_fmt = scales::percent)),
-                                                                     `Last 5` = colDef(cell = data_bars(ast_picks, 
-                                                                                                        fill_color = color_set, 
-                                                                                                        background = '#F1F1F1', 
-                                                                                                        min_value = 0, 
-                                                                                                        max_value = 1, 
-                                                                                                        text_position = 'outside-end',
-                                                                                                        number_fmt = scales::percent)),
-                                                                     `Regular Season` = colDef(cell = data_bars(ast_picks, 
-                                                                                                                fill_color = color_set, 
-                                                                                                                background = '#F1F1F1', 
-                                                                                                                min_value = 0, 
-                                                                                                                max_value = 1, 
-                                                                                                                text_position = 'outside-end',
-                                                                                                                number_fmt = scales::percent))),
-          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"),
-          paginationType = "simple") 
+# reactable(highlight = TRUE, striped = TRUE,ast_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110,
+#                                                                                          style = cell_style(font_weight = "bold")),
+#                                                                      urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+#                                                                      avg = colDef(name = "Season Avg"),
+#                                                                      GP = colDef(name = "Games Played"),
+#                                                                      minutes = colDef(name = "Minutes Last 10 GP",cell = function(value,index) {
+#                                                                        sparkline(ast_picks$minutes[[index]], height = 50)
+#                                                                      }),
+#                                                                      ast = colDef(name = "Total Assists Last 10 GP",cell = function(value,index) {
+#                                                                        sparkline(ast_picks$ast[[index]], type = "bar", height = 50)
+#                                                                      }),
+#                                                                      Under = colDef(name = "Odds"),
+#                                                                      OU = colDef(name = "Total Assists O/U",width = 110),
+#                                                                      `Away Games` = colDef(cell = data_bars(ast_picks, 
+#                                                                                                             fill_color = color_set, 
+#                                                                                                             background = '#F1F1F1', 
+#                                                                                                             min_value = 0, 
+#                                                                                                             max_value = 1, 
+#                                                                                                             text_position = 'outside-end',
+#                                                                                                             number_fmt = scales::percent)),
+#                                                                      `Home Games` = colDef(cell = data_bars(ast_picks, 
+#                                                                                                             fill_color = color_set, 
+#                                                                                                             background = '#F1F1F1', 
+#                                                                                                             min_value = 0, 
+#                                                                                                             max_value = 1, 
+#                                                                                                             text_position = 'outside-end',
+#                                                                                                             number_fmt = scales::percent)),
+#                                                                      `Last 10` = colDef(cell = data_bars(ast_picks, 
+#                                                                                                          fill_color = color_set, 
+#                                                                                                          background = '#F1F1F1', 
+#                                                                                                          min_value = 0, 
+#                                                                                                          max_value = 1, 
+#                                                                                                          text_position = 'outside-end',
+#                                                                                                          number_fmt = scales::percent)),
+#                                                                      `Last 5` = colDef(cell = data_bars(ast_picks, 
+#                                                                                                         fill_color = color_set, 
+#                                                                                                         background = '#F1F1F1', 
+#                                                                                                         min_value = 0, 
+#                                                                                                         max_value = 1, 
+#                                                                                                         text_position = 'outside-end',
+#                                                                                                         number_fmt = scales::percent)),
+#                                                                      `Regular Season` = colDef(cell = data_bars(ast_picks, 
+#                                                                                                                 fill_color = color_set, 
+#                                                                                                                 background = '#F1F1F1', 
+#                                                                                                                 min_value = 0, 
+#                                                                                                                 max_value = 1, 
+#                                                                                                                 text_position = 'outside-end',
+#                                                                                                                 number_fmt = scales::percent))),
+#           theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"),
+#           paginationType = "simple") 
 
 ##Rebounds
 
@@ -2835,7 +2866,7 @@ treb_df$namePlayer <- stri_trans_general(str = treb_df$namePlayer, id = "Latin-A
 
 treb_df <- treb_df %>% left_join(dk_reb, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test) %>% 
   left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
-              summarize(avg = mean(treb)), by = "idPlayer") %>% 
+              summarize(avg = mean(treb), GP = n()), by = "idPlayer") %>% 
   left_join(treb_df %>% filter(Type == "Regular Season") %>% group_by(idPlayer) %>% summarize(variation_regular = mean(sd)), by = "idPlayer")
 
 treb_df_join <- treb_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Regular Season", 1,0)) %>% 
@@ -2845,61 +2876,109 @@ treb_picks <- treb_df %>% left_join(treb_df_join, by = c("namePlayer","idPlayer"
   left_join(min_ten %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(minutes = list(minutes)), by = "idPlayer") %>%
   left_join(min_ten  %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(treb = list(treb)), by = "idPlayer") %>% 
   group_by(namePlayer,idPlayer, OU, Under, Type, avg = round(avg,1),
-           variation_regular = round(variation_regular,1), minutes, treb) %>% 
+           variation_regular = round(variation_regular,1), minutes, treb, GP) %>% 
   summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
-  relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>% select(-c(slugTeam,idPlayer, variation_regular))
+  relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam)  %>% 
+  relocate(minutes, .after = Under) %>% relocate(treb, .after = minutes) %>% relocate(GP, .after = treb)  %>% select(-c(slugTeam,idPlayer, variation_regular))
 
 
 
 
-reactable(highlight = TRUE, striped = TRUE,treb_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110),
-                                                                      urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
-                                                                      avg = colDef(name = "Season Avg"),
-                                                                      minutes = colDef(name = "Minutes Last 10 GP",cell = function(value,index) {
-                                                                        sparkline(treb_picks$minutes[[index]], height = 50)
-                                                                      }),
-                                                                      treb = colDef(name = "Total Rebounds Last 10 GP",cell = function(value,index) {
-                                                                        sparkline(treb_picks$treb[[index]], type = "bar", height = 50)
-                                                                      }),
-                                                                      Under = colDef(name = "Odds"),
-                                                                      OU = colDef(name = "Total Rebounds O/U",width = 110),
-                                                                      `Away Games` = colDef(cell = data_bars(treb_picks, 
-                                                                                                             fill_color = color_set, 
-                                                                                                             background = '#F1F1F1', 
-                                                                                                             min_value = 0, 
-                                                                                                             max_value = 1, 
-                                                                                                             text_position = 'outside-end',
-                                                                                                             number_fmt = scales::percent)),
-                                                                      `Home Games` = colDef(cell = data_bars(treb_picks, 
-                                                                                                             fill_color = color_set, 
-                                                                                                             background = '#F1F1F1', 
-                                                                                                             min_value = 0, 
-                                                                                                             max_value = 1, 
-                                                                                                             text_position = 'outside-end',
-                                                                                                             number_fmt = scales::percent)),
-                                                                      `Last 10` = colDef(cell = data_bars(treb_picks, 
-                                                                                                          fill_color = color_set, 
-                                                                                                          background = '#F1F1F1', 
-                                                                                                          min_value = 0, 
-                                                                                                          max_value = 1, 
-                                                                                                          text_position = 'outside-end',
-                                                                                                          number_fmt = scales::percent)),
-                                                                      `Last 5` = colDef(cell = data_bars(treb_picks, 
-                                                                                                         fill_color = color_set, 
-                                                                                                         background = '#F1F1F1', 
-                                                                                                         min_value = 0, 
-                                                                                                         max_value = 1, 
-                                                                                                         text_position = 'outside-end',
-                                                                                                         number_fmt = scales::percent)),
-                                                                      `Regular Season` = colDef(cell = data_bars(treb_picks, 
-                                                                                                                 fill_color = color_set, 
-                                                                                                                 background = '#F1F1F1', 
-                                                                                                                 min_value = 0, 
-                                                                                                                 max_value = 1, 
-                                                                                                                 text_position = 'outside-end',
-                                                                                                                 number_fmt = scales::percent))),
-          theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"),
-          paginationType = "simple") 
+# reactable(highlight = TRUE, striped = TRUE,treb_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110,
+#                                                                                           style = cell_style(font_weight = "bold")),
+#                                                                       urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+#                                                                       avg = colDef(name = "Season Avg"),
+#                                                                       GP = colDef(name = "Games Played"),
+#                                                                       minutes = colDef(name = "Minutes Last 10 GP",cell = function(value,index) {
+#                                                                         sparkline(treb_picks$minutes[[index]], height = 50)
+#                                                                       }),
+#                                                                       treb = colDef(name = "Total Rebounds Last 10 GP",cell = function(value,index) {
+#                                                                         sparkline(treb_picks$treb[[index]], type = "bar", height = 50)
+#                                                                       }),
+#                                                                       Under = colDef(name = "Odds"),
+#                                                                       OU = colDef(name = "Total Rebounds O/U",width = 110),
+#                                                                       `Away Games` = colDef(cell = data_bars(treb_picks, 
+#                                                                                                              fill_color = color_set, 
+#                                                                                                              background = '#F1F1F1', 
+#                                                                                                              min_value = 0, 
+#                                                                                                              max_value = 1, 
+#                                                                                                              text_position = 'outside-end',
+#                                                                                                              number_fmt = scales::percent)),
+#                                                                       `Home Games` = colDef(cell = data_bars(treb_picks, 
+#                                                                                                              fill_color = color_set, 
+#                                                                                                              background = '#F1F1F1', 
+#                                                                                                              min_value = 0, 
+#                                                                                                              max_value = 1, 
+#                                                                                                              text_position = 'outside-end',
+#                                                                                                              number_fmt = scales::percent)),
+#                                                                       `Last 10` = colDef(cell = data_bars(treb_picks, 
+#                                                                                                           fill_color = color_set, 
+#                                                                                                           background = '#F1F1F1', 
+#                                                                                                           min_value = 0, 
+#                                                                                                           max_value = 1, 
+#                                                                                                           text_position = 'outside-end',
+#                                                                                                           number_fmt = scales::percent)),
+#                                                                       `Last 5` = colDef(cell = data_bars(treb_picks, 
+#                                                                                                          fill_color = color_set, 
+#                                                                                                          background = '#F1F1F1', 
+#                                                                                                          min_value = 0, 
+#                                                                                                          max_value = 1, 
+#                                                                                                          text_position = 'outside-end',
+#                                                                                                          number_fmt = scales::percent)),
+#                                                                       `Regular Season` = colDef(cell = data_bars(treb_picks, 
+#                                                                                                                  fill_color = color_set, 
+#                                                                                                                  background = '#F1F1F1', 
+#                                                                                                                  min_value = 0, 
+#                                                                                                                  max_value = 1, 
+#                                                                                                                  text_position = 'outside-end',
+#                                                                                                                  number_fmt = scales::percent))),
+#           theme = fivethirtyeight(), defaultPageSize = 20, fullWidth = TRUE, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"),
+#           paginationType = "simple") 
 
+combined <- bind_rows(ptrebast_picks %>% rename(amount = pts_reb_ast) %>% mutate(Bet = "Total Pts, Reb, Ast"),
+                      pt_reb_picks %>% rename(amount = pts_reb) %>% mutate(Bet = "Total Pts, Reb"),ast_reb_picks %>% 
+                        rename(amount = ast_reb)%>% mutate(Bet = "Total Ast, Reb"), stl_blk_picks %>% 
+                        rename(amount = stl_blk) %>% mutate(Bet = "Total Stl, Blk"), fg3m_picks %>% 
+                        rename(amount = fg3m) %>% mutate(Bet = "Total Threes Made"), stl_picks %>% 
+                        rename(amount = stl) %>% mutate(Bet = "Total Steals"), blk_picks %>% 
+                        rename(amount = blk) %>% mutate(Bet = "Total Blocks"), tov_picks %>% 
+                        rename(amount = tov) %>% mutate(Bet = "Total Turnovers"), pts_picks %>% 
+                        rename(amount = pts) %>% mutate(Bet = "Total Points"), treb_picks %>% 
+                        rename(amount = treb) %>% mutate(Bet = "Total Rebounds"), ast_picks %>% 
+                        rename(amount = ast) %>% mutate(Bet = "Total Assists")) %>% relocate(Bet, .before = namePlayer) %>% 
+  mutate(namePlayer = paste0(substr(namePlayer,1,1),".",gsub("^\\S+ ", "",namePlayer)))
+
+
+
+
+
+
+Sys.setenv(RSTUDIO_PANDOC="C:/Program Files/RStudio/resources/app/bin/quarto/bin/tools")
+
+
+rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/Cheat_sheet.Rmd',
+                  output_file = "prop_bet_cheat_sheet.html",
+                  output_dir = file.path('C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/Matrix'))
+
+
+
+
+combined_sample <- bind_rows(ptrebast_picks %>% rename(amount = pts_reb_ast) %>% mutate(Bet = "Total Pts, Reb, Ast"),
+                      pt_reb_picks %>% rename(amount = pts_reb) %>% mutate(Bet = "Total Pts, Reb"),ast_reb_picks %>% 
+                        rename(amount = ast_reb)%>% mutate(Bet = "Total Ast, Reb"), stl_blk_picks %>% 
+                        rename(amount = stl_blk) %>% mutate(Bet = "Total Stl, Blk"), fg3m_picks %>% 
+                        rename(amount = fg3m) %>% mutate(Bet = "Total Threes Made"), stl_picks %>% 
+                        rename(amount = stl) %>% mutate(Bet = "Total Steals"), blk_picks %>% 
+                        rename(amount = blk) %>% mutate(Bet = "Total Blocks"), tov_picks %>% 
+                        rename(amount = tov) %>% mutate(Bet = "Total Turnovers"), pts_picks %>% 
+                        rename(amount = pts) %>% mutate(Bet = "Total Points"), treb_picks %>% 
+                        rename(amount = treb) %>% mutate(Bet = "Total Rebounds"), ast_picks %>% 
+                        rename(amount = ast) %>% mutate(Bet = "Total Assists")) %>% relocate(Bet, .before = namePlayer) %>% 
+  mutate(namePlayer = paste0(substr(namePlayer,1,1),".",gsub("^\\S+ ", "",namePlayer))) %>% arrange(desc(`Regular Season`)) %>% head(10)
+
+
+rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/Cheat_sheet_sample.Rmd',
+                  output_file = "prop_bet_cheat_sheet_sample.html",
+                  output_dir = file.path('C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/Matrix'))

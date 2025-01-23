@@ -137,7 +137,7 @@ schedule <- lapply(slugteams_list, function(x){
     mutate(Date = if_else(Date < scheduleDate,Date %m+% years(1),Date)) %>% select(Date,location,Opponent)
   
   tab <- tab %>% left_join(teams, by = "Opponent") %>% mutate(Team = toupper(x)) %>% 
-    mutate(Team = ifelse(Team == "UTAH","UTA",ifelse(Team == "NO","NOP",Team))) %>% mutate(next_game = ifelse(Date >= Sys.Date()+1,TRUE,FALSE)) %>% 
+    mutate(Team = ifelse(Team == "UTAH","UTA",ifelse(Team == "NO","NOP",Team))) %>% mutate(next_game = ifelse(Date >= Sys.Date(),TRUE,FALSE)) %>% 
     mutate(game_number = 1:n())
   
 })
@@ -232,16 +232,16 @@ stopCluster(cl)
 
 
  
-# test2 <- function(x) {
-#   
-#   file.info(paste0("C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/sheets/",x,substr(x,start = 1,stop=3),".html"))
-# 
-#   }
+test2 <- function(x) {
+ 
+file.info(paste0("C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/sheets/",x,substr(x,start = 1,stop=3),".html"))
+
+  }
   
-# test2 <- lapply(all_players_previous_batch$idPlayer, test2)
-# 
-# test2 <-bind_rows(test2)
-# 
-# test2 <- test2%>% rownames_to_column('File')
-# 
-# test2 %>% select(File,ctime)
+ test2 <- lapply(all_players_previous_batch$idPlayer, test2)
+ 
+ test2 <-bind_rows(test2)
+ 
+ test2 <- test2%>% rownames_to_column('File')
+ 
+ test2 %>% select(File,ctime)

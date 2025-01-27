@@ -217,7 +217,7 @@ dk_blk <- dk_blk %>% filter(selections.tags == "MainPointLine") %>% select(seoId
 # Turnovers
 
 
-json_file <- "https://sportsbook-nash.draftkings.com/api/sportscontent/dkusil/v1/leagues/42648/categories/1293/subcategories/13780"
+json_file <- "https://sportsbook-nash.draftkings.com/api/sportscontent/dkusil/v1/leagues/42648/categories/1293/subcategories/13782"
 json_data <- fromJSON(txt=json_file)
 
 dk_tov <- json_data[5]

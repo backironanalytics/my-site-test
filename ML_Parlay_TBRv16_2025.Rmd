@@ -408,15 +408,6 @@ ggplotly(p) %>% layout(legend = list(orientation = "h", x = 0, y = -0.2),
 
 
 
-### Minutes Histogram
-
-```{r min hist, echo = FALSE, warning = FALSE, message = FALSE}
-
-p <- player_data %>% filter(typeSeason == "Regular Season", slugSeason == current_season) %>% ggplot(aes(.data[[metric]])) + geom_histogram(bins = 10, color = secondary_color, fill = primary_color)+ scale_x_continuous(breaks = seq(0,90,2))+ ggtitle(toupper(paste(player_name[1],"Regular Season",metric,"histogram"))) + theme_minimal()+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-
-ggplotly(p) %>% layout(title = list(text = toupper(paste(player_name[1],metric,"histogram",'<br>','<sup>',toupper("Current Regular Season"),'</sup>'))))
-
-```
 
 
 

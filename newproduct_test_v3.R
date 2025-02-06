@@ -451,7 +451,7 @@ doParallel::registerDoParallel(cl)
 
 ##Pts Reb Ast
 
-ptrebast2 <- foreach(j = next_team_batch$idPlayer,.packages = c("flexdashboard",
+ptrebast2 <- foreach(j = c("H","A"),.packages = c("flexdashboard",
                                                    "tidyverse",
                                                    "dplyr",
                                                    "knitr",
@@ -479,47 +479,21 @@ ptrebast2 <- foreach(j = next_team_batch$idPlayer,.packages = c("flexdashboard",
                                                    "rvest",
                                                    "ggpubr")) %dopar% {
   
-ptrebast2 <- lapply(j, function(x){
-  
-  slug_team <- all_rosters %>% filter(idPlayer == x) %>% select(idPlayer,slugTeam)
-  
-  hit_rate <- seq(10.5,60.5,1)
-  
-  sd <- sd(playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% mutate(pts_reb_ast = pts+treb+ast) %>%
-             pull(pts_reb_ast))
-  
-  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
-    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,dateGame,locationGame,pts_reb_ast,urlPlayerHeadshot) %>% 
-    left_join(slug_team, by = "idPlayer")
-  
-  hit_rate_above <- lapply(hit_rate, function(x){
-    
-    df %>% mutate(test = mean(pts_reb_ast > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% 
-      summarize(test = min(test),average = mean(pts_reb_ast), sd = sd, .groups = 'drop') %>% 
-      ungroup() 
-    
-  })
-  
-  hit_rate_above 
-  
-})
-
-ptrebast2 <- bind_rows(ptrebast2) %>% mutate(Type = "Regular Season")
 
 ##Pts Reb Ast Home Games
 
 
-ptrebast_home2 <- lapply(j, function(x){
+ptrebast_home2 <- lapply(next_team_batch$idPlayer, function(x){
   
   slug_team <- all_rosters %>% filter(idPlayer == x) %>% select(idPlayer,slugTeam)
   
   hit_rate <- seq(10.5,60.5,1)
   
-  sd <- sd(playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == "H") %>% 
+  sd <- sd(playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == j) %>% 
              mutate(pts_reb_ast = pts+treb+ast) %>%
              pull(pts_reb_ast))
   
-  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == "H") %>% 
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == j) %>% 
     mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,dateGame,locationGame,pts_reb_ast) %>% left_join(slug_team, by = "idPlayer")
   
   hit_rate_above <- lapply(hit_rate, function(x){
@@ -533,7 +507,8 @@ ptrebast_home2 <- lapply(j, function(x){
   
 })
 
-ptrebast_home2 <- bind_rows(ptrebast_home2) %>% mutate(Type = "Home Games")
+ptrebast_home2 <- bind_rows(ptrebast_home2) %>% mutate(Type = j)
+
 
 }
 

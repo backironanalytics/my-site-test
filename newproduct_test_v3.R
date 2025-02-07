@@ -440,89 +440,40 @@ play_play <- bind_rows(results)
 
 stopCluster(cl)
 
-library(foreach)
-
-Sys.setenv(RSTUDIO_PANDOC="C:/Program Files/RStudio/resources/app/bin/quarto/bin/tools")
-
-
-cl <- makeCluster(5)
-
-doParallel::registerDoParallel(cl)
-
 ##Pts Reb Ast
 
-ptrebast2 <- foreach(j = c("H","A"),.packages = c("flexdashboard",
-                                                   "tidyverse",
-                                                   "dplyr",
-                                                   "knitr",
-                                                   "ggplot2",
-                                                   "stringr",
-                                                   "caret",
-                                                   "reactablefmtr",
-                                                   "formattable",
-                                                   "markdown",
-                                                   "magick",
-                                                   "highcharter",
-                                                   "cowplot",
-                                                   "extrafont",
-                                                   "data.table",
-                                                   "broom",
-                                                   "grid",
-                                                   "gridExtra",
-                                                   "grDevices",
-                                                   "fmsb",
-                                                   "fontawesome",
-                                                   "bslib",
-                                                   "plotly",
-                                                   "ggbreak",
-                                                   "nbastatR",
-                                                   "rvest",
-                                                   "ggpubr")) %dopar% {
-  
 
-##Pts Reb Ast Home Games
-
-
-ptrebast_home2 <- lapply(next_team_batch$idPlayer, function(x){
+ptrebast <- lapply(next_team_batch$idPlayer, function(x){
   
   slug_team <- all_rosters %>% filter(idPlayer == x) %>% select(idPlayer,slugTeam)
   
   hit_rate <- seq(10.5,60.5,1)
   
-  sd <- sd(playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == j) %>% 
-             mutate(pts_reb_ast = pts+treb+ast) %>%
+  sd <- sd(playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% mutate(pts_reb_ast = pts+treb+ast) %>%
              pull(pts_reb_ast))
   
-  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == j) %>% 
-    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,dateGame,locationGame,pts_reb_ast) %>% left_join(slug_team, by = "idPlayer")
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    mutate(pts_reb_ast = pts+treb+ast) %>% select(namePlayer,idPlayer,dateGame,locationGame,pts_reb_ast,urlPlayerHeadshot) %>% 
+    left_join(slug_team, by = "idPlayer")
   
   hit_rate_above <- lapply(hit_rate, function(x){
     
     df %>% mutate(test = mean(pts_reb_ast > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% 
-      summarize(test = min(test),average = mean(pts_reb_ast),sd = sd, .groups = 'drop') %>% ungroup()
+      summarize(test = min(test),average = mean(pts_reb_ast), sd = sd, .groups = 'drop') %>% 
+      ungroup() 
     
   })
   
-  hit_rate_above
+  hit_rate_above 
   
 })
 
-ptrebast_home2 <- bind_rows(ptrebast_home2) %>% mutate(Type = j)
-
-
-}
-
-                
-stopCluster(cl)
-
-ptrebast2 <- bind_rows(ptrebast2)
-
-
+ptrebast <- bind_rows(ptrebast) %>% mutate(Type = "Regular Season")
 
 ##Pts Reb Ast Home Games
 
 
-ptrebast_home <- lapply(j, function(x){
+ptrebast_home <- lapply(next_team_batch$idPlayer, function(x){
   
   slug_team <- all_rosters %>% filter(idPlayer == x) %>% select(idPlayer,slugTeam)
   
@@ -677,7 +628,8 @@ ptrebast_picks <- ptreb_ast_df %>% left_join(ptreb_ast_df_join, by = c("namePlay
   left_join(min_ten %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(minutes = list(minutes)), by = "idPlayer") %>%
   left_join(min_ten %>% 
               mutate(pts_reb_ast = pts+treb+ast) %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(pts_reb_ast = list(pts_reb_ast)), by = "idPlayer") %>% 
-  group_by(namePlayer, OU,Under, slugTeam,Type, avg = round(avg,1),
+  left_join(playerdata %>%group_by(idPlayer,urlPlayerHeadshot) %>% summarize(n = n()), by = "idPlayer") %>% 
+  group_by(namePlayer, idPlayer, urlPlayerHeadshot, OU,Under, slugTeam,Type, avg = round(avg,1),
                                   variation_regular = round(variation_regular,1),
                                   variation_home = as.character(round(variation_home,1)),
                                   variation_away = as.character(round(variation_away,1)),
@@ -917,7 +869,8 @@ pt_reb_df_join <- pt_reb_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type =
 pt_reb_picks <- pt_reb_df %>% left_join(pt_reb_df_join, by = c("namePlayer","idPlayer")) %>%
   left_join(min_ten %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(minutes = list(minutes)), by = "idPlayer") %>%
   left_join(min_ten %>% mutate(pts_reb = pts+treb) %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(pts_reb = list(pts_reb)), by = "idPlayer") %>% 
-  group_by(namePlayer,idPlayer, OU,Under, Type, avg = round(avg,1),
+  left_join(playerdata %>%group_by(idPlayer,urlPlayerHeadshot) %>% summarize(n = n()), by = "idPlayer") %>% 
+  group_by(namePlayer,idPlayer,urlPlayerHeadshot, OU,Under, Type, avg = round(avg,1),
                                   variation_regular = round(variation_regular,1), minutes, pts_reb, GP) %>% 
   summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1-season_hit) %>% pivot_wider(names_from = Type, values_from = season_hit) %>% 
   left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
@@ -925,7 +878,7 @@ pt_reb_picks <- pt_reb_df %>% left_join(pt_reb_df_join, by = c("namePlayer","idP
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
   relocate(urlThumbnailTeam, .after = namePlayer) %>% 
   relocate(matchup, .after = urlThumbnailTeam) %>% relocate(minutes, .after = Under) %>% relocate(pts_reb, .after = minutes) %>% relocate(GP, .after = pts_reb) %>% 
-  select(-c(slugTeam,idPlayer, variation_regular))
+  select(-c(slugTeam, variation_regular))
 
 
 
@@ -1142,15 +1095,16 @@ ast_reb_df_join <- ast_reb_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type
 
 ast_reb_picks <- ast_reb_df %>% left_join(ast_reb_df_join, by = c("namePlayer","idPlayer")) %>%
   left_join(min_ten %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(minutes = list(minutes)), by = "idPlayer") %>%
-  left_join(min_ten %>% mutate(ast_reb = ast+treb) %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(ast_reb = list(ast_reb)), by = "idPlayer")  %>% 
-  group_by(namePlayer,idPlayer, OU, Under, Type, avg = round(avg,1),
+  left_join(min_ten %>% mutate(ast_reb = ast+treb) %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(ast_reb = list(ast_reb)), by = "idPlayer") %>% 
+  left_join(playerdata %>%group_by(idPlayer,urlPlayerHeadshot) %>% summarize(n = n()), by = "idPlayer")  %>% 
+  group_by(namePlayer,idPlayer,urlPlayerHeadshot, OU, Under, Type, avg = round(avg,1),
                                   variation_regular = round(variation_regular,1), minutes, ast_reb, GP) %>% 
   summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% 
   left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
   relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>%
-  relocate(minutes, .after = Under) %>% relocate(ast_reb, .after = minutes) %>% relocate(GP, .after = ast_reb) %>% select(-c(slugTeam,idPlayer, variation_regular))
+  relocate(minutes, .after = Under) %>% relocate(ast_reb, .after = minutes) %>% relocate(GP, .after = ast_reb) %>% select(-c(slugTeam, variation_regular))
 
 
 # reactable(highlight = TRUE, striped = TRUE,ast_reb_picks, columns = list(namePlayer = colDef(name = "Player",sticky = "left", width = 110,
@@ -1371,14 +1325,15 @@ stl_blk_df_join <- stl_blk_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type
 stl_blk_picks <- stl_blk_df %>% left_join(stl_blk_df_join, by = c("namePlayer","idPlayer")) %>%
   left_join(min_ten %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(minutes = list(minutes)), by = "idPlayer") %>%
   left_join(min_ten %>% mutate(stl_blk = stl+blk) %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(stl_blk = list(stl_blk)), by = "idPlayer") %>% 
-  group_by(namePlayer,idPlayer, OU, Under, Type, avg = round(avg,1),
+  left_join(playerdata %>%group_by(idPlayer,urlPlayerHeadshot) %>% summarize(n = n()), by = "idPlayer") %>% 
+  group_by(namePlayer,idPlayer,urlPlayerHeadshot, OU, Under, Type, avg = round(avg,1),
                                   variation_regular = round(variation_regular,1), minutes, stl_blk, GP) %>% 
   summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% 
   left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
   relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>%
-  relocate(minutes, .after = Under) %>% relocate(stl_blk, .after = minutes) %>% relocate(GP, .after = stl_blk)  %>% select(-c(slugTeam,idPlayer, variation_regular))
+  relocate(minutes, .after = Under) %>% relocate(stl_blk, .after = minutes) %>% relocate(GP, .after = stl_blk)  %>% select(-c(slugTeam, variation_regular))
 
 
 
@@ -1594,7 +1549,8 @@ fg3m_df_join <- fg3m_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "R
 fg3m_picks <- fg3m_df %>% left_join(fg3m_df_join, by = c("namePlayer","idPlayer")) %>%
   left_join(min_ten %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(minutes = list(minutes)), by = "idPlayer") %>%
   left_join(min_ten  %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(fg3m = list(fg3m)), by = "idPlayer") %>% 
-  group_by(namePlayer,idPlayer, OU, Under, Type, avg = round(avg,1),
+  left_join(playerdata %>%group_by(idPlayer,urlPlayerHeadshot) %>% summarize(n = n()), by = "idPlayer") %>% 
+  group_by(namePlayer,idPlayer,urlPlayerHeadshot, OU, Under, Type, avg = round(avg,1),
                                   variation_regular = round(variation_regular,1), minutes, fg3m, GP) %>% 
   summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% 
   left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
@@ -1602,7 +1558,7 @@ fg3m_picks <- fg3m_df %>% left_join(fg3m_df_join, by = c("namePlayer","idPlayer"
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
   relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>%
   relocate(minutes, .after = Under) %>% relocate(fg3m, .after = minutes)%>% relocate(avg, .after = GP) %>% 
-  select(-c(slugTeam,idPlayer, variation_regular))
+  select(-c(slugTeam, variation_regular))
 
 
 
@@ -1819,13 +1775,14 @@ stl_df_join <- stl_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Reg
 stl_picks <- stl_df %>% left_join(stl_df_join, by = c("namePlayer","idPlayer")) %>%
   left_join(min_ten %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(minutes = list(minutes)), by = "idPlayer") %>%
   left_join(min_ten  %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(stl = list(stl)), by = "idPlayer") %>% 
-  group_by(namePlayer,idPlayer, OU, Under, Type, avg = round(avg,1),
+  left_join(playerdata %>%group_by(idPlayer,urlPlayerHeadshot) %>% summarize(n = n()), by = "idPlayer") %>% 
+  group_by(namePlayer,idPlayer,urlPlayerHeadshot, OU, Under, Type, avg = round(avg,1),
            variation_regular = round(variation_regular,1), minutes, stl, GP) %>% 
   summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
   relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>%
-  relocate(minutes, .after = Under) %>% relocate(stl, .after = minutes) %>% relocate(GP, .after = stl)%>% select(-c(slugTeam,idPlayer, variation_regular))
+  relocate(minutes, .after = Under) %>% relocate(stl, .after = minutes) %>% relocate(GP, .after = stl)%>% select(-c(slugTeam, variation_regular))
 
 
 
@@ -2040,13 +1997,15 @@ blk_df_join <- blk_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Reg
 blk_picks <- blk_df %>% left_join(blk_df_join, by = c("namePlayer","idPlayer")) %>%
   left_join(min_ten %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(minutes = list(minutes)), by = "idPlayer") %>%
   left_join(min_ten  %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(blk = list(blk)), by = "idPlayer") %>% 
-  group_by(namePlayer,idPlayer, OU, Under, Type, avg = round(avg,1),
+  left_join(playerdata %>%group_by(idPlayer,urlPlayerHeadshot) %>% summarize(n = n()), by = "idPlayer") %>% 
+  group_by(namePlayer,idPlayer, urlPlayerHeadshot, OU, Under, Type, avg = round(avg,1),
            variation_regular = round(variation_regular,1), minutes, blk, GP) %>% 
-  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
+  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% 
+  left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
   relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>% 
-  relocate(minutes, .after = Under) %>% relocate(blk, .after = minutes) %>% relocate(GP, .after = blk) %>% select(-c(slugTeam,idPlayer, variation_regular))
+  relocate(minutes, .after = Under) %>% relocate(blk, .after = minutes) %>% relocate(GP, .after = blk) %>% select(-c(slugTeam, variation_regular))
 
 
 
@@ -2261,13 +2220,15 @@ tov_df_join <- tov_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Reg
 tov_picks <- tov_df %>% left_join(tov_df_join, by = c("namePlayer","idPlayer")) %>%
   left_join(min_ten %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(minutes = list(minutes)), by = "idPlayer") %>%
   left_join(min_ten  %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(tov = list(tov)), by = "idPlayer") %>% 
-  group_by(namePlayer,idPlayer, OU, Under, Type, avg = round(avg,1),
+  left_join(playerdata %>%group_by(idPlayer,urlPlayerHeadshot) %>% summarize(n = n()), by = "idPlayer") %>% 
+  group_by(namePlayer,idPlayer, urlPlayerHeadshot, OU, Under, Type, avg = round(avg,1),
            variation_regular = round(variation_regular,1), minutes, tov, GP) %>% 
-  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
+  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% 
+  left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
   relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam)  %>% 
-  relocate(minutes, .after = Under) %>% relocate(tov, .after = minutes) %>% relocate(GP, .after = tov)  %>% select(-c(slugTeam,idPlayer, variation_regular))
+  relocate(minutes, .after = Under) %>% relocate(tov, .after = minutes) %>% relocate(GP, .after = tov)  %>% select(-c(slugTeam, variation_regular))
 
 
 
@@ -2482,13 +2443,15 @@ pts_df_join <- pts_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Reg
 pts_picks <- pts_df %>% left_join(pts_df_join, by = c("namePlayer","idPlayer")) %>%
   left_join(min_ten %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(minutes = list(minutes)), by = "idPlayer") %>%
   left_join(min_ten  %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(pts = list(pts)), by = "idPlayer") %>% 
-  group_by(namePlayer,idPlayer, OU, Under, Type, avg = round(avg,1),
+  left_join(playerdata %>%group_by(idPlayer,urlPlayerHeadshot) %>% summarize(n = n()), by = "idPlayer") %>% 
+  group_by(namePlayer,idPlayer, urlPlayerHeadshot, OU, Under, Type, avg = round(avg,1),
            variation_regular = round(variation_regular,1), minutes, pts, GP) %>% 
-  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
+  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% 
+  left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
   relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam)  %>% 
-  relocate(minutes, .after = Under) %>% relocate(pts, .after = minutes) %>% relocate(GP, .after = pts)  %>% select(-c(slugTeam,idPlayer, variation_regular))
+  relocate(minutes, .after = Under) %>% relocate(pts, .after = minutes) %>% relocate(GP, .after = pts)  %>% select(-c(slugTeam, variation_regular))
 
 
 
@@ -2703,13 +2666,15 @@ ast_df_join <- ast_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Reg
 ast_picks <- ast_df %>% left_join(ast_df_join, by = c("namePlayer","idPlayer")) %>%
   left_join(min_ten %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(minutes = list(minutes)), by = "idPlayer") %>%
   left_join(min_ten  %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(ast = list(ast)), by = "idPlayer") %>% 
-  group_by(namePlayer,idPlayer, OU, Under, Type, avg = round(avg,1),
+  left_join(playerdata %>%group_by(idPlayer,urlPlayerHeadshot) %>% summarize(n = n()), by = "idPlayer") %>% 
+  group_by(namePlayer,idPlayer, urlPlayerHeadshot, OU, Under, Type, avg = round(avg,1),
            variation_regular = round(variation_regular,1), minutes, ast, GP) %>% 
-  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
+  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% 
+  left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
   relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam)  %>% 
-  relocate(minutes, .after = Under) %>% relocate(ast, .after = minutes) %>% relocate(GP, .after = ast)  %>% select(-c(slugTeam,idPlayer, variation_regular))
+  relocate(minutes, .after = Under) %>% relocate(ast, .after = minutes) %>% relocate(GP, .after = ast)  %>% select(-c(slugTeam, variation_regular))
 
 
 
@@ -2924,13 +2889,15 @@ treb_df_join <- treb_df  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "R
 treb_picks <- treb_df %>% left_join(treb_df_join, by = c("namePlayer","idPlayer")) %>%
   left_join(min_ten %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(minutes = list(minutes)), by = "idPlayer") %>%
   left_join(min_ten  %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(treb = list(treb)), by = "idPlayer") %>% 
-  group_by(namePlayer,idPlayer, OU, Under, Type, avg = round(avg,1),
+  left_join(playerdata %>%group_by(idPlayer,urlPlayerHeadshot) %>% summarize(n = n()), by = "idPlayer") %>% 
+  group_by(namePlayer,idPlayer, urlPlayerHeadshot, OU, Under, Type, avg = round(avg,1),
            variation_regular = round(variation_regular,1), minutes, treb, GP) %>% 
-  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
+  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>% 
+  left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>% 
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
   relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam)  %>% 
-  relocate(minutes, .after = Under) %>% relocate(treb, .after = minutes) %>% relocate(GP, .after = treb)  %>% select(-c(slugTeam,idPlayer, variation_regular))
+  relocate(minutes, .after = Under) %>% relocate(treb, .after = minutes) %>% relocate(GP, .after = treb)  %>% select(-c(slugTeam, variation_regular))
 
 
 
@@ -2997,7 +2964,7 @@ combined <- bind_rows(ptrebast_picks %>% rename(amount = pts_reb_ast) %>% mutate
                         rename(amount = pts) %>% mutate(Bet = "Total Points"), treb_picks %>% 
                         rename(amount = treb) %>% mutate(Bet = "Total Rebounds"), ast_picks %>% 
                         rename(amount = ast) %>% mutate(Bet = "Total Assists")) %>% relocate(Bet, .before = namePlayer) %>% 
-  mutate(namePlayer = paste0(substr(namePlayer,1,1),".",gsub("^\\S+ ", "",namePlayer)))
+  mutate(namePlayer = paste0(substr(namePlayer,1,1),".",gsub("^\\S+ ", "",namePlayer))) %>% select(-c(idPlayer, urlPlayerHeadshot))
 
 
 
@@ -3025,7 +2992,7 @@ combined_sample <- bind_rows(ptrebast_picks %>% rename(amount = pts_reb_ast) %>%
                         rename(amount = pts) %>% mutate(Bet = "Total Points"), treb_picks %>% 
                         rename(amount = treb) %>% mutate(Bet = "Total Rebounds"), ast_picks %>% 
                         rename(amount = ast) %>% mutate(Bet = "Total Assists")) %>% relocate(Bet, .before = namePlayer) %>% 
-  mutate(namePlayer = paste0(substr(namePlayer,1,1),".",gsub("^\\S+ ", "",namePlayer))) %>% arrange(desc(`Regular Season`)) %>% head(10)
+  mutate(namePlayer = paste0(substr(namePlayer,1,1),".",gsub("^\\S+ ", "",namePlayer))) %>% arrange(desc(`Regular Season`)) %>% head(10) %>% select(-c(idPlayer, urlPlayerHeadshot))
 
 
 rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/Cheat_sheet_sample.Rmd',

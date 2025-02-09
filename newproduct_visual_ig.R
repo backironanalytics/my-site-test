@@ -24,7 +24,7 @@ df <- bind_rows(ptrebast_picks %>% rename(amount = pts_reb_ast) %>% mutate(Bet =
             rename(amount = ast) %>% mutate(Bet = "Total Assists")) %>% relocate(Bet, .before = namePlayer) 
 
 
-player <- "Kevin Durant"
+player <- "Anthony Davis"
 
 visual <- c("Away Games","Home Games","Last 10","Last 5","Regular Season")
 
@@ -35,7 +35,7 @@ output <- lapply(visual, function(x){
     pivot_longer(!c(Bet,namePlayer,urlPlayerHeadshot,OU,avg,matchup), names_to = "type", values_to = "success") %>% filter(type == x)
   
   p <- df2 %>% ggplot(aes(x = success, y = Bet), label = success) + 
-    geom_link(aes(x = 0,xend = success, y = Bet, yend = Bet, alpha = (stat(index))), size = 3.2, color = "orange") + 
+    geom_link(aes(x = 0,xend = success, y = Bet, yend = Bet, alpha = (stat(index))), size = 3.2, color = "lightblue2") + 
     dark_theme_minimal() + labs(x = element_blank(), y = element_blank(), title = paste0(df2$namePlayer[1],"\n",x, " Under Success Rates"),
                                 subtitle = paste0("Next Game: ",df2$matchup[1])) + 
     theme(axis.text.x = element_blank(),

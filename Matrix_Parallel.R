@@ -493,7 +493,7 @@ pt_ast <- lapply(next_team_batch$idPlayer, function(x){
   
   hit_rate_above <- lapply(hit_rate, function(x){
     
-    df %>% mutate(test = mean(pts_ast > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+    df %>% mutate(test = mean(pts_ast > x), OU = x) %>% group_by(namePlayer, idPlayer,  OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
       ungroup() %>% mutate(slugTeam = slug_team)
     
   })
@@ -522,7 +522,7 @@ pt_reb <- lapply(next_team_batch$idPlayer, function(x){
   
   hit_rate_above <- lapply(hit_rate, function(x){
     
-    df %>% mutate(test = mean(pts_reb > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+    df %>% mutate(test = mean(pts_reb > x), OU = x) %>% group_by(namePlayer, idPlayer,  OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
       ungroup() %>% mutate(slugTeam = slug_team)
     
   })
@@ -553,7 +553,7 @@ ast_reb <- lapply(next_team_batch$idPlayer, function(x){
   
   hit_rate_above <- lapply(hit_rate, function(x){
     
-    df %>% mutate(test = mean(ast_reb > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+    df %>% mutate(test = mean(ast_reb > x), OU = x) %>% group_by(namePlayer, idPlayer,  OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
       ungroup() %>% mutate(slugTeam = slug_team)
     
   })
@@ -583,7 +583,7 @@ stl_blk <- lapply(next_team_batch$idPlayer, function(x){
   
   hit_rate_above <- lapply(hit_rate, function(x){
     
-    df %>% mutate(test = mean(stl_blk > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+    df %>% mutate(test = mean(stl_blk > x), OU = x) %>% group_by(namePlayer, idPlayer,  OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
       ungroup() %>% mutate(slugTeam = slug_team)
     
   })
@@ -626,7 +626,7 @@ firstqpoints <- lapply(next_team_batch$idPlayer, function(x){
   
   hit_rate_above <- lapply(hit_rate, function(x){
     
-    firstq_makes %>% ungroup() %>% mutate(test = mean(pts > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+    firstq_makes %>% ungroup() %>% mutate(test = mean(pts > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
       ungroup() %>% mutate(slugTeam = slug_team)
     
   })
@@ -660,7 +660,7 @@ firstqassists <- lapply(next_team_batch$idPlayer, function(x){
   
   hit_rate_above <- lapply(hit_rate, function(x){
     
-    firstq_assists %>% ungroup() %>% mutate(test = mean(assists > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+    firstq_assists %>% ungroup() %>% mutate(test = mean(assists > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
       ungroup() %>% mutate(slugTeam = slug_team)
     
   })
@@ -687,13 +687,17 @@ firstqrebounds <- lapply(next_team_batch$idPlayer, function(x){
   
   play_play_player_rebounds <- play_play %>% filter(is.na(slugScore),idPlayerNBA1 == x, str_detect(descriptionPlayHome,"REBOUND") | str_detect(descriptionPlayVisitor,"REBOUND"))
   
-  play_play_rebounds <- play_play_player_rebounds %>% select(idGame,numberPeriod,descriptionPlayHome,descriptionPlayVisitor, namePlayer1,slugTeamPlayer1) %>% rename(slugTeam = slugTeamPlayer1) %>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason,locationGame,slugTeam,slugSeason) %>% summarize(n = n()), by = c("idGame","slugTeam")) 
+  play_play_rebounds <- play_play_player_rebounds %>% select(idGame,numberPeriod,descriptionPlayHome,descriptionPlayVisitor, namePlayer1,slugTeamPlayer1) %>% 
+    rename(slugTeam = slugTeamPlayer1) %>% left_join(gamedata %>% group_by(idGame,dateGame,typeSeason,locationGame,slugTeam,slugSeason) %>% summarize(n = n()), by = c("idGame","slugTeam")) 
   
-  firstq_rebounds <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25")  %>% group_by(dateGame,locationGame,typeSeason,slugOpponent,slugSeason,namePlayer,idPlayer,slugTeam) %>% summarize(n = n()) %>% left_join(play_play_rebounds %>% filter(numberPeriod == 1) %>% group_by(dateGame,typeSeason,locationGame) %>% summarize(rebounds = n()), by = "dateGame") %>% mutate(rebounds = replace_na(rebounds,0)) %>% rename(locationGame = locationGame.x, typeSeason = typeSeason.x)
+  firstq_rebounds <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25")  %>% 
+    group_by(dateGame,locationGame,typeSeason,slugOpponent,slugSeason,namePlayer,idPlayer,slugTeam) %>% summarize(n = n()) %>% 
+    left_join(play_play_rebounds %>% filter(numberPeriod == 1) %>% group_by(dateGame,typeSeason,locationGame) %>% summarize(rebounds = n()), by = "dateGame") %>%
+    mutate(rebounds = replace_na(rebounds,0)) %>% rename(locationGame = locationGame.x, typeSeason = typeSeason.x)
   
   hit_rate_above <- lapply(hit_rate, function(x){
     
-    firstq_rebounds %>% ungroup() %>% mutate(test = mean(rebounds > x), OU = x) %>% group_by(namePlayer, idPlayer, slugTeam, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+    firstq_rebounds %>% ungroup() %>% mutate(test = mean(rebounds > x), OU = x) %>% group_by(namePlayer, idPlayer, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
       ungroup() %>% mutate(slugTeam = slug_team)
     
   })

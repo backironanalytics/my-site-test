@@ -62,7 +62,29 @@ output <- lapply(visual, function(x){
   
   
 })
-  
+
+
 
   
+
+df3 <- df %>% filter(Bet == "Total Threes Made") %>% arrange(desc(`Last 5`)) %>% head(10) %>% 
+  mutate(label = paste0("<img src='",urlPlayerHeadshot,"'width='25'/>")) %>% mutate(ylabel = paste(namePlayer,"\n",Bet,"O/U",OU))
+
+p <- df3 %>% ggplot(aes(x = `Last 5`, y = reorder(ylabel,`Last 5`)), label = `Last 5`) + 
+  geom_link(aes(x = 0,xend = `Last 5`, y = reorder(ylabel,`Last 5`), yend = reorder(ylabel,`Last 5`), color = `Last 5`, alpha = (stat(index))), size = 4) + 
+  dark_theme_minimal()  + 
+  theme(axis.text.x = element_blank(),
+        legend.position = "none",
+        axis.ticks = element_blank(),
+        panel.grid = element_blank(),
+        axis.text.y = element_text(face = "bold", color = "white"),
+        plot.title = element_text(face = "bold", size = 15, color = "gray"),
+        plot.subtitle = element_text(face = "bold", size = 12, color = "gray", hjust = 0.9, vjust = 7.5),
+        plot.background = element_rect(color ="black"),
+        axis.title.y = element_blank(),
+        axis.title.x = element_blank()) + 
+  geom_text(aes(x = `Last 5`, y = reorder(ylabel,`Last 5`), label = percent(`Last 5`,1)), color = "white", size = 4, hjust = -0.8, fontface = "bold") + xlim(0,1.8) + 
+  geom_image(aes(image = urlPlayerHeadshot, x = 0), size = 0.1) + 
+  labs(x = element_blank(), y = element_blank(), title = paste0("Prop Bet: ",df3$Bet[1],"\n","Last 5 Games Played Under Success Rates")) + 
+  scale_color_gradient2(low = "yellow",high = "green", mid = "orange",midpoint = 0.8)
   

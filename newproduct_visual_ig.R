@@ -63,7 +63,7 @@ output <- lapply(visual, function(x){
   
 })
 
-bet <- "Total Threes Made"
+visual <- c("Away Games","Home Games","Last 10","Last 5","Regular Season")
 bets <- df %>% group_by(Bet) %>% summarize(n = n()) %>% pull(Bet)
 
 

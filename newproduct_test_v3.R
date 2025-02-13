@@ -373,19 +373,19 @@ all_players <- as.data.frame(players) %>% rename(namePlayer = players) %>%
   left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(namePlayer,idPlayer,slugTeam) %>% summarize(n = n()), by = "namePlayer") %>% 
   select(namePlayer,idPlayer,n) %>% ungroup()
 
-all_players_previous <- schedule %>% filter(Date == schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min -1) %>% pull(slugTeam)
-
-all_players_previous_batch <- lapply(all_players_previous, function(x){
-  
-  rosters %>% filter(slugTeam == x) %>% filter(Include == "Y") %>% select(idPlayer,namePlayer)
-  
-})
-
-all_players_previous_batch <- bind_rows(all_players_previous_batch)
-
-all_players_previous_batch <- all_players_previous_batch %>% 
-  left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(namePlayer,idPlayer,slugTeam) %>% summarize(n = n()), by = "idPlayer") %>% select(idPlayer,namePlayer.y) %>% 
-  rename(namePlayer = namePlayer.y)
+# all_players_previous <- schedule %>% filter(Date == schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min -1) %>% pull(slugTeam)
+# 
+# all_players_previous_batch <- lapply(all_players_previous, function(x){
+#   
+#   rosters %>% filter(slugTeam == x) %>% filter(Include == "Y") %>% select(idPlayer,namePlayer)
+#   
+# })
+# 
+# all_players_previous_batch <- bind_rows(all_players_previous_batch)
+# 
+# all_players_previous_batch <- all_players_previous_batch %>% 
+#   left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(namePlayer,idPlayer,slugTeam) %>% summarize(n = n()), by = "idPlayer") %>% select(idPlayer,namePlayer.y) %>% 
+#   rename(namePlayer = namePlayer.y)
 
 
 

@@ -107,4 +107,27 @@ output_outer <- lapply(bets, function(y){
 
   
 })
-  
+
+
+
+df_test <- df %>% 
+  mutate(label = paste0("<img src='",urlPlayerHeadshot,"'width='25'/>")) %>% mutate(ylabel = paste(namePlayer,"\n",Bet,"O/U",OU)) %>% 
+  select(!c(urlThumbnailTeam,Under,minutes,amount,GP,idPlayer,label)) %>% 
+  pivot_longer(!c(Bet,namePlayer,urlPlayerHeadshot,OU,avg,matchup,ylabel), names_to = "type", values_to = "success") %>% filter(type == "Regular Season")
+
+
+players <- df_test %>% group_by(namePlayer) %>% summarize(n = n()) %>% head(30) %>% pull(namePlayer)
+
+df_test %>% filter(namePlayer %in% players)  %>% ggplot(aes(x=Bet,y=namePlayer,fill = success, label = percent(success,1))) + geom_tile(stat = "Identity") + dark_theme_minimal() + 
+  scale_fill_viridis_c(option= "E", labels = scales::label_percent()) + 
+  theme(axis.text.x = element_text(face = "bold", color = "white", angle = 90, vjust = 0.5),
+        legend.position = "bottom",
+        legend.key.size = unit(1,'cm'),
+        axis.ticks = element_blank(),
+        panel.grid = element_blank(),
+        axis.text.y = element_text(face = "bold", color = "white"),
+        plot.title = element_text(face = "bold", size = 15, color = "gray"),
+        plot.subtitle = element_text(face = "bold", size = 12, color = "gray", hjust = 0.9, vjust = 7.5),
+        plot.background = element_rect(color ="black"),
+        axis.title.y = element_blank(),
+        axis.title.x = element_blank()) + geom_text(color = "white", size = 3.5)

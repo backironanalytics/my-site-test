@@ -121,7 +121,7 @@ players <- df_test %>% group_by(namePlayer) %>% summarize(n = n()) %>% pull(name
 
 
 p_test <- df_test %>% mutate(y.label = paste0(namePlayer," - ",slugTeam)) %>% 
-  filter(namePlayer %in% players[1:15])  %>% ggplot(aes(x=Bet,y=y.label,fill = success, label = paste("O/U:","\n",OU))) + geom_tile(stat = "Identity", color = "gray") + dark_theme_minimal() + 
+  filter(namePlayer %in% players[16:30])  %>% ggplot(aes(x=Bet,y=y.label,fill = success, label = paste("O/U:","\n",OU))) + geom_tile(stat = "Identity", color = "gray") + dark_theme_minimal() + 
   scale_fill_viridis_c(option= "turbo", labels = scales::label_percent(), name = "Success Rate") + 
   theme(axis.text.x = element_text(face = "bold", color = "gray", angle = 90, vjust = 0.5),
         legend.position = "right",
@@ -139,4 +139,32 @@ p_test <- df_test %>% mutate(y.label = paste0(namePlayer," - ",slugTeam)) %>%
 
 ggsave(plot = p_test, 
        path = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/Visuals',
-       filename = paste0("visual","heatmap",".png"), width = 1080, height = 1080, units = "px", dpi = 150)
+       filename = paste0("visual","heatmap2",".png"), width = 1080, height = 1080, units = "px", dpi = 150)
+
+
+player <- "Domantas Sabonis"
+
+df_player <- df %>% 
+  mutate(label = paste0("<img src='",urlPlayerHeadshot,"'width='25'/>")) %>% mutate(ylabel = paste(namePlayer,"\n",Bet,"O/U",OU)) %>% 
+  left_join(all_rosters %>% group_by(idPlayer,slugTeam) %>% summarize(n = n()), by = "idPlayer") %>% 
+  select(!c(urlThumbnailTeam,Under,minutes,amount,GP,idPlayer,label,n)) %>% 
+  pivot_longer(!c(Bet,namePlayer,slugTeam,urlPlayerHeadshot,OU,avg,matchup,ylabel), names_to = "type", values_to = "success") %>% filter(namePlayer == player)
+
+
+df_player %>% mutate(y.label = paste0(namePlayer," - ",slugTeam)) %>% ggplot(aes(x=type,y=Bet,fill = success, label = paste("O/U:","\n",OU,"\n","\n",percent(success,1)))) + 
+  geom_tile(stat = "Identity") + dark_theme_minimal() + 
+  scale_fill_viridis_c(option= "turbo", labels = scales::label_percent(), name = "Success Rate") + 
+  theme(axis.text.x = element_text(face = "bold", color = "gray", angle = 90, vjust = 0.5),
+        legend.position = "right",
+        legend.key.size = unit(1,'cm'),
+        axis.ticks = element_line(color = "white", linewidth = 2),
+        panel.grid = element_blank(),
+        axis.text.y = element_text(face = "bold", color = "gray"),
+        plot.title = element_text(face = "bold", size = 15, color = "gray"),
+        plot.subtitle = element_text(face = "bold", size = 12, color = "gray"),
+        plot.background = element_rect(color ="black"),
+        axis.title.y = element_text(face = "bold", color = "white"),
+        axis.title.x = element_text(face = "bold", color = "white")) + 
+  geom_text(color = "white", size = 4, fontface = "bold") + 
+  labs(x = "Prop Bet", y = "Player", title = paste0("Under Success Rates"))
+

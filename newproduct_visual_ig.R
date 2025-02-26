@@ -142,7 +142,7 @@ ggsave(plot = p_test,
        filename = paste0("visual","heatmap2",".png"), width = 1080, height = 1080, units = "px", dpi = 150)
 
 
-player <- "Domantas Sabonis"
+player <- "Austin Reaves"
 
 df_player <- df %>% 
   mutate(label = paste0("<img src='",urlPlayerHeadshot,"'width='25'/>")) %>% mutate(ylabel = paste(namePlayer,"\n",Bet,"O/U",OU)) %>% 
@@ -151,20 +151,30 @@ df_player <- df %>%
   pivot_longer(!c(Bet,namePlayer,slugTeam,urlPlayerHeadshot,OU,avg,matchup,ylabel), names_to = "type", values_to = "success") %>% filter(namePlayer == player)
 
 
-df_player %>% mutate(y.label = paste0(namePlayer," - ",slugTeam)) %>% ggplot(aes(x=type,y=Bet,fill = success, label = paste("O/U:","\n",OU,"\n","\n",percent(success,1)))) + 
+ p <- df_player %>% mutate(y.label = paste0(Bet,"\n","O/U: ",OU)) %>% ggplot(aes(x=type,y=y.label,fill = success, label = paste(percent(success,1)))) + 
   geom_tile(stat = "Identity") + dark_theme_minimal() + 
-  scale_fill_viridis_c(option= "turbo", labels = scales::label_percent(), name = "Success Rate") + 
-  theme(axis.text.x = element_text(face = "bold", color = "gray", angle = 90, vjust = 0.5),
+  scale_fill_viridis_c(option= "turbo", labels = scales::label_percent(), name = "Success Rate", limits = c(0,1)) + 
+  theme(axis.text.x = element_text(face = "bold", color = "gray", angle = 90, vjust = 0.5, size = 12),
         legend.position = "right",
         legend.key.size = unit(1,'cm'),
         axis.ticks = element_line(color = "white", linewidth = 2),
         panel.grid = element_blank(),
-        axis.text.y = element_text(face = "bold", color = "gray"),
+        axis.text.y = element_text(face = "bold", color = "gray", size = 12),
         plot.title = element_text(face = "bold", size = 15, color = "gray"),
         plot.subtitle = element_text(face = "bold", size = 12, color = "gray"),
         plot.background = element_rect(color ="black"),
         axis.title.y = element_text(face = "bold", color = "white"),
-        axis.title.x = element_text(face = "bold", color = "white")) + 
+        axis.title.x = element_blank()) + 
   geom_text(color = "white", size = 4, fontface = "bold") + 
-  labs(x = "Prop Bet", y = "Player", title = paste0("Under Success Rates"))
+  labs(y = "Prop Bet", title = paste0("Under Success Rates"), subtitle = df_player$namePlayer[1])
+ 
+ 
+ p_final <- ggdraw(p) + 
+   theme(plot.background = element_rect(fill="#000000", color = NA)) + 
+   draw_image(image_read(df_player$urlPlayerHeadshot[1]), scale = .25, x=-0.35, y = -0.38) 
+ 
+ 
+ ggsave(plot = p_final, 
+        path = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/Visuals',
+        filename = paste0("visual",player,".png"), width = 1080, height = 1080, units = "px", dpi = 150)
 

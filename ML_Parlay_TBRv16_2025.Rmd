@@ -27,7 +27,7 @@ player_name <- playerdata %>% filter(idPlayer == params$id) %>%
   select(dateGame, idGame, slugOpponent, idPlayer, namePlayer, fgm,fga,pts,treb,ast,stl,blk,fg3m,fg3a,tov,
          plusminus,minutes,locationGame, countDaysRestPlayer, isB2B, isB2BFirst, isB2BSecond) %>% pull(namePlayer) %>% head(1)
 
-slugteam <- playerdata %>% filter(idPlayer == params$id, slugSeason == current_season) %>% pull(slugTeam)
+slugteam <- all_rosters %>% filter(idPlayer == params$id) %>% pull(slugTeam)
 
 gameids<- playerdata %>% filter(idPlayer == params$id)%>% group_by(idGame) %>% summarize(n = n()) %>% pull(idGame)
 

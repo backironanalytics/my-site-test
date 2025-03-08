@@ -396,21 +396,10 @@ all_players <- as.data.frame(players) %>% rename(namePlayer = players) %>%
 
 next_game_date_teams <- schedule %>% filter(Date == schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min-1) %>% pull(slugTeam)
 
-next_team_batch <- lapply(next_game_date_teams, function(x){
-  
-  playerdata %>% filter(slugTeam == x , typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer,namePlayer) %>% summarize(n = n())
-  
-})
-
-next_team_batch <- bind_rows(next_team_batch)
+next_team_batch <- all_rosters %>% filter(slugTeam %in% next_game_date_teams) %>% select(idPlayer,namePlayer)
 
 next_team_batch_date <- schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min -1
 
-##Filter out players who have played this season but no longer on roster
-
-on_roster_filter <- all_rosters %>% filter(idPlayer %in% next_team_batch$idPlayer) %>% group_by(namePlayer,idPlayer,slugTeam) %>% summarize(n = n())
-
-next_team_batch <- on_roster_filter %>% select(idPlayer,namePlayer,n)
 
 ##Matchup
 

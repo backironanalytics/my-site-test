@@ -275,7 +275,10 @@ next_team_batch <- all_rosters %>% filter(slugTeam %in% next_game_date_teams) %>
 
 next_team_batch_date <- schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min
 
+##Matchup
 
+matchup <- schedule %>% filter(Date == schedule %>% filter(next_game == TRUE) %>% 
+                                 pull(Date) %>% min) %>% mutate(matchup = ifelse(location == "Away",paste("vs.",Team),paste("@",Team)))
 
 
 

@@ -739,13 +739,6 @@ stl_blk_pivoted <- stl_blk %>% left_join(playerdata %>% filter(typeSeason == "Re
 
 ##1Q Points
 
-gamedata <- game_logs(seasons = 2024, result_types = "team", season_types = c("Regular Season","Playoffs"))
-gamedata_current <- game_logs(seasons = 2025, result_types = "team", season_types = c("Regular Season"))
-
-current_season <- "2024-25"
-last_season <- "2023-24"
-
-gamedata <- bind_rows(gamedata,gamedata_current)
 
 firstqpoints <- lapply(next_team_batch$idPlayer, function(x){
   slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)

@@ -40,6 +40,7 @@ library(rlist)
 library(htmlwidgets)
 library(webshot)
 library(webshot2)
+library(foreach)
 
 
 Sys.sleep(10800)
@@ -200,68 +201,7 @@ wix_jobs <- write.csv(as.data.frame(players) %>% rename(namePlayer = players) %>
 
 
 
-library(foreach)
 
-Sys.setenv(RSTUDIO_PANDOC="C:/Program Files/RStudio/resources/app/bin/quarto/bin/tools")
-
-
-cl <- makeCluster(2)
-
-doParallel::registerDoParallel(cl)
-
-foreach(j = all_players_previous_batch$idPlayer[1:(length(all_players_previous_batch$idPlayer))],.packages = c("flexdashboard",
-                                                                                                               "tidyverse",
-                                                                                                               "dplyr",
-                                                                                                               "knitr",
-                                                                                                               "ggplot2",
-                                                                                                               "stringr",
-                                                                                                               "caret",
-                                                                                                               "reactablefmtr",
-                                                                                                               "formattable",
-                                                                                                               "markdown",
-                                                                                                               "magick",
-                                                                                                               "highcharter",
-                                                                                                               "cowplot",
-                                                                                                               "extrafont",
-                                                                                                               "data.table",
-                                                                                                               "broom",
-                                                                                                               "grid",
-                                                                                                               "gridExtra",
-                                                                                                               "grDevices",
-                                                                                                               "fmsb",
-                                                                                                               "fontawesome",
-                                                                                                               "bslib",
-                                                                                                               "plotly",
-                                                                                                               "ggbreak",
-                                                                                                               "nbastatR",
-                                                                                                               "rvest",
-                                                                                                               "ggpubr"
-),.export = ls(globalenv())) %dopar% {
-  
-  
-  rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/ML_Parlay_TBRv16_2025.Rmd',
-                    output_file = paste0(j,substr(j,start = 1,stop=3),".html"),
-                    output_dir = file.path('C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/sheets'),
-                    params = list(id = j))
-}
-
-stopCluster(cl)
-
-
-
-test2 <- function(x) {
-  
-  file.info(paste0("C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/sheets/",x,substr(x,start = 1,stop=3),".html"))
-  
-}
-
-test2 <- lapply(all_players_previous_batch$idPlayer, test2)
-
-test2 <-bind_rows(test2)
-
-test2 <- test2%>% rownames_to_column('File')
-
-test2 %>% select(File,ctime)
 
 
 #Matrix
@@ -2526,6 +2466,72 @@ treb_five <- bind_rows(treb_five) %>% unnest(cols = everything()) %>% mutate(Typ
 treb_df <- bind_rows(treb,treb_away,treb_home,treb_five,treb_ten)
 
 treb_df$namePlayer <- stri_trans_general(str = treb_df$namePlayer, id = "Latin-ASCII")
+
+
+# Data Sheet Ouput
+
+
+
+Sys.setenv(RSTUDIO_PANDOC="C:/Program Files/RStudio/resources/app/bin/quarto/bin/tools")
+
+
+cl <- makeCluster(2)
+
+doParallel::registerDoParallel(cl)
+
+foreach(j = all_players_previous_batch$idPlayer[1:(length(all_players_previous_batch$idPlayer))],.packages = c("flexdashboard",
+                                                                                                               "tidyverse",
+                                                                                                               "dplyr",
+                                                                                                               "knitr",
+                                                                                                               "ggplot2",
+                                                                                                               "stringr",
+                                                                                                               "caret",
+                                                                                                               "reactablefmtr",
+                                                                                                               "formattable",
+                                                                                                               "markdown",
+                                                                                                               "magick",
+                                                                                                               "highcharter",
+                                                                                                               "cowplot",
+                                                                                                               "extrafont",
+                                                                                                               "data.table",
+                                                                                                               "broom",
+                                                                                                               "grid",
+                                                                                                               "gridExtra",
+                                                                                                               "grDevices",
+                                                                                                               "fmsb",
+                                                                                                               "fontawesome",
+                                                                                                               "bslib",
+                                                                                                               "plotly",
+                                                                                                               "ggbreak",
+                                                                                                               "nbastatR",
+                                                                                                               "rvest",
+                                                                                                               "ggpubr"
+),.export = ls(globalenv())) %dopar% {
+  
+  
+  rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/ML_Parlay_TBRv16_2025.Rmd',
+                    output_file = paste0(j,substr(j,start = 1,stop=3),".html"),
+                    output_dir = file.path('C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/sheets'),
+                    params = list(id = j))
+}
+
+stopCluster(cl)
+
+
+
+test2 <- function(x) {
+  
+  file.info(paste0("C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/sheets/",x,substr(x,start = 1,stop=3),".html"))
+  
+}
+
+test2 <- lapply(all_players_previous_batch$idPlayer, test2)
+
+test2 <-bind_rows(test2)
+
+test2 <- test2%>% rownames_to_column('File')
+
+test2 %>% select(File,ctime)
 
 
 

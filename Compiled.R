@@ -43,7 +43,7 @@ library(webshot2)
 library(foreach)
 
 
-Sys.sleep(1)
+Sys.sleep(3600)
 
 
 rosters <- read.csv("C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/rosters.csv")

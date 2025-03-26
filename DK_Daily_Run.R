@@ -39,9 +39,14 @@ dk_ptrebast <- dk_ptrebast %>% filter(selections.tags == "MainPointLine") %>% se
 json_file <- "https://sportsbook-nash.draftkings.com/api/sportscontent/dkusil/v1/leagues/42648/categories/583/subcategories/9973"
 json_data <- fromJSON(txt=json_file)
 
-test <- json_data[5]
+dk_ptast <- json_data[5]
 
-test <- as.data.frame(test)
+dk_ptast <- as.data.frame(dk_ptast)
+
+dk_ptast <- unnest(dk_ptast)
+
+dk_ptast <- dk_ptast %>% filter(selections.tags == "MainPointLine") %>% select(seoIdentifier,selections.label,american,selections.points) %>% 
+  rename(namePlayer = seoIdentifier,label = selections.label,odds = american,OU = selections.points) %>% pivot_wider(names_from = label, values_from = odds)
 
 #Pts Reb O/U
 
@@ -74,15 +79,6 @@ dk_astreb <- unnest(dk_astreb)
 dk_astreb <- dk_astreb %>% filter(selections.tags == "MainPointLine") %>% select(seoIdentifier,selections.label,american,selections.points) %>% 
   rename(namePlayer = seoIdentifier,label = selections.label,odds = american,OU = selections.points) %>% pivot_wider(names_from = label, values_from = odds)
 
-#Total Reb O/U
-
-
-json_file <- "https://sportsbook-nash.draftkings.com/api/sportscontent/dkusil/v1/leagues/42648/categories/1216/subcategories/12492"
-json_data <- fromJSON(txt=json_file)
-
-test <- json_data[5]
-
-test <- as.data.frame(test)
 
 # Steals Blocks O/U
 
@@ -249,6 +245,8 @@ dk_reb <- dk_reb %>% filter(selections.tags == "MainPointLine") %>% select(seoId
   rename(namePlayer = seoIdentifier,label = selections.label,odds = american,OU = selections.points) %>% pivot_wider(names_from = label, values_from = odds)
 
 
+
+
 #Pt Reb Ast
 
 ptreb_ast_df_new <- ptreb_ast_df %>% left_join(dk_ptrebast, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test) %>% 
@@ -330,6 +328,29 @@ ast_reb_picks <- ast_reb_df_new %>% left_join(ast_reb_df_join, by = c("namePlaye
   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
   relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>%
   relocate(minutes, .after = Under) %>% relocate(ast_reb, .after = minutes) %>% relocate(GP, .after = ast_reb) %>% select(-c(slugTeam, variation_regular))
+
+# Pts Ast
+ 
+pt_ast_df_new <- pt_ast_df %>% left_join(dk_ptast, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test) %>%
+  left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>%
+              mutate(avg = ast+treb) %>% group_by(idPlayer) %>% summarize(avg = mean(avg), GP = n()), by = "idPlayer") %>%
+  left_join(pt_ast_df %>% filter(Type == "Regular Season") %>% group_by(idPlayer) %>% summarize(variation_regular = mean(sd)), by = "idPlayer")
+
+pt_ast_df_join <- pt_ast_df_new  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Last 5", 1,0)) %>%
+  group_by(namePlayer,idPlayer) %>% summarize(Ident = mean(Ident))
+
+pt_ast_picks <- pt_ast_df_new %>% left_join(pt_ast_df_join, by = c("namePlayer","idPlayer")) %>%
+  left_join(min_ten %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(minutes = list(minutes)), by = "idPlayer") %>%
+  left_join(min_ten %>% mutate(pt_ast = ast+treb) %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(pt_ast = list(pt_ast)), by = "idPlayer") %>%
+  left_join(playerdata %>%group_by(idPlayer,urlPlayerHeadshot) %>% summarize(n = n()), by = "idPlayer")  %>%
+  group_by(namePlayer,idPlayer,urlPlayerHeadshot, OU, Under, Type, avg = round(avg,1),
+           variation_regular = round(variation_regular,1), minutes, pt_ast, GP) %>%
+  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>%
+  left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>%
+  left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>%
+  left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
+  relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>%
+  relocate(minutes, .after = Under) %>% relocate(pt_ast, .after = minutes) %>% relocate(GP, .after = pt_ast) %>% select(-c(slugTeam, variation_regular))
 
 
 #Stl Blk

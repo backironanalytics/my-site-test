@@ -331,26 +331,26 @@ ast_reb_picks <- ast_reb_df_new %>% left_join(ast_reb_df_join, by = c("namePlaye
 
 # Pts Ast
  
-pt_ast_df_new <- pt_ast_df %>% left_join(dk_ptast, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test) %>%
-  left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>%
-              mutate(avg = ast+treb) %>% group_by(idPlayer) %>% summarize(avg = mean(avg), GP = n()), by = "idPlayer") %>%
-  left_join(pt_ast_df %>% filter(Type == "Regular Season") %>% group_by(idPlayer) %>% summarize(variation_regular = mean(sd)), by = "idPlayer")
-
-pt_ast_df_join <- pt_ast_df_new  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Last 5", 1,0)) %>%
-  group_by(namePlayer,idPlayer) %>% summarize(Ident = mean(Ident))
-
-pt_ast_picks <- pt_ast_df_new %>% left_join(pt_ast_df_join, by = c("namePlayer","idPlayer")) %>%
-  left_join(min_ten %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(minutes = list(minutes)), by = "idPlayer") %>%
-  left_join(min_ten %>% mutate(pt_ast = ast+treb) %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(pt_ast = list(pt_ast)), by = "idPlayer") %>%
-  left_join(playerdata %>%group_by(idPlayer,urlPlayerHeadshot) %>% summarize(n = n()), by = "idPlayer")  %>%
-  group_by(namePlayer,idPlayer,urlPlayerHeadshot, OU, Under, Type, avg = round(avg,1),
-           variation_regular = round(variation_regular,1), minutes, pt_ast, GP) %>%
-  summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>%
-  left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>%
-  left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>%
-  left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
-  relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>%
-  relocate(minutes, .after = Under) %>% relocate(pt_ast, .after = minutes) %>% relocate(GP, .after = pt_ast) %>% select(-c(slugTeam, variation_regular))
+# pt_ast_df_new <- pt_ast_df %>% left_join(dk_ptast, by = c("namePlayer","OU")) %>% filter(!is.na(Over)) %>% rename(season_hit = test) %>%
+#   left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>%
+#               mutate(avg = ast+treb) %>% group_by(idPlayer) %>% summarize(avg = mean(avg), GP = n()), by = "idPlayer") %>%
+#   left_join(pt_ast_df %>% filter(Type == "Regular Season") %>% group_by(idPlayer) %>% summarize(variation_regular = mean(sd)), by = "idPlayer")
+# 
+# pt_ast_df_join <- pt_ast_df_new  %>% mutate(Ident = ifelse(season_hit < .30 & Type == "Last 5", 1,0)) %>%
+#   group_by(namePlayer,idPlayer) %>% summarize(Ident = mean(Ident))
+# 
+# pt_ast_picks <- pt_ast_df_new %>% left_join(pt_ast_df_join, by = c("namePlayer","idPlayer")) %>%
+#   left_join(min_ten %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(minutes = list(minutes)), by = "idPlayer") %>%
+#   left_join(min_ten %>% mutate(pt_ast = ast+treb) %>% arrange(dateGame) %>% group_by(idPlayer) %>% summarize(pt_ast = list(pt_ast)), by = "idPlayer") %>%
+#   left_join(playerdata %>%group_by(idPlayer,urlPlayerHeadshot) %>% summarize(n = n()), by = "idPlayer")  %>%
+#   group_by(namePlayer,idPlayer,urlPlayerHeadshot, OU, Under, Type, avg = round(avg,1),
+#            variation_regular = round(variation_regular,1), minutes, pt_ast, GP) %>%
+#   summarize(season_hit) %>% ungroup() %>% mutate(season_hit = 1 - season_hit) %>%pivot_wider(names_from = Type, values_from = season_hit) %>%
+#   left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>%
+#   left_join(teams %>% select(slugTeam,urlThumbnailTeam), by = "slugTeam") %>%
+#   left_join(matchup %>% select(slugTeam,matchup), by = "slugTeam") %>%
+#   relocate(urlThumbnailTeam, .after = namePlayer) %>% relocate(matchup, .after = urlThumbnailTeam) %>%
+#   relocate(minutes, .after = Under) %>% relocate(pt_ast, .after = minutes) %>% relocate(GP, .after = pt_ast) %>% select(-c(slugTeam, variation_regular))
 
 
 #Stl Blk

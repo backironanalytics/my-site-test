@@ -238,7 +238,7 @@ next_game_date_teams <- schedule %>% filter(Date == next_team_batch_date) %>% pu
 
 next_team_batch <- all_rosters %>% filter(slugTeam %in% next_game_date_teams) %>% select(idPlayer,namePlayer)
 
-# To DELETE Play In Teams
+## To DELETE Play In Teams
 
 play_in_teams <- c("ATL","ORL","GSW","MEM","CHI","MIA","DAL","SAC")
 
@@ -246,7 +246,15 @@ all_players_previous_batch_play_in <- rosters %>% left_join(playerdata %>% filte
                                                                             pull(dateGame)) %>% group_by(idPlayer) %>% summarize(n = n()), by = "idPlayer") %>% 
   filter(!is.na(n), Include == "Y", slugTeam %in% play_in_teams) %>% select(idPlayer,namePlayer)
 
+## Standings Data
 
+standings <- standings(seasons = season_current, season_types = "Regular Season", return_message = F)
+
+play_off_teams <- standings %>% filter(slugPlayoffClinch != "- o") %>% select(nameTeam,slugTeam,idTeam,nameConference,ClinchedPlayIn,ClinchedPostSeason,slugPlayoffClinch) %>% pull(idTeam)
+
+all_players_previous_batch_play_off <- rosters %>% left_join(playerdata %>% filter(dateGame == playerdata %>% arrange(desc(dateGame)) %>% head(1) %>% 
+                                                                                     pull(dateGame)) %>% group_by(idPlayer) %>% summarize(n = n()), by = "idPlayer") %>% 
+  filter(!is.na(n), Include == "Y", idTeam %in% play_off_teams) %>% select(idPlayer,namePlayer)
 
 ##Matchup
 
@@ -488,7 +496,7 @@ ptrebast_1 <- bind_rows(ptrebast) %>% pivot_wider(names_from = OU, values_from =
 
 ptrebast_pivoted <- ptrebast_1 %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                              summarize(GP = n()), by = "idPlayer")  %>% 
-  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)   %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
+  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)   %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam, sd)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
 ptrebast <- bind_rows(ptrebast) %>% mutate(Type = "Regular Season")
@@ -665,7 +673,7 @@ pt_reb_1 <- bind_rows(pt_reb) %>% pivot_wider(names_from = OU, values_from = tes
 
 pt_reb_pivoted <- pt_reb_1 %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                          summarize(GP = n()), by = "idPlayer") %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer")  %>% 
-  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
+  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam, sd)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
 pt_reb <- bind_rows(pt_reb) %>% unnest(cols = everything()) %>% mutate(Type = "Regular Season")
@@ -828,7 +836,7 @@ ast_reb_1 <- bind_rows(ast_reb) %>% pivot_wider(names_from = OU, values_from = t
 
 ast_reb_pivoted <- ast_reb_1 %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                            summarize(GP = n()), by = "idPlayer") %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer")  %>% 
-  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
+  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam, sd)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
 ast_reb <- bind_rows(ast_reb) %>% unnest(cols = everything()) %>% mutate(Type = "Regular Season")
@@ -986,7 +994,7 @@ pt_ast_1 <- bind_rows(pt_ast) %>% pivot_wider(names_from = OU, values_from = tes
 
 pt_ast_pivoted <- pt_ast_1 %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                              summarize(GP = n()), by = "idPlayer") %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer")  %>% 
-  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
+  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam,sd)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
 pt_ast <- bind_rows(pt_ast) %>% unnest(cols = everything()) %>% mutate(Type = "Regular Season")
@@ -1138,7 +1146,7 @@ stl_blk_1 <- bind_rows(stl_blk) %>% pivot_wider(names_from = OU, values_from = t
 
 stl_blk_pivoted <- stl_blk_1 %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                            summarize(GP = n()), by = "idPlayer") %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer")  %>% 
-  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)   %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
+  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)   %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam,sd)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
 stl_blk <- bind_rows(stl_blk) %>% unnest(cols = everything()) %>% mutate(Type = "Regular Season")
@@ -1297,7 +1305,7 @@ fg3m_1 <- bind_rows(fg3m) %>% pivot_wider(names_from = OU, values_from = test)%>
 
 fg3m_pivoted <- fg3m_1 %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                      summarize(GP = n()), by = "idPlayer") %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer")  %>% 
-  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
+  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam,sd)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam)
 
 fg3m <- bind_rows(fg3m) %>% unnest(cols = everything()) %>% mutate(Type = "Regular Season")
@@ -1452,7 +1460,7 @@ stl_1 <- bind_rows(stl) %>% pivot_wider(names_from = OU, values_from = test)%>% 
 
 stl_pivoted <- stl_1 %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                    summarize(GP = n()), by = "idPlayer") %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer")   %>% 
-  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
+  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam,sd)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
 stl <- bind_rows(stl) %>% unnest(cols = everything()) %>% mutate(Type = "Regular Season")
@@ -1607,7 +1615,7 @@ blk_1 <- bind_rows(blk) %>% pivot_wider(names_from = OU, values_from = test)%>% 
 
 blk_pivoted <- blk_1 %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                    summarize(GP = n()), by = "idPlayer") %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer")  %>% 
-  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
+  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam,sd)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
 blk <- bind_rows(blk) %>% unnest(cols = everything()) %>% mutate(Type = "Regular Season")
@@ -1762,7 +1770,7 @@ tov_1 <- bind_rows(tov) %>% pivot_wider(names_from = OU, values_from = test)%>% 
 
 tov_pivoted <- tov_1 %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                    summarize(GP = n()), by = "idPlayer") %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
-  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
+  left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam,sd)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
 tov <- bind_rows(tov) %>% unnest(cols = everything()) %>% mutate(Type = "Regular Season")
@@ -2073,7 +2081,7 @@ ast_1 <- bind_rows(ast) %>% pivot_wider(names_from = OU, values_from = test)%>% 
 
 ast_pivoted <- ast_1 %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                    summarize(GP = n()), by = "idPlayer") %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer")   %>% 
-  left_join(teams, by = "slugTeam")   %>% rename(Player = namePlayer, Team = slugTeam)   %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
+  left_join(teams, by = "slugTeam")   %>% rename(Player = namePlayer, Team = slugTeam)   %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam, sd)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
 ast <- bind_rows(ast) %>% unnest(cols = everything()) %>% mutate(Type = "Regular Season")
@@ -2228,7 +2236,7 @@ reb <- bind_rows(treb) %>% pivot_wider(names_from = OU, values_from = test)%>% u
 
 reb_pivoted <- reb %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                    summarize(GP = n()), by = "idPlayer") %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer")  %>% 
-  left_join(teams, by = "slugTeam")   %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
+  left_join(teams, by = "slugTeam")   %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam,sd)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
 treb <- bind_rows(treb) %>% unnest(cols = everything()) %>% mutate(Type = "Regular Season")

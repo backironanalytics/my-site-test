@@ -43,7 +43,6 @@ library(webshot2)
 library(foreach)
 
 
-Sys.sleep(7200)
 
 
 rosters <- read.csv("C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/rosters.csv")
@@ -70,9 +69,8 @@ Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
 gamedata <- game_logs(seasons = season_previous, result_types = "team", season_types = c("Regular Season","Playoffs"))
 gamedata_current <- game_logs(seasons = season_current, result_types = "team", season_types = c("Regular Season"))
 
-
-
 gamedata <- bind_rows(gamedata,gamedata_current)
+
 
 all_rosters <- seasons_rosters(seasons = season_current, return_message = FALSE)
 
@@ -135,9 +133,42 @@ slugteams_list <- slugteams %>% mutate(slugTeam = tolower(slugTeam)) %>%
   mutate(slugTeam = ifelse(slugTeam == "uta","utah",
                            ifelse(slugTeam == "nop","no",slugTeam))) %>% pull(slugTeam)
 
+## Regular Season Schedule
+
+# schedule <- lapply(slugteams_list, function(x){
+#   
+#   testurl <- paste0("https://www.espn.com/nba/team/schedule/_/name/",x,"/seasontype/2")
+#   
+#   h <- read_html(testurl)
+#   
+#   tab <- h |> html_nodes("table")
+#   
+#   tab <- tab[[1]] |> html_table()
+#   
+#   tab <- tab |> setNames(c("Date", "Opponenet", "Time", "TV","Tickets","Tickets_dup","Unused1","Unused2")) 
+#   
+#   tab <- tab[-(1:2),]
+#   
+#   tab <- tab %>% mutate(location = ifelse(str_detect(Opponenet,"@"),"Away","Home")) %>% 
+#     mutate(Opponent = ifelse(location == "Home", str_sub(Opponenet,3),str_sub(Opponenet,2))) %>% 
+#     mutate(Date = str_extract(Date, '\\b[^,]+$'))
+#   
+#   tab <- tab %>% left_join(teams, by = "Opponent") %>% mutate(Team = toupper(x)) %>% 
+#     mutate(Team = ifelse(Team == "UTAH","UTA",ifelse(Team == "NO","NOP",Team))) %>% 
+#     mutate(game_number = 1:n())
+#   
+# })
+# 
+# schedule <- bind_rows(schedule)
+# 
+# schedule <- schedule %>% filter(!is.na(Date)) %>% mutate(Date = ifelse(substr(Date,1,3) %in% c("Oct","Nov","Dec"),paste(Date,season_previous),paste(Date,season_current))) %>% 
+#   mutate(Date = as.Date(Date, "%b%d%Y")) %>% select(Date,location,Opponent,slugTeam,idTeam,nameTeam,urlThumbnailTeam,Team,game_number,TV)
+
+## Play In Schedule
+
 schedule <- lapply(slugteams_list, function(x){
   
-  testurl <- paste0("https://www.espn.com/nba/team/schedule/_/name/",x,"/seasontype/2")
+  testurl <- paste0("https://www.espn.com/nba/team/schedule/_/name/",x,"/seasontype/5")
   
   h <- read_html(testurl)
   
@@ -147,22 +178,22 @@ schedule <- lapply(slugteams_list, function(x){
   
   tab <- tab |> setNames(c("Date", "Opponenet", "Time", "TV","Tickets","Tickets_dup","Unused1","Unused2")) 
   
-  tab <- tab[-(1:2),]
+  tab <- tab[-(1:1),]
   
   tab <- tab %>% mutate(location = ifelse(str_detect(Opponenet,"@"),"Away","Home")) %>% 
     mutate(Opponent = ifelse(location == "Home", str_sub(Opponenet,3),str_sub(Opponenet,2))) %>% 
-    mutate(Date = str_extract(Date, '\\b[^,]+$')) %>% mutate(Date = as.Date(Date, "%b%d")) %>% 
-    mutate(Date = if_else(Date < scheduleDate,Date %m+% years(1),Date)) %>% select(Date,location,Opponent)
+    mutate(Date = str_extract(Date, '\\b[^,]+$'))
   
   tab <- tab %>% left_join(teams, by = "Opponent") %>% mutate(Team = toupper(x)) %>% 
-    mutate(Team = ifelse(Team == "UTAH","UTA",ifelse(Team == "NO","NOP",Team))) %>% mutate(next_game = ifelse(Date >= Sys.Date()+1,TRUE,FALSE)) %>% 
+    mutate(Team = ifelse(Team == "UTAH","UTA",ifelse(Team == "NO","NOP",Team))) %>% 
     mutate(game_number = 1:n())
   
 })
 
 schedule <- bind_rows(schedule)
 
-schedule <- schedule %>% filter(!is.na(Date))
+schedule <- schedule %>% filter(!is.na(Date)) %>% mutate(Date = ifelse(substr(Date,1,3) %in% c("Oct","Nov","Dec"),paste(Date,season_previous),paste(Date,season_current))) %>% 
+  mutate(Date = as.Date(Date, "%b%d%Y")) %>% select(Date,location,Opponent,slugTeam,idTeam,nameTeam,urlThumbnailTeam,Team,game_number,TV)
 
 conference <- unnest(bref_teams_stats(seasons = season_current))
 
@@ -176,19 +207,10 @@ all_players <- as.data.frame(players) %>% rename(namePlayer = players) %>%
   left_join(playerdata %>% filter(slugSeason == current_season) %>% group_by(namePlayer,idPlayer,slugTeam) %>% summarize(n = n()), by = "namePlayer") %>% 
   select(namePlayer,idPlayer,n) %>% ungroup()
 
-all_players_previous <- schedule %>% filter(Date == schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min -1) %>% pull(slugTeam)
 
-all_players_previous_batch <- lapply(all_players_previous, function(x){
-  
-  rosters %>% left_join(all_rosters %>% select(slugTeam,idPlayer), by = "idPlayer") %>% filter(slugTeam.y == x) %>% filter(Include == "Y") %>% select(idPlayer,namePlayer)
-  
-})
-
-all_players_previous_batch <- bind_rows(all_players_previous_batch)
-
-all_players_previous_batch <- all_players_previous_batch %>% 
-  left_join(playerdata %>% filter(slugSeason == current_season) %>% group_by(namePlayer,idPlayer,slugTeam) %>% summarize(n = n()), by = "idPlayer") %>% select(idPlayer,namePlayer.y) %>% 
-  rename(namePlayer = namePlayer.y) %>% group_by(idPlayer,namePlayer) %>% summarize(n = n()) %>% as.data.frame()
+all_players_previous_batch <- rosters %>% left_join(playerdata %>% filter(dateGame == playerdata %>% arrange(desc(dateGame)) %>% head(1) %>% 
+                                                                            pull(dateGame)) %>% group_by(idPlayer) %>% summarize(n = n()), by = "idPlayer") %>% 
+  filter(!is.na(n), Include == "Y") %>% select(idPlayer,namePlayer)
 
 wix_jobs <- write.csv(as.data.frame(players) %>% rename(namePlayer = players) %>% 
                         left_join(playerdata %>% filter(slugSeason == current_season) %>% group_by(namePlayer,idPlayer) %>% 
@@ -209,17 +231,26 @@ wix_jobs <- write.csv(as.data.frame(players) %>% rename(namePlayer = players) %>
 
 #Next Game
 
-next_game_date_teams <- schedule %>% filter(Date == schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min) %>% pull(slugTeam)
+next_team_batch_date <- schedule %>% arrange(Date) %>% filter(!str_detect(TV,"-"), !str_detect(TV,"Postponed")) %>% head(1) %>% pull(Date)
+
+next_game_date_teams <- schedule %>% filter(Date == next_team_batch_date) %>% pull(slugTeam)
+
 
 next_team_batch <- all_rosters %>% filter(slugTeam %in% next_game_date_teams) %>% select(idPlayer,namePlayer)
 
-next_team_batch_date <- schedule %>% filter(next_game == TRUE) %>% pull(Date) %>% min
+# To DELETE Play In Teams
+
+play_in_teams <- c("ATL","ORL","GSW","MEM","CHI","MIA","DAL","SAC")
+
+all_players_previous_batch_play_in <- rosters %>% left_join(playerdata %>% filter(dateGame == playerdata %>% arrange(desc(dateGame)) %>% head(1) %>% 
+                                                                            pull(dateGame)) %>% group_by(idPlayer) %>% summarize(n = n()), by = "idPlayer") %>% 
+  filter(!is.na(n), Include == "Y", slugTeam %in% play_in_teams) %>% select(idPlayer,namePlayer)
+
+
 
 ##Matchup
 
-matchup <- schedule %>% filter(Date == schedule %>% filter(next_game == TRUE) %>% 
-                                 pull(Date) %>% min) %>% mutate(matchup = ifelse(location == "Away",paste("vs.",Team),paste("@",Team)))
-
+matchup <-  schedule %>% filter(Date == next_team_batch_date) %>% mutate(matchup = ifelse(location == "Away",paste("vs.",Team),paste("@",Team)))
 
 
 ##Three Pointers Attempted
@@ -1886,7 +1917,7 @@ pt <- bind_rows(pts) %>% pivot_wider(names_from = OU, values_from = test) %>% un
 
 pt_pivoted <- pt %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                  summarize(GP = n()), by = "idPlayer") %>% left_join(all_rosters %>% select(idPlayer,slugTeam), by = "idPlayer") %>% 
-  left_join(teams, by = "slugTeam")   %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
+  left_join(teams, by = "slugTeam")   %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam,sd)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
 pts <- bind_rows(pts) %>% unnest(cols = everything()) %>% mutate(Type = "Regular Season")
@@ -2343,7 +2374,7 @@ cl <- makeCluster(2)
 
 doParallel::registerDoParallel(cl)
 
-foreach(j = all_players_previous_batch$idPlayer[1:(length(all_players_previous_batch$idPlayer))],.packages = c("flexdashboard",
+foreach(j = all_players_previous_batch$idPlayer,.packages = c("flexdashboard",
                                                                                                                "tidyverse",
                                                                                                                "dplyr",
                                                                                                                "knitr",
@@ -2373,7 +2404,7 @@ foreach(j = all_players_previous_batch$idPlayer[1:(length(all_players_previous_b
 ),.export = ls(globalenv())) %dopar% {
   
   
-  rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/ML_Parlay_TBRv16_2025.Rmd',
+  rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/ML_Parlay_TBRv17_2025.Rmd',
                     output_file = paste0(j,substr(j,start = 1,stop=3),".html"),
                     output_dir = file.path('C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/sheets'),
                     params = list(id = j))
@@ -2397,6 +2428,17 @@ test2 <- test2%>% rownames_to_column('File')
 
 test2 %>% select(File,ctime)
 
+
+#One Off
+
+
+foreach(j = all_players_previous_batch_play_in$idPlayer) %do% {
+  
+  rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/ML_Parlay_TBRv17_2025.Rmd',
+                    output_file = paste0(j,substr(j,start = 1,stop=3),".html"),
+                    output_dir = file.path('C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/sheets'),
+                    params = list(id = j))
+}
 
 
 

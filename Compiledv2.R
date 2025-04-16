@@ -238,13 +238,6 @@ next_game_date_teams <- schedule %>% filter(Date == next_team_batch_date) %>% pu
 
 next_team_batch <- all_rosters %>% filter(slugTeam %in% next_game_date_teams) %>% select(idPlayer,namePlayer)
 
-## To DELETE Play In Teams
-
-play_in_teams <- c("ATL","ORL","GSW","MEM","CHI","MIA","DAL","SAC")
-
-all_players_previous_batch_play_in <- rosters %>% left_join(playerdata %>% filter(dateGame == playerdata %>% arrange(desc(dateGame)) %>% head(1) %>% 
-                                                                            pull(dateGame)) %>% group_by(idPlayer) %>% summarize(n = n()), by = "idPlayer") %>% 
-  filter(!is.na(n), Include == "Y", slugTeam %in% play_in_teams) %>% select(idPlayer,namePlayer)
 
 ## Standings Data
 
@@ -2378,69 +2371,69 @@ rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-te
 Sys.setenv(RSTUDIO_PANDOC="C:/Program Files/RStudio/resources/app/bin/quarto/bin/tools")
 
 
-cl <- makeCluster(2)
-
-doParallel::registerDoParallel(cl)
-
-foreach(j = all_players_previous_batch$idPlayer,.packages = c("flexdashboard",
-                                                                                                               "tidyverse",
-                                                                                                               "dplyr",
-                                                                                                               "knitr",
-                                                                                                               "ggplot2",
-                                                                                                               "stringr",
-                                                                                                               "caret",
-                                                                                                               "reactablefmtr",
-                                                                                                               "formattable",
-                                                                                                               "markdown",
-                                                                                                               "magick",
-                                                                                                               "highcharter",
-                                                                                                               "cowplot",
-                                                                                                               "extrafont",
-                                                                                                               "data.table",
-                                                                                                               "broom",
-                                                                                                               "grid",
-                                                                                                               "gridExtra",
-                                                                                                               "grDevices",
-                                                                                                               "fmsb",
-                                                                                                               "fontawesome",
-                                                                                                               "bslib",
-                                                                                                               "plotly",
-                                                                                                               "ggbreak",
-                                                                                                               "nbastatR",
-                                                                                                               "rvest",
-                                                                                                               "ggpubr"
-),.export = ls(globalenv())) %dopar% {
-  
-  
-  rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/ML_Parlay_TBRv17_2025.Rmd',
-                    output_file = paste0(j,substr(j,start = 1,stop=3),".html"),
-                    output_dir = file.path('C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/sheets'),
-                    params = list(id = j))
-}
-
-stopCluster(cl)
-
-
-
-test2 <- function(x) {
-  
-  file.info(paste0("C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/sheets/",x,substr(x,start = 1,stop=3),".html"))
-  
-}
-
-test2 <- lapply(all_players_previous_batch$idPlayer, test2)
-
-test2 <-bind_rows(test2)
-
-test2 <- test2%>% rownames_to_column('File')
-
-test2 %>% select(File,ctime)
+# cl <- makeCluster(2)
+# 
+# doParallel::registerDoParallel(cl)
+# 
+# foreach(j = all_players_previous_batch$idPlayer,.packages = c("flexdashboard",
+#                                                                                                                "tidyverse",
+#                                                                                                                "dplyr",
+#                                                                                                                "knitr",
+#                                                                                                                "ggplot2",
+#                                                                                                                "stringr",
+#                                                                                                                "caret",
+#                                                                                                                "reactablefmtr",
+#                                                                                                                "formattable",
+#                                                                                                                "markdown",
+#                                                                                                                "magick",
+#                                                                                                                "highcharter",
+#                                                                                                                "cowplot",
+#                                                                                                                "extrafont",
+#                                                                                                                "data.table",
+#                                                                                                                "broom",
+#                                                                                                                "grid",
+#                                                                                                                "gridExtra",
+#                                                                                                                "grDevices",
+#                                                                                                                "fmsb",
+#                                                                                                                "fontawesome",
+#                                                                                                                "bslib",
+#                                                                                                                "plotly",
+#                                                                                                                "ggbreak",
+#                                                                                                                "nbastatR",
+#                                                                                                                "rvest",
+#                                                                                                                "ggpubr"
+# ),.export = ls(globalenv())) %dopar% {
+#   
+#   
+#   rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/ML_Parlay_TBRv17_2025.Rmd',
+#                     output_file = paste0(j,substr(j,start = 1,stop=3),".html"),
+#                     output_dir = file.path('C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/sheets'),
+#                     params = list(id = j))
+# }
+# 
+# stopCluster(cl)
+# 
+# 
+# 
+# test2 <- function(x) {
+#   
+#   file.info(paste0("C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/sheets/",x,substr(x,start = 1,stop=3),".html"))
+#   
+# }
+# 
+# test2 <- lapply(all_players_previous_batch$idPlayer, test2)
+# 
+# test2 <-bind_rows(test2)
+# 
+# test2 <- test2%>% rownames_to_column('File')
+# 
+# test2 %>% select(File,ctime)
 
 
 #One Off
 
 
-foreach(j = all_players_previous_batch_play_in$idPlayer) %do% {
+foreach(j = all_players_previous_batch_play_off$idPlayer) %do% {
   
   rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/ML_Parlay_TBRv17_2025.Rmd',
                     output_file = paste0(j,substr(j,start = 1,stop=3),".html"),

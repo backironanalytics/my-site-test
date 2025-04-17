@@ -42,6 +42,8 @@ library(webshot)
 library(webshot2)
 library(foreach)
 
+Sys.sleep(7200)
+
 
 
 
@@ -166,9 +168,19 @@ slugteams_list <- slugteams %>% mutate(slugTeam = tolower(slugTeam)) %>%
 
 ## Play In Schedule
 
-schedule <- lapply(slugteams_list, function(x){
+standings <- standings(seasons = season_current, season_types = "Regular Season", return_message = F)
+
+play_off_teams_list <- standings %>% filter(slugPlayoffClinch != "- o") %>% left_join(gamedata %>% group_by(slugTeam,idTeam) %>% summarize(n = n()), by = "idTeam") %>% 
+  select(nameTeam,slugTeam.y,idTeam,nameConference,ClinchedPlayIn,ClinchedPostSeason,slugPlayoffClinch) %>% rename(slugTeam = slugTeam.y) %>% 
+  mutate(slugTeam = tolower(slugTeam)) %>% 
+  mutate(slugTeam = ifelse(slugTeam == "uta","utah",
+                           ifelse(slugTeam == "nop","no",slugTeam))) %>% pull(slugTeam)
+
+
+
+schedule <- lapply(play_off_teams_list, function(x){
   
-  testurl <- paste0("https://www.espn.com/nba/team/schedule/_/name/",x,"/seasontype/5")
+  testurl <- paste0("https://www.espn.com/nba/team/schedule/_/name/",x,"/seasontype/3")
   
   h <- read_html(testurl)
   
@@ -241,7 +253,7 @@ next_team_batch <- all_rosters %>% filter(slugTeam %in% next_game_date_teams) %>
 
 ## Standings Data
 
-standings <- standings(seasons = season_current, season_types = "Regular Season", return_message = F)
+
 
 play_off_teams <- standings %>% filter(slugPlayoffClinch != "- o") %>% select(nameTeam,slugTeam,idTeam,nameConference,ClinchedPlayIn,ClinchedPostSeason,slugPlayoffClinch) %>% pull(idTeam)
 

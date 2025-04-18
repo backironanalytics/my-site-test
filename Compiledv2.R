@@ -243,7 +243,7 @@ wix_jobs <- write.csv(as.data.frame(players) %>% rename(namePlayer = players) %>
 
 #Next Game
 
-next_team_batch_date <- schedule %>% arrange(Date) %>% filter(!str_detect(TV,"-"), !str_detect(TV,"Postponed")) %>% head(1) %>% pull(Date)
+next_team_batch_date <- schedule %>% arrange(Date) %>% filter(!str_detect(TV,"-"), !str_detect(TV,"Postponed"), !is.na(Date)) %>% head(1) %>% pull(Date)
 
 next_game_date_teams <- schedule %>% filter(Date == next_team_batch_date) %>% pull(slugTeam)
 

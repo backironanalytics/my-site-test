@@ -42,7 +42,7 @@ library(webshot)
 library(webshot2)
 library(foreach)
 
-Sys.sleep(7200)
+Sys.sleep(1)
 
 
 
@@ -69,7 +69,7 @@ season_previous <- 2024
 Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
 
 gamedata <- game_logs(seasons = season_previous, result_types = "team", season_types = c("Regular Season","Playoffs"))
-gamedata_current <- game_logs(seasons = season_current, result_types = "team", season_types = c("Regular Season"))
+gamedata_current <- game_logs(seasons = season_current, result_types = "team", season_types = c("Regular Season","Playoffs"))
 
 gamedata <- bind_rows(gamedata,gamedata_current)
 
@@ -78,7 +78,7 @@ all_rosters <- seasons_rosters(seasons = season_current, return_message = FALSE)
 
 playerdata <- game_logs(seasons = season_previous:season_current, result_types = "player", season_types = c("Regular Season"))
 
-playerdata_playoffs <- game_logs(seasons = season_previous, result_types = "player", season_types = c("Playoffs"))
+playerdata_playoffs <- game_logs(seasons = season_previous:season_current, result_types = "player", season_types = c("Playoffs"))
 
 playerdata <- bind_rows(playerdata, playerdata_playoffs)
 
@@ -124,7 +124,7 @@ stopCluster(cl)
 
 teams <- nba_teams(league = "NBA")
 
-teams <- teams %>% filter(idLeague == 2, idConference != 0) %>% 
+teams <- teams %>% filter(idConference != 0) %>% 
   select(cityTeam, slugTeam, idTeam, nameTeam, urlThumbnailTeam) %>% rename(Opponent = cityTeam) %>% 
   mutate(urlThumbnailTeam = ifelse(slugTeam == "GSW", "https://cdn.nba.com/logos/nba/1610612744/primary/L/logo.svg",urlThumbnailTeam))
 
@@ -205,7 +205,7 @@ schedule <- lapply(play_off_teams_list, function(x){
 schedule <- bind_rows(schedule)
 
 schedule <- schedule %>% filter(!is.na(Date)) %>% mutate(Date = ifelse(substr(Date,1,3) %in% c("Oct","Nov","Dec"),paste(Date,season_previous),paste(Date,season_current))) %>% 
-  mutate(Date = as.Date(Date, "%b%d%Y")) %>% select(Date,location,Opponent,slugTeam,idTeam,nameTeam,urlThumbnailTeam,Team,game_number,TV)
+  mutate(Date = as.Date(Date, "%b%d%Y")) %>% select(Date,location,Opponent,slugTeam,idTeam,nameTeam,urlThumbnailTeam,Team,game_number,TV,Time)
 
 conference <- unnest(bref_teams_stats(seasons = season_current))
 
@@ -243,7 +243,8 @@ wix_jobs <- write.csv(as.data.frame(players) %>% rename(namePlayer = players) %>
 
 #Next Game
 
-next_team_batch_date <- schedule %>% arrange(Date) %>% filter(!str_detect(TV,"-"), !str_detect(TV,"Postponed"), !is.na(Date)) %>% head(1) %>% pull(Date)
+next_team_batch_date <- schedule %>% arrange(Date) %>% 
+  filter(!str_detect(Time,"Postponed"),!str_detect(Time,"-"),!str_detect(TV,"-"), !str_detect(TV,"Postponed"), !is.na(Date)) %>% head(1) %>% pull(Date)
 
 next_game_date_teams <- schedule %>% filter(Date == next_team_batch_date) %>% pull(slugTeam)
 

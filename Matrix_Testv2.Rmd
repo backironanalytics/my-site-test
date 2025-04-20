@@ -1,0 +1,609 @@
+---
+title: "Dollar Data Science - Over Hit Rates" 
+output: 
+  flexdashboard::flex_dashboard:
+    theme: yeti
+    orientation: rows
+    logo: logo_simple.png
+    favicon: logo_simple.png
+
+
+---
+
+```{r setup, include=FALSE, echo = FALSE}
+
+
+
+color_set <- c("#f7c844","#429460","#2e6d9e")
+
+
+
+```
+
+
+
+Row  {.tabset .tabset-fade .tabset-pills}
+-----------------------------------------------------------------------
+
+
+
+
+### Points
+
+
+```{r pts, echo = FALSE, warning = FALSE, message = FALSE}
+reactable(highlight = TRUE, striped = TRUE,pt_pivoted %>% select(1:3,7:44), columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `6.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `7.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `8.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `9.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `10.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `11.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `12.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `13.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `14.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `15.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `16.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `17.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `18.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `19.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `20.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `21.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `22.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `23.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `24.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `25.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `26.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `27.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `28.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `29.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `30.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `31.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `32.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `33.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `34.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `35.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `36.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `37.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `38.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `39.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `40.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE)
+```
+
+### Assists
+
+```{r ast, echo = FALSE, warning = FALSE, message = FALSE}
+
+reactable(highlight = TRUE, striped = TRUE,ast_pivoted %>% select(1:17), columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `6.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `7.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `8.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `9.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `10.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `11.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `12.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `13.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE))
+                                                                        ), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE)
+
+
+
+
+
+```
+
+
+### Rebounds
+
+```{r reb, echo = FALSE, warning = FALSE, message = FALSE}
+
+reactable(highlight = TRUE, striped = TRUE,reb_pivoted %>% select(1:21), columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `6.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `7.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `8.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `9.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `10.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `11.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `12.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `13.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                       `14.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                       `15.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                       `16.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                       `17.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE))
+                                                                        ), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE)
+
+
+
+
+
+```
+
+
+### Three Pointers Made
+
+```{r fg3m, echo = FALSE, warning = FALSE, message = FALSE}
+
+reactable(highlight = TRUE, striped = TRUE,fg3m_pivoted %>% select(1:10), columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fg3m_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fg3m_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fg3m_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fg3m_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fg3m_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fg3m_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `6.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fg3m_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE))
+                                                                        ), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE)
+
+
+
+
+
+```
+
+
+### Three Pointers Attempted
+
+```{r fg3a, echo = FALSE, warning = FALSE, message = FALSE}
+
+reactable(highlight = TRUE, striped = TRUE,fg3a_pivoted %>% select(1:13), columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fg3a_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fg3a_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fg3a_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fg3a_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fg3a_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fg3a_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `6.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fg3a_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `7.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fg3a_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `8.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fg3a_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `9.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fg3a_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE))
+                                                                        ), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE)
+
+
+
+
+
+```
+
+
+### Steals
+
+```{r stl, echo = FALSE, warning = FALSE, message = FALSE}
+
+reactable(highlight = TRUE, striped = TRUE,stl_pivoted %>% select(1:9), columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(stl_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(stl_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(stl_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(stl_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(stl_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(stl_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE))
+                                                                        ), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE)
+
+
+
+
+
+```
+
+
+### Blocks
+
+```{r blk, echo = FALSE, warning = FALSE, message = FALSE}
+
+reactable(highlight = TRUE, striped = TRUE,blk_pivoted %>% select(1:9), columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(blk_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(blk_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(blk_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(blk_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(blk_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(blk_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE))
+                                                                        ), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE)
+
+
+
+
+
+```
+
+
+### Turnovers
+
+```{r tov, echo = FALSE, warning = FALSE, message = FALSE}
+
+reactable(highlight = TRUE, striped = TRUE,tov_pivoted %>% select(1:9), columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(tov_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(tov_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(tov_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(tov_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(tov_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(tov_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE))
+                                                                        ), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE)
+
+
+
+
+
+```
+
+### Free Throws Made
+
+```{r ftm, echo = FALSE, warning = FALSE, message = FALSE}
+
+reactable(highlight = TRUE, striped = TRUE,ftm_pivoted %>% select(1:9), columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ftm_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ftm_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ftm_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ftm_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ftm_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ftm_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE))
+                                                                        ), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE)
+
+
+
+
+
+```
+
+
+### Field Goals Made
+
+```{r fgm, echo = FALSE, warning = FALSE, message = FALSE}
+
+reactable(highlight = TRUE, striped = TRUE,fgm_pivoted %>% select(1:15), columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fgm_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fgm_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fgm_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fgm_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fgm_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fgm_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),`6.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fgm_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)), `7.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fgm_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)), `8.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fgm_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)), `9.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fgm_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)), `10.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fgm_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)), `11.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(fgm_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE))
+                                                                        ), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE)
+
+
+
+
+
+```
+
+
+### Points + Rebounds + Assists
+
+
+```{r output, echo = FALSE, warning = FALSE, message = FALSE}
+reactable(highlight = TRUE, striped = TRUE,ptrebast_pivoted %>% select(1:3,14:64), columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                        `10.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `11.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `12.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `13.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `14.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `15.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `16.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `17.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `18.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `19.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `20.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `21.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `22.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `23.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `24.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `25.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `26.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `27.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `28.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `29.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `30.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `31.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `32.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `33.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `34.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `35.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `36.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `37.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `38.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `39.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `40.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `41.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `42.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `43.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `44.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `45.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `46.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `47.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `48.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `49.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `50.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `51.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `52.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `53.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `54.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `55.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `56.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `57.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `58.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `59.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `60.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ptrebast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+```
+
+### Points + Assists
+
+
+```{r pt_ast, echo = FALSE, warning = FALSE, message = FALSE}
+reactable(highlight = TRUE, striped = TRUE,pt_ast_pivoted %>% select(1:3,14:64), columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                        `10.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `11.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `12.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `13.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `14.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `15.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `16.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `17.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `18.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `19.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `20.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `21.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `22.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `23.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `24.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `25.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `26.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `27.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `28.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `29.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `30.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `31.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `32.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `33.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `34.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `35.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `36.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `37.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `38.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `39.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `40.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `41.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `42.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `43.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `44.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `45.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `46.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `47.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `48.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `49.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `50.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `51.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `52.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `53.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `54.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `55.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `56.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `57.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `58.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `59.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `60.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_ast_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+```
+
+
+
+### Points + Rebounds
+
+
+```{r pt_reb, echo = FALSE, warning = FALSE, message = FALSE}
+reactable(highlight = TRUE, striped = TRUE,pt_reb_pivoted %>% select(1:3,14:64), columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                        `10.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `11.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `12.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `13.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `14.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `15.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `16.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `17.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `18.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `19.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `20.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `21.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `22.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `23.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `24.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `25.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `26.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `27.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `28.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `29.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `30.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `31.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `32.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `33.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `34.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `35.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `36.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `37.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `38.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `39.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `40.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `41.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `42.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `43.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `44.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `45.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `46.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `47.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `48.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `49.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `50.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `51.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `52.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `53.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `54.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `55.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `56.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `57.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `58.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `59.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `60.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(pt_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+```
+
+
+
+
+### Assists + Rebounds
+
+
+```{r ast_reb, echo = FALSE, warning = FALSE, message = FALSE}
+reactable(highlight = TRUE, striped = TRUE,ast_reb_pivoted %>% select(1:3,9:29), columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `6.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `7.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `8.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `9.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `10.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `11.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `12.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `13.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `14.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `15.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `16.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `17.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `18.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `19.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `20.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `21.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `22.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `23.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `24.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `25.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(ast_reb_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+```
+
+
+### Steals + Blocks
+
+
+```{r stl_blk, echo = FALSE, warning = FALSE, message = FALSE}
+
+
+
+reactable(highlight = TRUE, striped = TRUE,stl_blk_pivoted %>% select(1:11), columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(stl_blk_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(stl_blk_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(stl_blk_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(stl_blk_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(stl_blk_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(stl_blk_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `6.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(stl_blk_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `7.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(stl_blk_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+```
+
+
+### First Quarter Points
+
+
+```{r firstqpts, echo = FALSE, warning = FALSE, message = FALSE}
+
+
+
+reactable(highlight = TRUE, striped = TRUE,firstqpoints_pivoted, columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqpoints_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqpoints_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqpoints_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqpoints_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqpoints_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqpoints_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `6.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqpoints_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `7.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqpoints_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `8.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqpoints_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `9.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqpoints_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `10.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqpoints_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+
+
+
+```
+
+
+### First Quarter Assists
+
+
+```{r firstqast, echo = FALSE, warning = FALSE, message = FALSE}
+
+
+
+reactable(highlight = TRUE, striped = TRUE,firstqassists_pivoted, columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqassists_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqassists_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqassists_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqassists_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqassists_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqassists_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `6.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqassists_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+
+
+
+```
+
+
+### First Quarter Rebounds
+
+
+```{r firstqreb, echo = FALSE, warning = FALSE, message = FALSE}
+
+
+
+reactable(highlight = TRUE, striped = TRUE,firstqrebounds_pivoted, columns = list(Player = colDef(sticky = "left", width = 110),
+                                                                        urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                        `0.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqrebounds_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `1.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqrebounds_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `2.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqrebounds_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `3.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqrebounds_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `4.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqrebounds_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `5.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqrebounds_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE)),
+                                                                        `6.5` = colDef(format = colFormat(suffix = "%"), cell = color_tiles(firstqrebounds_pivoted, number_fmt = scales::percent,colors = color_set, box_shadow = TRUE))), 
+           theme = fivethirtyeight(), defaultPageSize = 20, searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER"), fullWidth = TRUE) 
+
+
+
+```
+
+

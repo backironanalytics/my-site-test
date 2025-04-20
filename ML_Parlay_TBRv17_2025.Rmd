@@ -76,7 +76,7 @@ rest <- as.integer(Sys.Date() - most_recent - 1)
 
 next_opponent_table <- schedule %>% filter(Team == slugteam[1])
 
-next_opponent <- next_opponent_table %>% filter(Date == next_opponent_table %>% arrange(Date) %>% filter(!str_detect(TV,"-"), !str_detect(TV,"Postponed")) %>% head(1) %>% pull(Date)) %>% pull(slugTeam)
+next_opponent <- next_opponent_table %>% filter(Date == next_opponent_table %>% arrange(Date) %>% filter(!str_detect(Time,"Postponed"),!str_detect(Time,"-"),!str_detect(TV,"-"), !str_detect(TV,"Postponed")) %>% head(1) %>% pull(Date)) %>% pull(slugTeam)
 next_location <- substring(next_opponent_table %>% filter(Date == next_opponent_table  %>% arrange(Date) %>% filter(!str_detect(TV,"-"), !str_detect(TV,"Postponed")) %>% head(1) %>% pull(Date))  %>% pull(location),1,1)
 
 

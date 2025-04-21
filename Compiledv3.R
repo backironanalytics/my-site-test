@@ -42,7 +42,7 @@ library(webshot)
 library(webshot2)
 library(foreach)
 
-Sys.sleep(7200)
+Sys.sleep(1)
 
 
 
@@ -126,7 +126,7 @@ stopCluster(cl)
 
 teams <- nba_teams(league = "NBA")
 
-teams <- teams %>% filter(idLeague == 2, idConference != 0) %>% 
+teams <- teams %>% filter(idConference != 0) %>% 
   select(cityTeam, slugTeam, idTeam, nameTeam, urlThumbnailTeam) %>% rename(Opponent = cityTeam) %>% 
   mutate(urlThumbnailTeam = ifelse(slugTeam == "GSW", "https://cdn.nba.com/logos/nba/1610612744/primary/L/logo.svg",urlThumbnailTeam))
 
@@ -245,7 +245,9 @@ wix_jobs <- write.csv(as.data.frame(players) %>% rename(namePlayer = players) %>
 
 #Next Game
 
-next_team_batch_date <- schedule %>% arrange(Date) %>% filter(!str_detect(Time,"Postponed"),!str_detect(Time,"-"),!str_detect(TV,"-"), !str_detect(TV,"Postponed"), !is.na(Date)) %>% head(1) %>% pull(Date)
+next_team_batch_date <- schedule %>% 
+  arrange(Date) %>% filter(!str_detect(Time,"Postponed"),!str_detect(Time,"-"),!str_detect(TV,"-"), !str_detect(TV,"Postponed"), !is.na(Date)) %>% 
+  head(1) %>% pull(Date)
 
 next_game_date_teams <- schedule %>% filter(Date == next_team_batch_date) %>% pull(slugTeam)
 
@@ -272,8 +274,91 @@ matchup <-  schedule %>% filter(Date == next_team_batch_date) %>% mutate(matchup
 
 test_names <- c("fg3a","ftm","pts_reb_ast","fgm","pts_reb","ast_reb","pts_ast","stl_blk","fg3m","stl","blk","tov","pts","ast","treb")
 
+cl <- makeCluster(numcores)
 
-test <- lapply(test_names, function(z){
+
+test <- function(z){
+  
+  library(tidyverse)
+  library(nbastatR)
+  library(rvest)
+  
+  Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
+  
+  season_previous <- 2024
+  season_current <- 2025
+  
+  gamedata <- game_logs(seasons = season_previous, result_types = "team", season_types = c("Regular Season","Playoffs"))
+  gamedata_current <- game_logs(seasons = season_current, result_types = "team", season_types = c("Regular Season","Playoffs"))
+  
+  gamedata <- bind_rows(gamedata,gamedata_current)
+  
+  playerdata <- game_logs(seasons = season_previous:season_current, result_types = "player", season_types = c("Regular Season"))
+  
+  playerdata_playoffs <- game_logs(seasons = season_previous:season_current, result_types = "player", season_types = c("Playoffs"))
+  
+  playerdata <- bind_rows(playerdata, playerdata_playoffs)
+  
+  standings <- standings(seasons = season_current, season_types = "Regular Season", return_message = F)
+  
+  play_off_teams_list <- standings %>% filter(slugPlayoffClinch != "- o") %>% left_join(gamedata %>% group_by(slugTeam,idTeam) %>% summarize(n = n()), by = "idTeam") %>% 
+    select(nameTeam,slugTeam.y,idTeam,nameConference,ClinchedPlayIn,ClinchedPostSeason,slugPlayoffClinch) %>% rename(slugTeam = slugTeam.y) %>% 
+    mutate(slugTeam = tolower(slugTeam)) %>% 
+    mutate(slugTeam = ifelse(slugTeam == "uta","utah",
+                             ifelse(slugTeam == "nop","no",slugTeam))) %>% pull(slugTeam)
+  
+  teams <- nba_teams(league = "NBA")
+  
+  teams <- teams %>% filter(idConference != 0) %>% 
+    select(cityTeam, slugTeam, idTeam, nameTeam, urlThumbnailTeam) %>% rename(Opponent = cityTeam) %>% 
+    mutate(urlThumbnailTeam = ifelse(slugTeam == "GSW", "https://cdn.nba.com/logos/nba/1610612744/primary/L/logo.svg",urlThumbnailTeam))
+  
+  
+  slugteams <- teams %>% select(slugTeam)
+  
+  slugteams_list <- slugteams %>% mutate(slugTeam = tolower(slugTeam)) %>% 
+    mutate(slugTeam = ifelse(slugTeam == "uta","utah",
+                             ifelse(slugTeam == "nop","no",slugTeam))) %>% pull(slugTeam)
+  
+  
+  
+  schedule <- lapply(play_off_teams_list, function(x){
+    
+    testurl <- paste0("https://www.espn.com/nba/team/schedule/_/name/",x,"/seasontype/3")
+    
+    h <- read_html(testurl)
+    
+    tab <- h |> html_nodes("table")
+    
+    tab <- tab[[1]] |> html_table()
+    
+    tab <- tab |> setNames(c("Date", "Opponenet", "Time", "TV","Tickets","Tickets_dup","Unused1","Unused2")) 
+    
+    tab <- tab[-(1:1),]
+    
+    tab <- tab %>% mutate(location = ifelse(str_detect(Opponenet,"@"),"Away","Home")) %>% 
+      mutate(Opponent = ifelse(location == "Home", str_sub(Opponenet,3),str_sub(Opponenet,2))) %>% 
+      mutate(Date = str_extract(Date, '\\b[^,]+$'))
+    
+    tab <- tab %>% left_join(teams, by = "Opponent") %>% mutate(Team = toupper(x)) %>% 
+      mutate(Team = ifelse(Team == "UTAH","UTA",ifelse(Team == "NO","NOP",Team))) %>% 
+      mutate(game_number = 1:n())
+    
+  })
+  
+  schedule <- bind_rows(schedule)
+  
+  schedule <- schedule %>% filter(!is.na(Date)) %>% mutate(Date = ifelse(substr(Date,1,3) %in% c("Oct","Nov","Dec"),paste(Date,season_previous),paste(Date,season_current))) %>% 
+    mutate(Date = as.Date(Date, "%b%d%Y")) %>% select(Date,location,Opponent,slugTeam,idTeam,nameTeam,urlThumbnailTeam,Team,game_number,TV,Time)
+  
+  all_rosters <- seasons_rosters(seasons = season_current, return_message = FALSE)
+  
+  next_team_batch_date <- schedule %>% arrange(Date) %>% 
+    filter(!str_detect(Time,"Postponed"),!str_detect(Time,"-"),!str_detect(TV,"-"), !str_detect(TV,"Postponed"), !is.na(Date)) %>% head(1) %>% pull(Date)
+  
+  next_game_date_teams <- schedule %>% filter(Date == next_team_batch_date) %>% pull(slugTeam)
+  
+  next_team_batch <- all_rosters %>% filter(slugTeam %in% next_game_date_teams) %>% select(idPlayer,namePlayer)
   
   output <- lapply(next_team_batch$idPlayer, function(x){
     
@@ -294,16 +379,484 @@ test <- lapply(test_names, function(z){
     })
     
     bind_rows(hit_rate_above)
-   
     
   })
   
+  bind_rows(output)
   
-  
-})
+}
+
+test <- parLapply(cl,test_names,test)
+
+#Test Home
 
 
-test_2 <- bind_rows(test) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
+test_home <- function(z){
+  
+  library(tidyverse)
+  library(nbastatR)
+  library(rvest)
+  
+  Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
+  
+  season_previous <- 2024
+  season_current <- 2025
+  
+  gamedata <- game_logs(seasons = season_previous, result_types = "team", season_types = c("Regular Season","Playoffs"))
+  gamedata_current <- game_logs(seasons = season_current, result_types = "team", season_types = c("Regular Season","Playoffs"))
+  
+  gamedata <- bind_rows(gamedata,gamedata_current)
+  
+  playerdata <- game_logs(seasons = season_previous:season_current, result_types = "player", season_types = c("Regular Season"))
+  
+  playerdata_playoffs <- game_logs(seasons = season_previous:season_current, result_types = "player", season_types = c("Playoffs"))
+  
+  playerdata <- bind_rows(playerdata, playerdata_playoffs)
+  
+  standings <- standings(seasons = season_current, season_types = "Regular Season", return_message = F)
+  
+  play_off_teams_list <- standings %>% filter(slugPlayoffClinch != "- o") %>% left_join(gamedata %>% group_by(slugTeam,idTeam) %>% summarize(n = n()), by = "idTeam") %>% 
+    select(nameTeam,slugTeam.y,idTeam,nameConference,ClinchedPlayIn,ClinchedPostSeason,slugPlayoffClinch) %>% rename(slugTeam = slugTeam.y) %>% 
+    mutate(slugTeam = tolower(slugTeam)) %>% 
+    mutate(slugTeam = ifelse(slugTeam == "uta","utah",
+                             ifelse(slugTeam == "nop","no",slugTeam))) %>% pull(slugTeam)
+  
+  teams <- nba_teams(league = "NBA")
+  
+  teams <- teams %>% filter(idConference != 0) %>% 
+    select(cityTeam, slugTeam, idTeam, nameTeam, urlThumbnailTeam) %>% rename(Opponent = cityTeam) %>% 
+    mutate(urlThumbnailTeam = ifelse(slugTeam == "GSW", "https://cdn.nba.com/logos/nba/1610612744/primary/L/logo.svg",urlThumbnailTeam))
+  
+  
+  slugteams <- teams %>% select(slugTeam)
+  
+  slugteams_list <- slugteams %>% mutate(slugTeam = tolower(slugTeam)) %>% 
+    mutate(slugTeam = ifelse(slugTeam == "uta","utah",
+                             ifelse(slugTeam == "nop","no",slugTeam))) %>% pull(slugTeam)
+  
+  
+  
+  schedule <- lapply(play_off_teams_list, function(x){
+    
+    testurl <- paste0("https://www.espn.com/nba/team/schedule/_/name/",x,"/seasontype/3")
+    
+    h <- read_html(testurl)
+    
+    tab <- h |> html_nodes("table")
+    
+    tab <- tab[[1]] |> html_table()
+    
+    tab <- tab |> setNames(c("Date", "Opponenet", "Time", "TV","Tickets","Tickets_dup","Unused1","Unused2")) 
+    
+    tab <- tab[-(1:1),]
+    
+    tab <- tab %>% mutate(location = ifelse(str_detect(Opponenet,"@"),"Away","Home")) %>% 
+      mutate(Opponent = ifelse(location == "Home", str_sub(Opponenet,3),str_sub(Opponenet,2))) %>% 
+      mutate(Date = str_extract(Date, '\\b[^,]+$'))
+    
+    tab <- tab %>% left_join(teams, by = "Opponent") %>% mutate(Team = toupper(x)) %>% 
+      mutate(Team = ifelse(Team == "UTAH","UTA",ifelse(Team == "NO","NOP",Team))) %>% 
+      mutate(game_number = 1:n())
+    
+  })
+  
+  schedule <- bind_rows(schedule)
+  
+  schedule <- schedule %>% filter(!is.na(Date)) %>% mutate(Date = ifelse(substr(Date,1,3) %in% c("Oct","Nov","Dec"),paste(Date,season_previous),paste(Date,season_current))) %>% 
+    mutate(Date = as.Date(Date, "%b%d%Y")) %>% select(Date,location,Opponent,slugTeam,idTeam,nameTeam,urlThumbnailTeam,Team,game_number,TV,Time)
+  
+  all_rosters <- seasons_rosters(seasons = season_current, return_message = FALSE)
+  
+  next_team_batch_date <- schedule %>% arrange(Date) %>% 
+    filter(!str_detect(Time,"Postponed"),!str_detect(Time,"-"),!str_detect(TV,"-"), !str_detect(TV,"Postponed"), !is.na(Date)) %>% head(1) %>% pull(Date)
+  
+  next_game_date_teams <- schedule %>% filter(Date == next_team_batch_date) %>% pull(slugTeam)
+  
+  next_team_batch <- all_rosters %>% filter(slugTeam %in% next_game_date_teams) %>% select(idPlayer,namePlayer)
+  
+  output <- lapply(next_team_batch$idPlayer, function(x){
+    
+    slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)
+    
+    hit_rate <- seq(0.5,60.5,1)
+    
+    df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == "H") %>% 
+      mutate(pts_reb_ast = pts+treb+ast, pts_reb = pts+treb,ast_reb = ast+treb, pts_ast = pts+ast,stl_blk = stl+blk, metric = z) %>% 
+      select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,metric,z) %>% 
+      rename(amount = z)
+    
+    hit_rate_above <- lapply(hit_rate, function(x){
+      
+      df %>% mutate(test = mean(amount > x), OU = x) %>% group_by(namePlayer, idPlayer, OU, metric) %>% summarize(test = min(test), .groups = 'drop') %>% 
+        ungroup() %>% mutate(slugTeam = slug_team)
+      
+    })
+    
+    bind_rows(hit_rate_above)
+    
+  })
+  
+  bind_rows(output)
+  
+}
+
+test_home <- parLapply(cl,test_names,test_home)
+
+
+#Test Away
+
+
+test_away <- function(z){
+  
+  library(tidyverse)
+  library(nbastatR)
+  library(rvest)
+  
+  Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
+  
+  season_previous <- 2024
+  season_current <- 2025
+  
+  gamedata <- game_logs(seasons = season_previous, result_types = "team", season_types = c("Regular Season","Playoffs"))
+  gamedata_current <- game_logs(seasons = season_current, result_types = "team", season_types = c("Regular Season","Playoffs"))
+  
+  gamedata <- bind_rows(gamedata,gamedata_current)
+  
+  playerdata <- game_logs(seasons = season_previous:season_current, result_types = "player", season_types = c("Regular Season"))
+  
+  playerdata_playoffs <- game_logs(seasons = season_previous:season_current, result_types = "player", season_types = c("Playoffs"))
+  
+  playerdata <- bind_rows(playerdata, playerdata_playoffs)
+  
+  standings <- standings(seasons = season_current, season_types = "Regular Season", return_message = F)
+  
+  play_off_teams_list <- standings %>% filter(slugPlayoffClinch != "- o") %>% left_join(gamedata %>% group_by(slugTeam,idTeam) %>% summarize(n = n()), by = "idTeam") %>% 
+    select(nameTeam,slugTeam.y,idTeam,nameConference,ClinchedPlayIn,ClinchedPostSeason,slugPlayoffClinch) %>% rename(slugTeam = slugTeam.y) %>% 
+    mutate(slugTeam = tolower(slugTeam)) %>% 
+    mutate(slugTeam = ifelse(slugTeam == "uta","utah",
+                             ifelse(slugTeam == "nop","no",slugTeam))) %>% pull(slugTeam)
+  
+  teams <- nba_teams(league = "NBA")
+  
+  teams <- teams %>% filter(idConference != 0) %>% 
+    select(cityTeam, slugTeam, idTeam, nameTeam, urlThumbnailTeam) %>% rename(Opponent = cityTeam) %>% 
+    mutate(urlThumbnailTeam = ifelse(slugTeam == "GSW", "https://cdn.nba.com/logos/nba/1610612744/primary/L/logo.svg",urlThumbnailTeam))
+  
+  
+  slugteams <- teams %>% select(slugTeam)
+  
+  slugteams_list <- slugteams %>% mutate(slugTeam = tolower(slugTeam)) %>% 
+    mutate(slugTeam = ifelse(slugTeam == "uta","utah",
+                             ifelse(slugTeam == "nop","no",slugTeam))) %>% pull(slugTeam)
+  
+  
+  
+  schedule <- lapply(play_off_teams_list, function(x){
+    
+    testurl <- paste0("https://www.espn.com/nba/team/schedule/_/name/",x,"/seasontype/3")
+    
+    h <- read_html(testurl)
+    
+    tab <- h |> html_nodes("table")
+    
+    tab <- tab[[1]] |> html_table()
+    
+    tab <- tab |> setNames(c("Date", "Opponenet", "Time", "TV","Tickets","Tickets_dup","Unused1","Unused2")) 
+    
+    tab <- tab[-(1:1),]
+    
+    tab <- tab %>% mutate(location = ifelse(str_detect(Opponenet,"@"),"Away","Home")) %>% 
+      mutate(Opponent = ifelse(location == "Home", str_sub(Opponenet,3),str_sub(Opponenet,2))) %>% 
+      mutate(Date = str_extract(Date, '\\b[^,]+$'))
+    
+    tab <- tab %>% left_join(teams, by = "Opponent") %>% mutate(Team = toupper(x)) %>% 
+      mutate(Team = ifelse(Team == "UTAH","UTA",ifelse(Team == "NO","NOP",Team))) %>% 
+      mutate(game_number = 1:n())
+    
+  })
+  
+  schedule <- bind_rows(schedule)
+  
+  schedule <- schedule %>% filter(!is.na(Date)) %>% mutate(Date = ifelse(substr(Date,1,3) %in% c("Oct","Nov","Dec"),paste(Date,season_previous),paste(Date,season_current))) %>% 
+    mutate(Date = as.Date(Date, "%b%d%Y")) %>% select(Date,location,Opponent,slugTeam,idTeam,nameTeam,urlThumbnailTeam,Team,game_number,TV,Time)
+  
+  all_rosters <- seasons_rosters(seasons = season_current, return_message = FALSE)
+  
+  next_team_batch_date <- schedule %>% arrange(Date) %>% 
+    filter(!str_detect(Time,"Postponed"),!str_detect(Time,"-"),!str_detect(TV,"-"), !str_detect(TV,"Postponed"), !is.na(Date)) %>% head(1) %>% pull(Date)
+  
+  next_game_date_teams <- schedule %>% filter(Date == next_team_batch_date) %>% pull(slugTeam)
+  
+  next_team_batch <- all_rosters %>% filter(slugTeam %in% next_game_date_teams) %>% select(idPlayer,namePlayer)
+  
+  output <- lapply(next_team_batch$idPlayer, function(x){
+    
+    slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)
+    
+    hit_rate <- seq(0.5,60.5,1)
+    
+    df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == "A") %>% 
+      mutate(pts_reb_ast = pts+treb+ast, pts_reb = pts+treb,ast_reb = ast+treb, pts_ast = pts+ast,stl_blk = stl+blk, metric = z) %>% 
+      select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,metric,z) %>% 
+      rename(amount = z)
+    
+    hit_rate_above <- lapply(hit_rate, function(x){
+      
+      df %>% mutate(test = mean(amount > x), OU = x) %>% group_by(namePlayer, idPlayer, OU, metric) %>% summarize(test = min(test), .groups = 'drop') %>% 
+        ungroup() %>% mutate(slugTeam = slug_team)
+      
+    })
+    
+    bind_rows(hit_rate_above)
+    
+  })
+  
+  bind_rows(output)
+  
+}
+
+test_away <- parLapply(cl,test_names,test_away)
+
+
+#Test Last 5
+
+
+test_five <- function(z){
+  
+  library(tidyverse)
+  library(nbastatR)
+  library(rvest)
+  
+  Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
+  
+  season_previous <- 2024
+  season_current <- 2025
+  
+  gamedata <- game_logs(seasons = season_previous, result_types = "team", season_types = c("Regular Season","Playoffs"))
+  gamedata_current <- game_logs(seasons = season_current, result_types = "team", season_types = c("Regular Season","Playoffs"))
+  
+  gamedata <- bind_rows(gamedata,gamedata_current)
+  
+  playerdata <- game_logs(seasons = season_previous:season_current, result_types = "player", season_types = c("Regular Season"))
+  
+  playerdata_playoffs <- game_logs(seasons = season_previous:season_current, result_types = "player", season_types = c("Playoffs"))
+  
+  playerdata <- bind_rows(playerdata, playerdata_playoffs)
+  
+  standings <- standings(seasons = season_current, season_types = "Regular Season", return_message = F)
+  
+  play_off_teams_list <- standings %>% filter(slugPlayoffClinch != "- o") %>% left_join(gamedata %>% group_by(slugTeam,idTeam) %>% summarize(n = n()), by = "idTeam") %>% 
+    select(nameTeam,slugTeam.y,idTeam,nameConference,ClinchedPlayIn,ClinchedPostSeason,slugPlayoffClinch) %>% rename(slugTeam = slugTeam.y) %>% 
+    mutate(slugTeam = tolower(slugTeam)) %>% 
+    mutate(slugTeam = ifelse(slugTeam == "uta","utah",
+                             ifelse(slugTeam == "nop","no",slugTeam))) %>% pull(slugTeam)
+  
+  teams <- nba_teams(league = "NBA")
+  
+  teams <- teams %>% filter(idConference != 0) %>% 
+    select(cityTeam, slugTeam, idTeam, nameTeam, urlThumbnailTeam) %>% rename(Opponent = cityTeam) %>% 
+    mutate(urlThumbnailTeam = ifelse(slugTeam == "GSW", "https://cdn.nba.com/logos/nba/1610612744/primary/L/logo.svg",urlThumbnailTeam))
+  
+  
+  slugteams <- teams %>% select(slugTeam)
+  
+  slugteams_list <- slugteams %>% mutate(slugTeam = tolower(slugTeam)) %>% 
+    mutate(slugTeam = ifelse(slugTeam == "uta","utah",
+                             ifelse(slugTeam == "nop","no",slugTeam))) %>% pull(slugTeam)
+  
+  
+  
+  schedule <- lapply(play_off_teams_list, function(x){
+    
+    testurl <- paste0("https://www.espn.com/nba/team/schedule/_/name/",x,"/seasontype/3")
+    
+    h <- read_html(testurl)
+    
+    tab <- h |> html_nodes("table")
+    
+    tab <- tab[[1]] |> html_table()
+    
+    tab <- tab |> setNames(c("Date", "Opponenet", "Time", "TV","Tickets","Tickets_dup","Unused1","Unused2")) 
+    
+    tab <- tab[-(1:1),]
+    
+    tab <- tab %>% mutate(location = ifelse(str_detect(Opponenet,"@"),"Away","Home")) %>% 
+      mutate(Opponent = ifelse(location == "Home", str_sub(Opponenet,3),str_sub(Opponenet,2))) %>% 
+      mutate(Date = str_extract(Date, '\\b[^,]+$'))
+    
+    tab <- tab %>% left_join(teams, by = "Opponent") %>% mutate(Team = toupper(x)) %>% 
+      mutate(Team = ifelse(Team == "UTAH","UTA",ifelse(Team == "NO","NOP",Team))) %>% 
+      mutate(game_number = 1:n())
+    
+  })
+  
+  schedule <- bind_rows(schedule)
+  
+  schedule <- schedule %>% filter(!is.na(Date)) %>% mutate(Date = ifelse(substr(Date,1,3) %in% c("Oct","Nov","Dec"),paste(Date,season_previous),paste(Date,season_current))) %>% 
+    mutate(Date = as.Date(Date, "%b%d%Y")) %>% select(Date,location,Opponent,slugTeam,idTeam,nameTeam,urlThumbnailTeam,Team,game_number,TV,Time)
+  
+  all_rosters <- seasons_rosters(seasons = season_current, return_message = FALSE)
+  
+  next_team_batch_date <- schedule %>% arrange(Date) %>% 
+    filter(!str_detect(Time,"Postponed"),!str_detect(Time,"-"),!str_detect(TV,"-"), !str_detect(TV,"Postponed"), !is.na(Date)) %>% head(1) %>% pull(Date)
+  
+  next_game_date_teams <- schedule %>% filter(Date == next_team_batch_date) %>% pull(slugTeam)
+  
+  next_team_batch <- all_rosters %>% filter(slugTeam %in% next_game_date_teams) %>% select(idPlayer,namePlayer)
+  
+  output <- lapply(next_team_batch$idPlayer, function(x){
+    
+    slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)
+    
+    hit_rate <- seq(0.5,60.5,1)
+    
+    df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+      mutate(pts_reb_ast = pts+treb+ast, pts_reb = pts+treb,ast_reb = ast+treb, pts_ast = pts+ast,stl_blk = stl+blk, metric = z) %>% 
+      select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,metric,z) %>% arrange(desc(dateGame)) %>% head(5) %>% 
+      rename(amount = z)
+    
+    hit_rate_above <- lapply(hit_rate, function(x){
+      
+      df %>% mutate(test = mean(amount > x), OU = x) %>% group_by(namePlayer, idPlayer, OU, metric) %>% summarize(test = min(test), .groups = 'drop') %>% 
+        ungroup() %>% mutate(slugTeam = slug_team)
+      
+    })
+    
+    bind_rows(hit_rate_above)
+    
+  })
+  
+  bind_rows(output)
+  
+}
+
+test_five <- parLapply(cl,test_names,test_five)
+
+
+#Test Last 10
+
+
+test_ten <- function(z){
+  
+  library(tidyverse)
+  library(nbastatR)
+  library(rvest)
+  
+  Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
+  
+  season_previous <- 2024
+  season_current <- 2025
+  
+  gamedata <- game_logs(seasons = season_previous, result_types = "team", season_types = c("Regular Season","Playoffs"))
+  gamedata_current <- game_logs(seasons = season_current, result_types = "team", season_types = c("Regular Season","Playoffs"))
+  
+  gamedata <- bind_rows(gamedata,gamedata_current)
+  
+  playerdata <- game_logs(seasons = season_previous:season_current, result_types = "player", season_types = c("Regular Season"))
+  
+  playerdata_playoffs <- game_logs(seasons = season_previous:season_current, result_types = "player", season_types = c("Playoffs"))
+  
+  playerdata <- bind_rows(playerdata, playerdata_playoffs)
+  
+  standings <- standings(seasons = season_current, season_types = "Regular Season", return_message = F)
+  
+  play_off_teams_list <- standings %>% filter(slugPlayoffClinch != "- o") %>% left_join(gamedata %>% group_by(slugTeam,idTeam) %>% summarize(n = n()), by = "idTeam") %>% 
+    select(nameTeam,slugTeam.y,idTeam,nameConference,ClinchedPlayIn,ClinchedPostSeason,slugPlayoffClinch) %>% rename(slugTeam = slugTeam.y) %>% 
+    mutate(slugTeam = tolower(slugTeam)) %>% 
+    mutate(slugTeam = ifelse(slugTeam == "uta","utah",
+                             ifelse(slugTeam == "nop","no",slugTeam))) %>% pull(slugTeam)
+  
+  teams <- nba_teams(league = "NBA")
+  
+  teams <- teams %>% filter(idConference != 0) %>% 
+    select(cityTeam, slugTeam, idTeam, nameTeam, urlThumbnailTeam) %>% rename(Opponent = cityTeam) %>% 
+    mutate(urlThumbnailTeam = ifelse(slugTeam == "GSW", "https://cdn.nba.com/logos/nba/1610612744/primary/L/logo.svg",urlThumbnailTeam))
+  
+  
+  slugteams <- teams %>% select(slugTeam)
+  
+  slugteams_list <- slugteams %>% mutate(slugTeam = tolower(slugTeam)) %>% 
+    mutate(slugTeam = ifelse(slugTeam == "uta","utah",
+                             ifelse(slugTeam == "nop","no",slugTeam))) %>% pull(slugTeam)
+  
+  
+  
+  schedule <- lapply(play_off_teams_list, function(x){
+    
+    testurl <- paste0("https://www.espn.com/nba/team/schedule/_/name/",x,"/seasontype/3")
+    
+    h <- read_html(testurl)
+    
+    tab <- h |> html_nodes("table")
+    
+    tab <- tab[[1]] |> html_table()
+    
+    tab <- tab |> setNames(c("Date", "Opponenet", "Time", "TV","Tickets","Tickets_dup","Unused1","Unused2")) 
+    
+    tab <- tab[-(1:1),]
+    
+    tab <- tab %>% mutate(location = ifelse(str_detect(Opponenet,"@"),"Away","Home")) %>% 
+      mutate(Opponent = ifelse(location == "Home", str_sub(Opponenet,3),str_sub(Opponenet,2))) %>% 
+      mutate(Date = str_extract(Date, '\\b[^,]+$'))
+    
+    tab <- tab %>% left_join(teams, by = "Opponent") %>% mutate(Team = toupper(x)) %>% 
+      mutate(Team = ifelse(Team == "UTAH","UTA",ifelse(Team == "NO","NOP",Team))) %>% 
+      mutate(game_number = 1:n())
+    
+  })
+  
+  schedule <- bind_rows(schedule)
+  
+  schedule <- schedule %>% filter(!is.na(Date)) %>% mutate(Date = ifelse(substr(Date,1,3) %in% c("Oct","Nov","Dec"),paste(Date,season_previous),paste(Date,season_current))) %>% 
+    mutate(Date = as.Date(Date, "%b%d%Y")) %>% select(Date,location,Opponent,slugTeam,idTeam,nameTeam,urlThumbnailTeam,Team,game_number,TV,Time)
+  
+  all_rosters <- seasons_rosters(seasons = season_current, return_message = FALSE)
+  
+  next_team_batch_date <- schedule %>% arrange(Date) %>% 
+    filter(!str_detect(Time,"Postponed"),!str_detect(Time,"-"),!str_detect(TV,"-"), !str_detect(TV,"Postponed"), !is.na(Date)) %>% head(1) %>% pull(Date)
+  
+  next_game_date_teams <- schedule %>% filter(Date == next_team_batch_date) %>% pull(slugTeam)
+  
+  next_team_batch <- all_rosters %>% filter(slugTeam %in% next_game_date_teams) %>% select(idPlayer,namePlayer)
+  
+  output <- lapply(next_team_batch$idPlayer, function(x){
+    
+    slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)
+    
+    hit_rate <- seq(0.5,60.5,1)
+    
+    df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+      mutate(pts_reb_ast = pts+treb+ast, pts_reb = pts+treb,ast_reb = ast+treb, pts_ast = pts+ast,stl_blk = stl+blk, metric = z) %>% 
+      select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,metric,z) %>% arrange(desc(dateGame)) %>% head(10) %>% 
+      rename(amount = z)
+    
+    hit_rate_above <- lapply(hit_rate, function(x){
+      
+      df %>% mutate(test = mean(amount > x), OU = x) %>% group_by(namePlayer, idPlayer, OU, metric) %>% summarize(test = min(test), .groups = 'drop') %>% 
+        ungroup() %>% mutate(slugTeam = slug_team)
+      
+    })
+    
+    bind_rows(hit_rate_above)
+    
+  })
+  
+  bind_rows(output)
+  
+}
+
+test_ten <- parLapply(cl,test_names,test_ten)
+
+
+
+
+stopCluster(cl)
+
+
+
+
+test <- bind_rows(test)
+test_2 <- test %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
 fg3a <- test_2 %>% filter(metric == "fg3a") %>% select(!metric)
 ftm <- test_2 %>% filter(metric == "ftm") %>% select(!metric)
@@ -341,21 +894,21 @@ ptrebast_pivoted <- ptrebast_1 %>% left_join(playerdata %>% filter(typeSeason ==
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)   %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
-ptrebast <- ptrebast_1 %>% mutate(Type = "Regular Season")
+ptrebast <- test %>% filter(metric == "pts_reb_ast") %>% mutate(Type = "Regular Season")
 
 pt_reb_pivoted <- pt_reb_1 %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                            summarize(GP = n()), by = "idPlayer")  %>% 
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
-pt_reb <- pt_reb_1 %>% mutate(Type = "Regular Season")
+pt_reb <- test %>% filter(metric == "pts_reb") %>% mutate(Type = "Regular Season")
 
 ast_reb_pivoted <- ast_reb_1 %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                              summarize(GP = n()), by = "idPlayer")  %>% 
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
-ast_reb <- ast_reb_1 %>% mutate(Type = "Regular Season")
+ast_reb <- test %>% filter(metric == "ast_reb") %>% mutate(Type = "Regular Season")
 
 
 pt_ast_pivoted <- pt_ast_1 %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
@@ -363,7 +916,7 @@ pt_ast_pivoted <- pt_ast_1 %>% left_join(playerdata %>% filter(typeSeason == "Re
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
-pt_ast <- pt_ast_1 %>% mutate(Type = "Regular Season")
+pt_ast <- test %>% filter(metric == "pts_ast") %>% mutate(Type = "Regular Season")
 
 
 stl_blk_pivoted <- stl_blk_1 %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
@@ -371,14 +924,14 @@ stl_blk_pivoted <- stl_blk_1 %>% left_join(playerdata %>% filter(typeSeason == "
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)   %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
-stl_blk <- stl_blk_1 %>% mutate(Type = "Regular Season")
+stl_blk <- test %>% filter(metric == "stl_blk") %>% mutate(Type = "Regular Season")
 
 fg3m_pivoted <- fg3m_1 %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                        summarize(GP = n()), by = "idPlayer")  %>% 
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam)
 
-fg3m <- fg3m_1 %>% mutate(Type = "Regular Season")
+fg3m <- test %>% filter(metric == "fg3m")%>% mutate(Type = "Regular Season")
 
 
 stl_pivoted <- stl_1 %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
@@ -386,7 +939,7 @@ stl_pivoted <- stl_1 %>% left_join(playerdata %>% filter(typeSeason == "Regular 
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
-stl <- stl_1 %>% mutate(Type = "Regular Season")
+stl <- test %>% filter(metric == "stl") %>% mutate(Type = "Regular Season")
 
 
 blk_pivoted <- blk_1 %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
@@ -394,14 +947,14 @@ blk_pivoted <- blk_1 %>% left_join(playerdata %>% filter(typeSeason == "Regular 
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
-blk <- blk_1 %>% mutate(Type = "Regular Season")
+blk <- test %>% filter(metric == "blk") %>% mutate(Type = "Regular Season")
 
 tov_pivoted <- tov_1 %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                      summarize(GP = n()), by = "idPlayer")  %>% 
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
-tov <- tov_1 %>% mutate(Type = "Regular Season")
+tov <- test %>% filter(metric == "tov") %>% mutate(Type = "Regular Season")
 
 
 pt_pivoted <- pt %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
@@ -409,14 +962,14 @@ pt_pivoted <- pt %>% left_join(playerdata %>% filter(typeSeason == "Regular Seas
   left_join(teams, by = "slugTeam")   %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
-pts <- pt %>% mutate(Type = "Regular Season")
+pts <- test %>% filter(metric == "pts") %>% mutate(Type = "Regular Season")
 
 ast_pivoted <- ast_1 %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
                                      summarize(GP = n()), by = "idPlayer")   %>% 
   left_join(teams, by = "slugTeam")   %>% rename(Player = namePlayer, Team = slugTeam)   %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
-ast <- ast_1 %>% mutate(Type = "Regular Season")
+ast <- test %>% filter(metric == "ast") %>% mutate(Type = "Regular Season")
 
 
 reb_pivoted <- reb %>% left_join(playerdata %>% filter(typeSeason == "Regular Season", slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
@@ -424,212 +977,91 @@ reb_pivoted <- reb %>% left_join(playerdata %>% filter(typeSeason == "Regular Se
   left_join(teams, by = "slugTeam")   %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
-treb <- reb %>% mutate(Type = "Regular Season")
+treb <- test %>% filter(metric == "treb") %>% mutate(Type = "Regular Season")
 
 
 
-## Test Home
+test_home <- bind_rows(test_home)
+test_2_home <- test_home %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
+
+fg3a_home <- test_home %>% filter(metric == "fg3a") %>% select(!metric) %>% mutate(Type = "Home Games")
+ftm_home <- test_home %>% filter(metric == "ftm") %>% select(!metric) %>% mutate(Type = "Home Games")
+fgm_home <- test_home %>% filter(metric == "fgm") %>% select(!metric) %>% mutate(Type = "Home Games")
+ptrebast_home <- test_home %>% filter(metric == "pts_reb_ast") %>% select(!metric) %>% mutate(Type = "Home Games")
+pt_reb_home <- test_home %>% filter(metric == "pts_reb") %>% select(!metric) %>% mutate(Type = "Home Games")
+ast_reb_home <- test_home %>% filter(metric == "ast_reb") %>% select(!metric) %>% mutate(Type = "Home Games")
+pt_ast_home <- test_home %>% filter(metric == "pts_ast") %>% select(!metric) %>% mutate(Type = "Home Games")
+stl_blk_home <- test_home %>% filter(metric == "stl_blk") %>% select(!metric) %>% mutate(Type = "Home Games")
+fg3m_home <- test_home %>% filter(metric == "fg3m") %>% select(!metric) %>% mutate(Type = "Home Games")
+stl_home <- test_home %>% filter(metric == "stl") %>% select(!metric) %>% mutate(Type = "Home Games")
+blk_home <- test_home %>% filter(metric == "blk") %>% select(!metric) %>% mutate(Type = "Home Games")
+tov_home <- test_home %>% filter(metric == "tov") %>% select(!metric) %>% mutate(Type = "Home Games")
+pts_home <- test_home %>% filter(metric == "pts") %>% select(!metric) %>% mutate(Type = "Home Games")
+ast_home <- test_home %>% filter(metric == "ast") %>% select(!metric) %>% mutate(Type = "Home Games")
+treb_home <- test_home %>% filter(metric == "treb") %>% select(!metric) %>% mutate(Type = "Home Games")
 
 
-test_home <- lapply(test_names, function(z){
-  
-  output <- lapply(next_team_batch$idPlayer, function(x){
-    
-    slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)
-    
-    hit_rate <- seq(0.5,60.5,1)
-    
-    df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == "H") %>% 
-      mutate(pts_reb_ast = pts+treb+ast, pts_reb = pts+treb,ast_reb = ast+treb, pts_ast = pts+ast,stl_blk = stl+blk, metric = z) %>% 
-      select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,metric,z) %>% 
-      rename(amount = z)
-    
-    hit_rate_above <- lapply(hit_rate, function(x){
-      
-      df %>% mutate(test = mean(amount > x), OU = x) %>% group_by(namePlayer, idPlayer, OU, metric) %>% summarize(test = min(test), .groups = 'drop') %>% 
-        ungroup() %>% mutate(slugTeam = slug_team)
-      
-    })
-    
-    bind_rows(hit_rate_above)
-    
-    
-  })
-  
-  
-})
+
+test_away <- bind_rows(test_away)
+test_2_away <- test_away %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
+
+fg3a_away <- test_away %>% filter(metric == "fg3a") %>% select(!metric) %>% mutate(Type = "Away Games")
+ftm_away <- test_away %>% filter(metric == "ftm") %>% select(!metric) %>% mutate(Type = "Away Games")
+fgm_away <- test_away %>% filter(metric == "fgm") %>% select(!metric) %>% mutate(Type = "Away Games")
+ptrebast_away <- test_away %>% filter(metric == "pts_reb_ast") %>% select(!metric) %>% mutate(Type = "Away Games")
+pt_reb_away <- test_away %>% filter(metric == "pts_reb") %>% select(!metric) %>% mutate(Type = "Away Games")
+ast_reb_away <- test_away %>% filter(metric == "ast_reb") %>% select(!metric) %>% mutate(Type = "Away Games")
+pt_ast_away <- test_away %>% filter(metric == "pts_ast") %>% select(!metric) %>% mutate(Type = "Away Games")
+stl_blk_away <- test_away %>% filter(metric == "stl_blk") %>% select(!metric) %>% mutate(Type = "Away Games")
+fg3m_away <- test_away %>% filter(metric == "fg3m") %>% select(!metric) %>% mutate(Type = "Away Games")
+stl_away <- test_away %>% filter(metric == "stl") %>% select(!metric) %>% mutate(Type = "Away Games")
+blk_away <- test_away %>% filter(metric == "blk") %>% select(!metric) %>% mutate(Type = "Away Games")
+tov_away <- test_away %>% filter(metric == "tov") %>% select(!metric) %>% mutate(Type = "Away Games")
+pts_away <- test_away %>% filter(metric == "pts") %>% select(!metric) %>% mutate(Type = "Away Games")
+ast_away <- test_away %>% filter(metric == "ast") %>% select(!metric) %>% mutate(Type = "Away Games")
+treb_away <- test_away %>% filter(metric == "treb") %>% select(!metric) %>% mutate(Type = "Away Games")
 
 
-test_2_home <- bind_rows(test_home) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
-
-fg3a_home <- test_2_home %>% filter(metric == "fg3a") %>% select(!metric) %>% mutate(Type = "Home Games")
-ftm_home <- test_2_home %>% filter(metric == "ftm") %>% select(!metric) %>% mutate(Type = "Home Games")
-fgm_home <- test_2_home %>% filter(metric == "fgm") %>% select(!metric) %>% mutate(Type = "Home Games")
-ptrebast_home <- test_2_home %>% filter(metric == "pts_reb_ast") %>% select(!metric) %>% mutate(Type = "Home Games")
-pt_reb_home <- test_2_home %>% filter(metric == "pts_reb") %>% select(!metric) %>% mutate(Type = "Home Games")
-ast_reb_home <- test_2_home %>% filter(metric == "ast_reb") %>% select(!metric) %>% mutate(Type = "Home Games")
-pt_ast_home <- test_2_home %>% filter(metric == "pts_ast") %>% select(!metric) %>% mutate(Type = "Home Games")
-stl_blk_home <- test_2_home %>% filter(metric == "stl_blk") %>% select(!metric) %>% mutate(Type = "Home Games")
-fg3m_home <- test_2_home %>% filter(metric == "fg3m") %>% select(!metric) %>% mutate(Type = "Home Games")
-stl_home <- test_2_home %>% filter(metric == "stl") %>% select(!metric) %>% mutate(Type = "Home Games")
-blk_home <- test_2_home %>% filter(metric == "blk") %>% select(!metric) %>% mutate(Type = "Home Games")
-tov_home <- test_2_home %>% filter(metric == "tov") %>% select(!metric) %>% mutate(Type = "Home Games")
-pt_home <- test_2_home %>% filter(metric == "pts") %>% select(!metric) %>% mutate(Type = "Home Games")
-ast_home <- test_2_home %>% filter(metric == "ast") %>% select(!metric) %>% mutate(Type = "Home Games")
-reb_home <- test_2_home %>% filter(metric == "treb") %>% select(!metric) %>% mutate(Type = "Home Games")
 
 
-## Test Away
+test_five <- bind_rows(test_five)
+test_2_five <- test_five %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
+
+fg3a_five <- test_five %>% filter(metric == "fg3a") %>% select(!metric) %>% mutate(Type = "Last 5")
+ftm_five <- test_five %>% filter(metric == "ftm") %>% select(!metric) %>% mutate(Type = "Last 5")
+fgm_five <- test_five %>% filter(metric == "fgm") %>% select(!metric) %>% mutate(Type = "Last 5")
+ptrebast_five <- test_five %>% filter(metric == "pts_reb_ast") %>% select(!metric) %>% mutate(Type = "Last 5")
+pt_reb_five <- test_five %>% filter(metric == "pts_reb") %>% select(!metric) %>% mutate(Type = "Last 5")
+ast_reb_five <- test_five %>% filter(metric == "ast_reb") %>% select(!metric) %>% mutate(Type = "Last 5")
+pt_ast_five <- test_five %>% filter(metric == "pts_ast") %>% select(!metric) %>% mutate(Type = "Last 5")
+stl_blk_five <- test_five %>% filter(metric == "stl_blk") %>% select(!metric) %>% mutate(Type = "Last 5")
+fg3m_five <- test_five %>% filter(metric == "fg3m") %>% select(!metric) %>% mutate(Type = "Last 5")
+stl_five <- test_five %>% filter(metric == "stl") %>% select(!metric) %>% mutate(Type = "Last 5")
+blk_five <- test_five %>% filter(metric == "blk") %>% select(!metric) %>% mutate(Type = "Last 5")
+tov_five <- test_five %>% filter(metric == "tov") %>% select(!metric) %>% mutate(Type = "Last 5")
+pts_five <- test_five %>% filter(metric == "pts") %>% select(!metric) %>% mutate(Type = "Last 5")
+ast_five <- test_five %>% filter(metric == "ast") %>% select(!metric) %>% mutate(Type = "Last 5")
+treb_five <- test_five %>% filter(metric == "treb") %>% select(!metric) %>% mutate(Type = "Last 5")
 
 
-test_away <- lapply(test_names, function(z){
-  
-  output <- lapply(next_team_batch$idPlayer, function(x){
-    
-    slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)
-    
-    hit_rate <- seq(0.5,60.5,1)
-    
-    df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25", locationGame == "A") %>% 
-      mutate(pts_reb_ast = pts+treb+ast, pts_reb = pts+treb,ast_reb = ast+treb, pts_ast = pts+ast,stl_blk = stl+blk, metric = z) %>% 
-      select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,metric,z) %>% 
-      rename(amount = z)
-    
-    hit_rate_above <- lapply(hit_rate, function(x){
-      
-      df %>% mutate(test = mean(amount > x), OU = x) %>% group_by(namePlayer, idPlayer, OU, metric) %>% summarize(test = min(test), .groups = 'drop') %>% 
-        ungroup() %>% mutate(slugTeam = slug_team)
-      
-    })
-    
-    bind_rows(hit_rate_above)
-    
-    
-  })
-  
-  
-})
+test_ten <- bind_rows(test_ten)
+test_2_ten <- test_ten %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
-
-test_2_away <- bind_rows(test_away) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
-
-fg3a_away <- test_2_away %>% filter(metric == "fg3a") %>% select(!metric) %>% mutate(Type = "Away Games")
-ftm_away <- test_2_away %>% filter(metric == "ftm") %>% select(!metric) %>% mutate(Type = "Away Games")
-fgm_away <- test_2_away %>% filter(metric == "fgm") %>% select(!metric) %>% mutate(Type = "Away Games")
-ptrebast_away <- test_2_away %>% filter(metric == "pts_reb_ast") %>% select(!metric) %>% mutate(Type = "Away Games")
-pt_reb_away <- test_2_away %>% filter(metric == "pts_reb") %>% select(!metric) %>% mutate(Type = "Away Games")
-ast_reb_away <- test_2_away %>% filter(metric == "ast_reb") %>% select(!metric) %>% mutate(Type = "Away Games")
-pt_ast_away <- test_2_away %>% filter(metric == "pts_ast") %>% select(!metric) %>% mutate(Type = "Away Games")
-stl_blk_away <- test_2_away %>% filter(metric == "stl_blk") %>% select(!metric) %>% mutate(Type = "Away Games")
-fg3m_away <- test_2_away %>% filter(metric == "fg3m") %>% select(!metric) %>% mutate(Type = "Away Games")
-stl_away <- test_2_away %>% filter(metric == "stl") %>% select(!metric) %>% mutate(Type = "Away Games")
-blk_away <- test_2_away %>% filter(metric == "blk") %>% select(!metric) %>% mutate(Type = "Away Games")
-tov_away <- test_2_away %>% filter(metric == "tov") %>% select(!metric) %>% mutate(Type = "Away Games")
-pt_away <- test_2_away %>% filter(metric == "pts") %>% select(!metric) %>% mutate(Type = "Away Games")
-ast_away <- test_2_away %>% filter(metric == "ast") %>% select(!metric) %>% mutate(Type = "Away Games")
-reb_away <- test_2_away %>% filter(metric == "treb") %>% select(!metric) %>% mutate(Type = "Away Games")
-
-
-## Test Last 5
-
-
-test_five <- lapply(test_names, function(z){
-  
-  output <- lapply(next_team_batch$idPlayer, function(x){
-    
-    slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)
-    
-    hit_rate <- seq(0.5,60.5,1)
-    
-    df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
-      mutate(pts_reb_ast = pts+treb+ast, pts_reb = pts+treb,ast_reb = ast+treb, pts_ast = pts+ast,stl_blk = stl+blk, metric = z) %>% 
-      select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,metric,z) %>% arrange(desc(dateGame)) %>% head(5) %>% 
-      rename(amount = z)
-    
-    hit_rate_above <- lapply(hit_rate, function(x){
-      
-      df %>% mutate(test = mean(amount > x), OU = x) %>% group_by(namePlayer, idPlayer, OU, metric) %>% summarize(test = min(test), .groups = 'drop') %>% 
-        ungroup() %>% mutate(slugTeam = slug_team)
-      
-    })
-    
-    bind_rows(hit_rate_above)
-    
-    
-  })
-  
-  
-})
-
-
-test_2_five <- bind_rows(test_five) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
-
-fg3a_five <- test_2_five %>% filter(metric == "fg3a") %>% select(!metric) %>% mutate(Type = "Last 5")
-ftm_five <- test_2_five %>% filter(metric == "ftm") %>% select(!metric) %>% mutate(Type = "Last 5")
-fgm_five <- test_2_five %>% filter(metric == "fgm") %>% select(!metric) %>% mutate(Type = "Last 5")
-ptrebast_five <- test_2_five %>% filter(metric == "pts_reb_ast") %>% select(!metric) %>% mutate(Type = "Last 5")
-pt_reb_five <- test_2_five %>% filter(metric == "pts_reb") %>% select(!metric) %>% mutate(Type = "Last 5")
-ast_reb_five <- test_2_five %>% filter(metric == "ast_reb") %>% select(!metric) %>% mutate(Type = "Last 5")
-pt_ast_five <- test_2_five %>% filter(metric == "pts_ast") %>% select(!metric) %>% mutate(Type = "Last 5")
-stl_blk_five <- test_2_five %>% filter(metric == "stl_blk") %>% select(!metric) %>% mutate(Type = "Last 5")
-fg3m_five <- test_2_five %>% filter(metric == "fg3m") %>% select(!metric) %>% mutate(Type = "Last 5")
-stl_five <- test_2_five %>% filter(metric == "stl") %>% select(!metric) %>% mutate(Type = "Last 5")
-blk_five <- test_2_five %>% filter(metric == "blk") %>% select(!metric) %>% mutate(Type = "Last 5")
-tov_five <- test_2_five %>% filter(metric == "tov") %>% select(!metric) %>% mutate(Type = "Last 5")
-pt_five <- test_2_five %>% filter(metric == "pts") %>% select(!metric) %>% mutate(Type = "Last 5")
-ast_five <- test_2_five %>% filter(metric == "ast") %>% select(!metric) %>% mutate(Type = "Last 5")
-reb_five <- test_2_five %>% filter(metric == "treb") %>% select(!metric) %>% mutate(Type = "Last 5")
-
-
-## Test Last 10
-
-
-test_ten <- lapply(test_names, function(z){
-  
-  output <- lapply(next_team_batch$idPlayer, function(x){
-    
-    slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)
-    
-    hit_rate <- seq(0.5,60.5,1)
-    
-    df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
-      mutate(pts_reb_ast = pts+treb+ast, pts_reb = pts+treb,ast_reb = ast+treb, pts_ast = pts+ast,stl_blk = stl+blk, metric = z) %>% 
-      select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,metric,z) %>% arrange(desc(dateGame)) %>% head(10) %>% 
-      rename(amount = z)
-    
-    hit_rate_above <- lapply(hit_rate, function(x){
-      
-      df %>% mutate(test = mean(amount > x), OU = x) %>% group_by(namePlayer, idPlayer, OU, metric) %>% summarize(test = min(test), .groups = 'drop') %>% 
-        ungroup() %>% mutate(slugTeam = slug_team)
-      
-    })
-    
-    bind_rows(hit_rate_above)
-    
-    
-  })
-  
-  
-})
-
-
-test_2_ten <- bind_rows(test_ten) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
-
-fg3a_ten <- test_2_ten %>% filter(metric == "fg3a") %>% select(!metric) %>% mutate(Type = "Last 10")
-ftm_ten <- test_2_ten %>% filter(metric == "ftm") %>% select(!metric) %>% mutate(Type = "Last 10")
-fgm_ten <- test_2_ten %>% filter(metric == "fgm") %>% select(!metric) %>% mutate(Type = "Last 10")
-ptrebast_ten <- test_2_ten %>% filter(metric == "pts_reb_ast") %>% select(!metric) %>% mutate(Type = "Last 10")
-pt_reb_ten <- test_2_ten %>% filter(metric == "pts_reb") %>% select(!metric) %>% mutate(Type = "Last 10")
-ast_reb_ten <- test_2_ten %>% filter(metric == "ast_reb") %>% select(!metric) %>% mutate(Type = "Last 10")
-pt_ast_ten <- test_2_ten %>% filter(metric == "pts_ast") %>% select(!metric) %>% mutate(Type = "Last 10")
-stl_blk_ten <- test_2_ten %>% filter(metric == "stl_blk") %>% select(!metric) %>% mutate(Type = "Last 10")
-fg3m_ten <- test_2_ten %>% filter(metric == "fg3m") %>% select(!metric) %>% mutate(Type = "Last 10")
-stl_ten <- test_2_ten %>% filter(metric == "stl") %>% select(!metric) %>% mutate(Type = "Last 10")
-blk_ten <- test_2_ten %>% filter(metric == "blk") %>% select(!metric) %>% mutate(Type = "Last 10")
-tov_ten <- test_2_ten %>% filter(metric == "tov") %>% select(!metric) %>% mutate(Type = "Last 10")
-pt_ten <- test_2_ten %>% filter(metric == "pts") %>% select(!metric) %>% mutate(Type = "Last 10")
-ast_ten <- test_2_ten %>% filter(metric == "ast") %>% select(!metric) %>% mutate(Type = "Last 10")
-reb_ten <- test_2_ten %>% filter(metric == "treb") %>% select(!metric) %>% mutate(Type = "Last 10")
+fg3a_ten <- test_ten %>% filter(metric == "fg3a") %>% select(!metric) %>% mutate(Type = "Last 10")
+ftm_ten <- test_ten %>% filter(metric == "ftm") %>% select(!metric) %>% mutate(Type = "Last 10")
+fgm_ten <- test_ten %>% filter(metric == "fgm") %>% select(!metric) %>% mutate(Type = "Last 10")
+ptrebast_ten <- test_ten %>% filter(metric == "pts_reb_ast") %>% select(!metric) %>% mutate(Type = "Last 10")
+pt_reb_ten <- test_ten %>% filter(metric == "pts_reb") %>% select(!metric) %>% mutate(Type = "Last 10")
+ast_reb_ten <- test_ten %>% filter(metric == "ast_reb") %>% select(!metric) %>% mutate(Type = "Last 10")
+pt_ast_ten <- test_ten %>% filter(metric == "pts_ast") %>% select(!metric) %>% mutate(Type = "Last 10")
+stl_blk_ten <- test_ten %>% filter(metric == "stl_blk") %>% select(!metric) %>% mutate(Type = "Last 10")
+fg3m_ten <- test_ten %>% filter(metric == "fg3m") %>% select(!metric) %>% mutate(Type = "Last 10")
+stl_ten <- test_ten %>% filter(metric == "stl") %>% select(!metric) %>% mutate(Type = "Last 10")
+blk_ten <- test_ten %>% filter(metric == "blk") %>% select(!metric) %>% mutate(Type = "Last 10")
+tov_ten <- test_ten %>% filter(metric == "tov") %>% select(!metric) %>% mutate(Type = "Last 10")
+pts_ten <- test_ten %>% filter(metric == "pts") %>% select(!metric) %>% mutate(Type = "Last 10")
+ast_ten <- test_ten %>% filter(metric == "ast") %>% select(!metric) %>% mutate(Type = "Last 10")
+treb_ten <- test_ten %>% filter(metric == "treb") %>% select(!metric) %>% mutate(Type = "Last 10")
 
 
 ptreb_ast_df <- bind_rows(ptrebast,ptrebast_away,ptrebast_home,ptrebast_five,ptrebast_ten)
@@ -679,6 +1111,19 @@ ast_df$namePlayer <- stri_trans_general(str = ast_df$namePlayer, id = "Latin-ASC
 treb_df <- bind_rows(treb,treb_away,treb_home,treb_five,treb_ten)
 
 treb_df$namePlayer <- stri_trans_general(str = treb_df$namePlayer, id = "Latin-ASCII")
+
+##Minutes Last 10
+
+
+min_ten <- lapply(next_team_batch$idPlayer, function(x){
+  
+  
+  df <- playerdata %>% filter(idPlayer == x, typeSeason == "Regular Season", slugSeason == "2024-25") %>% 
+    arrange(desc(dateGame)) %>% head(10)
+  
+})
+
+min_ten <- bind_rows(min_ten) 
 
 
  
@@ -796,7 +1241,7 @@ library(reactablefmtr)
 Sys.setenv(RSTUDIO_PANDOC="C:/Program Files/RStudio/resources/app/bin/quarto/bin/tools")
 
 
-rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/Matrix_Test.Rmd',
+rmarkdown::render(input = 'C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/Matrix_Testv2.Rmd',
                   output_file = "prop_bet_matrix.html",
                   output_dir = file.path('C:/Users/CECRAIG/Desktop/Backironanalytics/my-site-test/Matrix'))
 

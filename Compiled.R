@@ -124,7 +124,7 @@ stopCluster(cl)
 
 teams <- nba_teams(league = "NBA")
 
-teams <- teams %>% filter(idLeague == 2, idConference != 0) %>% 
+teams <- teams %>% filter(idConference != 0) %>% 
   select(cityTeam, slugTeam, idTeam, nameTeam, urlThumbnailTeam) %>% rename(Opponent = cityTeam) %>% 
   mutate(urlThumbnailTeam = ifelse(slugTeam == "GSW", "https://cdn.nba.com/logos/nba/1610612744/primary/L/logo.svg",urlThumbnailTeam))
 

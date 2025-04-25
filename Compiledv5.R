@@ -1329,7 +1329,9 @@ test_playoffs <- function(z){
   
   next_team_batch <- all_rosters %>% filter(slugTeam %in% next_game_date_teams) %>% select(idPlayer,namePlayer)
   
-  output <- lapply(next_team_batch$idPlayer, function(x){
+  next_team_batch_played <- playerdata %>% filter(slugSeason == "2024-25",typeSeason == "Playoffs", idPlayer %in% next_team_batch$idPlayer) %>% group_by(idPlayer,namePlayer) %>% summarize(n = n())
+  
+  output <- lapply(next_team_batch_played$idPlayer, function(x){
     
     slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)
     
@@ -1445,7 +1447,9 @@ test_home_playoffs <- function(z){
   
   next_team_batch <- all_rosters %>% filter(slugTeam %in% next_game_date_teams) %>% select(idPlayer,namePlayer)
   
-  output <- lapply(next_team_batch$idPlayer, function(x){
+  next_team_batch_played <- playerdata %>% filter(slugSeason == "2024-25",typeSeason == "Playoffs", idPlayer %in% next_team_batch$idPlayer) %>% group_by(idPlayer,namePlayer) %>% summarize(n = n())
+  
+  output <- lapply(next_team_batch_played$idPlayer, function(x){
     
     slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)
     
@@ -1559,6 +1563,8 @@ test_away_playoffs <- function(z){
   next_game_date_teams <- schedule %>% filter(Date == next_team_batch_date) %>% pull(slugTeam)
   
   next_team_batch <- all_rosters %>% filter(slugTeam %in% next_game_date_teams) %>% select(idPlayer,namePlayer)
+  
+  next_team_batch_played <- playerdata %>% filter(slugSeason == "2024-25",typeSeason == "Playoffs", idPlayer %in% next_team_batch$idPlayer) %>% group_by(idPlayer,namePlayer) %>% summarize(n = n())
   
   output <- lapply(next_team_batch$idPlayer, function(x){
     

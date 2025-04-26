@@ -42,7 +42,7 @@ library(webshot)
 library(webshot2)
 library(foreach)
 
-Sys.sleep(1)
+Sys.sleep(3600)
 
 
 
@@ -413,8 +413,30 @@ test <- function(z){
       bind_rows(hit_rate_above)
       
     })
+    
+    output_3 <- lapply(next_team_batch$idPlayer, function(x){
+      
+      slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)
+      
+      hit_rate <- seq(0.5,60.5,1)
+      
+      df <- playerdata %>% filter(idPlayer == x, slugSeason == "2024-25") %>% 
+        mutate(pts_reb_ast = pts+treb+ast, pts_reb = pts+treb,ast_reb = ast+treb, pts_ast = pts+ast,stl_blk = stl+blk, metric = z) %>% 
+        select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,metric,z) %>% 
+        rename(amount = z)
+      
+      hit_rate_above <- lapply(hit_rate, function(x){
+        
+        df %>% mutate(test = mean(amount > x), OU = x) %>% group_by(namePlayer, idPlayer, OU, metric) %>% summarize(test = min(test), .groups = 'drop') %>% 
+          ungroup() %>% mutate(slugTeam = slug_team, typeSeason = "All") %>% relocate(typeSeason, .after = metric)
+        
+      })
+      
+      bind_rows(hit_rate_above)
+      
+    })
   
-  bind_rows(output_1,output_2)
+  bind_rows(output_1,output_2,output_3)
   
   
 }
@@ -557,7 +579,29 @@ test_home <- function(z){
     
   })
   
-  bind_rows(output_1,output_2)
+  output_3 <- lapply(next_team_batch$idPlayer, function(x){
+    
+    slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)
+    
+    hit_rate <- seq(0.5,60.5,1)
+    
+    df <- playerdata %>% filter(idPlayer == x, slugSeason == "2024-25", locationGame == "H") %>% 
+      mutate(pts_reb_ast = pts+treb+ast, pts_reb = pts+treb,ast_reb = ast+treb, pts_ast = pts+ast,stl_blk = stl+blk, metric = z) %>% 
+      select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,metric,z) %>% 
+      rename(amount = z)
+    
+    hit_rate_above <- lapply(hit_rate, function(x){
+      
+      df %>% mutate(test = mean(amount > x), OU = x) %>% group_by(namePlayer, idPlayer, OU, metric) %>% summarize(test = min(test), .groups = 'drop') %>% 
+        ungroup() %>% mutate(slugTeam = slug_team, typeSeason = "All") %>% relocate(typeSeason, .after = metric)
+      
+    })
+    
+    bind_rows(hit_rate_above)
+    
+  })
+  
+  bind_rows(output_1,output_2,output_3)
   
   
 }
@@ -698,7 +742,29 @@ test_away <- function(z){
     
   })
   
-  bind_rows(output_1,output_2)
+  output_3 <- lapply(next_team_batch$idPlayer, function(x){
+    
+    slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)
+    
+    hit_rate <- seq(0.5,60.5,1)
+    
+    df <- playerdata %>% filter(idPlayer == x, slugSeason == "2024-25", locationGame == "A") %>% 
+      mutate(pts_reb_ast = pts+treb+ast, pts_reb = pts+treb,ast_reb = ast+treb, pts_ast = pts+ast,stl_blk = stl+blk, metric = z) %>% 
+      select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,metric,z) %>% 
+      rename(amount = z)
+    
+    hit_rate_above <- lapply(hit_rate, function(x){
+      
+      df %>% mutate(test = mean(amount > x), OU = x) %>% group_by(namePlayer, idPlayer, OU, metric) %>% summarize(test = min(test), .groups = 'drop') %>% 
+        ungroup() %>% mutate(slugTeam = slug_team,typeSeason = "All") %>% relocate(typeSeason, .after = metric)
+      
+    })
+    
+    bind_rows(hit_rate_above)
+    
+  })
+  
+  bind_rows(output_1,output_2,output_3)
   
   
 }
@@ -840,7 +906,29 @@ test_five <- function(z){
     
   })
   
-  bind_rows(output_1,output_2)
+  output_3 <- lapply(next_team_batch$idPlayer, function(x){
+    
+    slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)
+    
+    hit_rate <- seq(0.5,60.5,1)
+    
+    df <- playerdata %>% filter(idPlayer == x, slugSeason == "2024-25") %>% 
+      mutate(pts_reb_ast = pts+treb+ast, pts_reb = pts+treb,ast_reb = ast+treb, pts_ast = pts+ast,stl_blk = stl+blk, metric = z) %>% 
+      select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,metric,z) %>% arrange(desc(dateGame)) %>% head(5) %>% 
+      rename(amount = z)
+    
+    hit_rate_above <- lapply(hit_rate, function(x){
+      
+      df %>% mutate(test = mean(amount > x), OU = x) %>% group_by(namePlayer, idPlayer, OU, metric) %>% summarize(test = min(test), .groups = 'drop') %>% 
+        ungroup() %>% mutate(slugTeam = slug_team, typeSeason = "All") %>% relocate(typeSeason, .after = metric)
+      
+    })
+    
+    bind_rows(hit_rate_above)
+    
+  })
+  
+  bind_rows(output_1,output_2,output_3)
   
   
 }
@@ -981,7 +1069,29 @@ test_ten <- function(z){
     
   })
   
-  bind_rows(output_1,output_2)
+  output_3 <- lapply(next_team_batch$idPlayer, function(x){
+    
+    slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)
+    
+    hit_rate <- seq(0.5,60.5,1)
+    
+    df <- playerdata %>% filter(idPlayer == x, slugSeason == "2024-25") %>% 
+      mutate(pts_reb_ast = pts+treb+ast, pts_reb = pts+treb,ast_reb = ast+treb, pts_ast = pts+ast,stl_blk = stl+blk, metric = z) %>% 
+      select(namePlayer,idPlayer,slugTeam,dateGame,locationGame,metric,z) %>% arrange(desc(dateGame)) %>% head(10) %>% 
+      rename(amount = z)
+    
+    hit_rate_above <- lapply(hit_rate, function(x){
+      
+      df %>% mutate(test = mean(amount > x), OU = x) %>% group_by(namePlayer, idPlayer, OU, metric) %>% summarize(test = min(test), .groups = 'drop') %>% 
+        ungroup() %>% mutate(slugTeam = slug_team,typeSeason = "All") %>% relocate(typeSeason, .after = metric)
+      
+    })
+    
+    bind_rows(hit_rate_above)
+    
+  })
+  
+  bind_rows(output_1,output_2,output_3)
   
   
 }
@@ -1016,36 +1126,48 @@ ast_1 <- test_2 %>% filter(metric == "ast") %>% select(!metric)
 reb <- test_2 %>% filter(metric == "treb") %>% select(!metric)
 
 fg3a_pivoted <- fg3a %>% left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer,typeSeason) %>% 
-                                     summarize(GP = n()), by = c("idPlayer","typeSeason"))   %>% 
+                                     summarize(GP = n()), by = c("idPlayer","typeSeason")) %>% 
+  left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
+              summarize(GP_all = n()), by = c("idPlayer")) %>% mutate(GP = ifelse(typeSeason == "All",GP_all,GP)) %>% select(!GP_all)   %>% 
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
 ftm_pivoted <- ftm %>% left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer,typeSeason) %>% 
-                                   summarize(GP = n()), by = c("idPlayer","typeSeason"))  %>% 
+                                   summarize(GP = n()), by = c("idPlayer","typeSeason")) %>% 
+  left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
+              summarize(GP_all = n()), by = c("idPlayer")) %>% mutate(GP = ifelse(typeSeason == "All",GP_all,GP)) %>% select(!GP_all)   %>% 
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
 fgm_pivoted <- fgm %>% left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer,typeSeason) %>% 
-                                   summarize(GP = n()), by = c("idPlayer","typeSeason"))  %>% 
+                                   summarize(GP = n()), by = c("idPlayer","typeSeason")) %>% 
+  left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
+              summarize(GP_all = n()), by = c("idPlayer")) %>% mutate(GP = ifelse(typeSeason == "All",GP_all,GP)) %>% select(!GP_all)   %>% 
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
 ptrebast_pivoted <- ptrebast_1 %>% left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer,typeSeason) %>% 
                                                summarize(GP = n()), by = c("idPlayer","typeSeason")) %>% 
+  left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
+              summarize(GP_all = n()), by = c("idPlayer")) %>% mutate(GP = ifelse(typeSeason == "All",GP_all,GP)) %>% select(!GP_all)  %>% 
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)   %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
 ptrebast <- test %>% filter(metric == "pts_reb_ast") %>% mutate(Type = "Regular Season")
 
 pt_reb_pivoted <- pt_reb_1 %>% left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer,typeSeason) %>% 
-                                           summarize(GP = n()), by = c("idPlayer","typeSeason"))  %>% 
+                                           summarize(GP = n()), by = c("idPlayer","typeSeason")) %>% 
+  left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
+              summarize(GP_all = n()), by = c("idPlayer")) %>% mutate(GP = ifelse(typeSeason == "All",GP_all,GP)) %>% select(!GP_all)   %>% 
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
 pt_reb <- test %>% filter(metric == "pts_reb") %>% mutate(Type = "Regular Season")
 
 ast_reb_pivoted <- ast_reb_1 %>% left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer,typeSeason) %>% 
-                                             summarize(GP = n()), by = c("idPlayer","typeSeason"))  %>% 
+                                             summarize(GP = n()), by = c("idPlayer","typeSeason")) %>% 
+  left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
+              summarize(GP_all = n()), by = c("idPlayer")) %>% mutate(GP = ifelse(typeSeason == "All",GP_all,GP)) %>% select(!GP_all)   %>% 
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
@@ -1053,7 +1175,9 @@ ast_reb <- test %>% filter(metric == "ast_reb") %>% mutate(Type = "Regular Seaso
 
 
 pt_ast_pivoted <- pt_ast_1 %>% left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer,typeSeason) %>% 
-                                           summarize(GP = n()), by = c("idPlayer","typeSeason"))  %>% 
+                                           summarize(GP = n()), by = c("idPlayer","typeSeason")) %>% 
+  left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
+              summarize(GP_all = n()), by = c("idPlayer")) %>% mutate(GP = ifelse(typeSeason == "All",GP_all,GP)) %>% select(!GP_all)  %>% 
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
@@ -1061,14 +1185,18 @@ pt_ast <- test %>% filter(metric == "pts_ast") %>% mutate(Type = "Regular Season
 
 
 stl_blk_pivoted <- stl_blk_1 %>% left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer,typeSeason) %>% 
-                                             summarize(GP = n()), by = c("idPlayer","typeSeason"))  %>% 
+                                             summarize(GP = n()), by = c("idPlayer","typeSeason")) %>% 
+  left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
+              summarize(GP_all = n()), by = c("idPlayer")) %>% mutate(GP = ifelse(typeSeason == "All",GP_all,GP)) %>% select(!GP_all)   %>% 
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)   %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
 stl_blk <- test %>% filter(metric == "stl_blk") %>% mutate(Type = "Regular Season")
 
 fg3m_pivoted <- fg3m_1 %>% left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer,typeSeason) %>% 
-                                       summarize(GP = n()), by = c("idPlayer","typeSeason"))  %>% 
+                                       summarize(GP = n()), by = c("idPlayer","typeSeason")) %>% 
+  left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
+              summarize(GP_all = n()), by = c("idPlayer")) %>% mutate(GP = ifelse(typeSeason == "All",GP_all,GP)) %>% select(!GP_all)   %>% 
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam)
 
@@ -1076,7 +1204,9 @@ fg3m <- test %>% filter(metric == "fg3m")%>% mutate(Type = "Regular Season")
 
 
 stl_pivoted <- stl_1 %>% left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer,typeSeason) %>% 
-                                     summarize(GP = n()), by = c("idPlayer","typeSeason"))   %>% 
+                                     summarize(GP = n()), by = c("idPlayer","typeSeason")) %>% 
+  left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
+              summarize(GP_all = n()), by = c("idPlayer")) %>% mutate(GP = ifelse(typeSeason == "All",GP_all,GP)) %>% select(!GP_all)   %>% 
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
@@ -1084,14 +1214,18 @@ stl <- test %>% filter(metric == "stl") %>% mutate(Type = "Regular Season")
 
 
 blk_pivoted <- blk_1 %>% left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer,typeSeason) %>% 
-                                     summarize(GP = n()), by = c("idPlayer","typeSeason"))  %>% 
+                                     summarize(GP = n()), by = c("idPlayer","typeSeason")) %>% 
+  left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
+              summarize(GP_all = n()), by = c("idPlayer")) %>% mutate(GP = ifelse(typeSeason == "All",GP_all,GP)) %>% select(!GP_all)  %>% 
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
 blk <- test %>% filter(metric == "blk") %>% mutate(Type = "Regular Season")
 
 tov_pivoted <- tov_1 %>% left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer,typeSeason) %>% 
-                                     summarize(GP = n()), by = c("idPlayer","typeSeason"))  %>% 
+                                     summarize(GP = n()), by = c("idPlayer","typeSeason")) %>% 
+  left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
+              summarize(GP_all = n()), by = c("idPlayer")) %>% mutate(GP = ifelse(typeSeason == "All",GP_all,GP)) %>% select(!GP_all)  %>% 
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
@@ -1099,14 +1233,18 @@ tov <- test %>% filter(metric == "tov") %>% mutate(Type = "Regular Season")
 
 
 pt_pivoted <- pt %>% left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer,typeSeason) %>% 
-                                 summarize(GP = n()), by = c("idPlayer","typeSeason"))  %>% 
+                                 summarize(GP = n()), by = c("idPlayer","typeSeason")) %>% 
+  left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
+              summarize(GP_all = n()), by = c("idPlayer")) %>% mutate(GP = ifelse(typeSeason == "All",GP_all,GP)) %>% select(!GP_all)  %>% 
   left_join(teams, by = "slugTeam")   %>% rename(Player = namePlayer, Team = slugTeam)  %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
 pts <- test %>% filter(metric == "pts") %>% mutate(Type = "Regular Season")
 
 ast_pivoted <- ast_1 %>% left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer,typeSeason) %>% 
-                                     summarize(GP = n()), by = c("idPlayer","typeSeason"))   %>% 
+                                     summarize(GP = n()), by = c("idPlayer","typeSeason")) %>% 
+  left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
+              summarize(GP_all = n()), by = c("idPlayer")) %>% mutate(GP = ifelse(typeSeason == "All",GP_all,GP)) %>% select(!GP_all)   %>% 
   left_join(teams, by = "slugTeam")   %>% rename(Player = namePlayer, Team = slugTeam)   %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
@@ -1114,7 +1252,9 @@ ast <- test %>% filter(metric == "ast") %>% mutate(Type = "Regular Season")
 
 
 reb_pivoted <- reb %>% left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer,typeSeason) %>% 
-                                   summarize(GP = n()), by = c("idPlayer","typeSeason"))   %>% 
+                                   summarize(GP = n()), by = c("idPlayer","typeSeason")) %>% 
+  left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
+              summarize(GP_all = n()), by = c("idPlayer")) %>% mutate(GP = ifelse(typeSeason == "All",GP_all,GP)) %>% select(!GP_all)   %>% 
   left_join(teams, by = "slugTeam")   %>% rename(Player = namePlayer, Team = slugTeam) %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
@@ -1125,42 +1265,42 @@ treb <- test %>% filter(metric == "treb") %>% mutate(Type = "Regular Season")
 test_home <- bind_rows(test_home)
 test_2_home <- test_home %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
-fg3a_home <- test_home %>% filter(metric == "fg3a") %>% select(!metric) %>% mutate(Type = "Home Games")
-ftm_home <- test_home %>% filter(metric == "ftm") %>% select(!metric) %>% mutate(Type = "Home Games")
-fgm_home <- test_home %>% filter(metric == "fgm") %>% select(!metric) %>% mutate(Type = "Home Games")
-ptrebast_home <- test_home %>% filter(metric == "pts_reb_ast") %>% select(!metric) %>% mutate(Type = "Home Games")
-pt_reb_home <- test_home %>% filter(metric == "pts_reb") %>% select(!metric) %>% mutate(Type = "Home Games")
-ast_reb_home <- test_home %>% filter(metric == "ast_reb") %>% select(!metric) %>% mutate(Type = "Home Games")
-pt_ast_home <- test_home %>% filter(metric == "pts_ast") %>% select(!metric) %>% mutate(Type = "Home Games")
-stl_blk_home <- test_home %>% filter(metric == "stl_blk") %>% select(!metric) %>% mutate(Type = "Home Games")
-fg3m_home <- test_home %>% filter(metric == "fg3m") %>% select(!metric) %>% mutate(Type = "Home Games")
-stl_home <- test_home %>% filter(metric == "stl") %>% select(!metric) %>% mutate(Type = "Home Games")
-blk_home <- test_home %>% filter(metric == "blk") %>% select(!metric) %>% mutate(Type = "Home Games")
-tov_home <- test_home %>% filter(metric == "tov") %>% select(!metric) %>% mutate(Type = "Home Games")
-pts_home <- test_home %>% filter(metric == "pts") %>% select(!metric) %>% mutate(Type = "Home Games")
-ast_home <- test_home %>% filter(metric == "ast") %>% select(!metric) %>% mutate(Type = "Home Games")
-treb_home <- test_home %>% filter(metric == "treb") %>% select(!metric) %>% mutate(Type = "Home Games")
+fg3a_home <- test_home %>% filter(metric == "fg3a")  %>% mutate(Type = "Home Games")
+ftm_home <- test_home %>% filter(metric == "ftm") %>% mutate(Type = "Home Games")
+fgm_home <- test_home %>% filter(metric == "fgm")  %>% mutate(Type = "Home Games")
+ptrebast_home <- test_home %>% filter(metric == "pts_reb_ast") %>% mutate(Type = "Home Games")
+pt_reb_home <- test_home %>% filter(metric == "pts_reb")  %>% mutate(Type = "Home Games")
+ast_reb_home <- test_home %>% filter(metric == "ast_reb")  %>% mutate(Type = "Home Games")
+pt_ast_home <- test_home %>% filter(metric == "pts_ast")  %>% mutate(Type = "Home Games")
+stl_blk_home <- test_home %>% filter(metric == "stl_blk")  %>% mutate(Type = "Home Games")
+fg3m_home <- test_home %>% filter(metric == "fg3m")  %>% mutate(Type = "Home Games")
+stl_home <- test_home %>% filter(metric == "stl")  %>% mutate(Type = "Home Games")
+blk_home <- test_home %>% filter(metric == "blk")  %>% mutate(Type = "Home Games")
+tov_home <- test_home %>% filter(metric == "tov")  %>% mutate(Type = "Home Games")
+pts_home <- test_home %>% filter(metric == "pts") %>% mutate(Type = "Home Games")
+ast_home <- test_home %>% filter(metric == "ast")  %>% mutate(Type = "Home Games")
+treb_home <- test_home %>% filter(metric == "treb")  %>% mutate(Type = "Home Games")
 
 
 
 test_away <- bind_rows(test_away)
 test_2_away <- test_away %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
-fg3a_away <- test_away %>% filter(metric == "fg3a") %>% select(!metric) %>% mutate(Type = "Away Games")
-ftm_away <- test_away %>% filter(metric == "ftm") %>% select(!metric) %>% mutate(Type = "Away Games")
-fgm_away <- test_away %>% filter(metric == "fgm") %>% select(!metric) %>% mutate(Type = "Away Games")
-ptrebast_away <- test_away %>% filter(metric == "pts_reb_ast") %>% select(!metric) %>% mutate(Type = "Away Games")
-pt_reb_away <- test_away %>% filter(metric == "pts_reb") %>% select(!metric) %>% mutate(Type = "Away Games")
-ast_reb_away <- test_away %>% filter(metric == "ast_reb") %>% select(!metric) %>% mutate(Type = "Away Games")
-pt_ast_away <- test_away %>% filter(metric == "pts_ast") %>% select(!metric) %>% mutate(Type = "Away Games")
-stl_blk_away <- test_away %>% filter(metric == "stl_blk") %>% select(!metric) %>% mutate(Type = "Away Games")
-fg3m_away <- test_away %>% filter(metric == "fg3m") %>% select(!metric) %>% mutate(Type = "Away Games")
-stl_away <- test_away %>% filter(metric == "stl") %>% select(!metric) %>% mutate(Type = "Away Games")
-blk_away <- test_away %>% filter(metric == "blk") %>% select(!metric) %>% mutate(Type = "Away Games")
-tov_away <- test_away %>% filter(metric == "tov") %>% select(!metric) %>% mutate(Type = "Away Games")
-pts_away <- test_away %>% filter(metric == "pts") %>% select(!metric) %>% mutate(Type = "Away Games")
-ast_away <- test_away %>% filter(metric == "ast") %>% select(!metric) %>% mutate(Type = "Away Games")
-treb_away <- test_away %>% filter(metric == "treb") %>% select(!metric) %>% mutate(Type = "Away Games")
+fg3a_away <- test_away %>% filter(metric == "fg3a")  %>% mutate(Type = "Away Games")
+ftm_away <- test_away %>% filter(metric == "ftm")  %>% mutate(Type = "Away Games")
+fgm_away <- test_away %>% filter(metric == "fgm")  %>% mutate(Type = "Away Games")
+ptrebast_away <- test_away %>% filter(metric == "pts_reb_ast")  %>% mutate(Type = "Away Games")
+pt_reb_away <- test_away %>% filter(metric == "pts_reb")  %>% mutate(Type = "Away Games")
+ast_reb_away <- test_away %>% filter(metric == "ast_reb") %>% mutate(Type = "Away Games")
+pt_ast_away <- test_away %>% filter(metric == "pts_ast")  %>% mutate(Type = "Away Games")
+stl_blk_away <- test_away %>% filter(metric == "stl_blk")  %>% mutate(Type = "Away Games")
+fg3m_away <- test_away %>% filter(metric == "fg3m")  %>% mutate(Type = "Away Games")
+stl_away <- test_away %>% filter(metric == "stl")  %>% mutate(Type = "Away Games")
+blk_away <- test_away %>% filter(metric == "blk")  %>% mutate(Type = "Away Games")
+tov_away <- test_away %>% filter(metric == "tov")  %>% mutate(Type = "Away Games")
+pts_away <- test_away %>% filter(metric == "pts")  %>% mutate(Type = "Away Games")
+ast_away <- test_away %>% filter(metric == "ast")  %>% mutate(Type = "Away Games")
+treb_away <- test_away %>% filter(metric == "treb")  %>% mutate(Type = "Away Games")
 
 
 
@@ -1168,90 +1308,90 @@ treb_away <- test_away %>% filter(metric == "treb") %>% select(!metric) %>% muta
 test_five <- bind_rows(test_five)
 test_2_five <- test_five %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
-fg3a_five <- test_five %>% filter(metric == "fg3a") %>% select(!metric) %>% mutate(Type = "Last 5")
-ftm_five <- test_five %>% filter(metric == "ftm") %>% select(!metric) %>% mutate(Type = "Last 5")
-fgm_five <- test_five %>% filter(metric == "fgm") %>% select(!metric) %>% mutate(Type = "Last 5")
-ptrebast_five <- test_five %>% filter(metric == "pts_reb_ast") %>% select(!metric) %>% mutate(Type = "Last 5")
-pt_reb_five <- test_five %>% filter(metric == "pts_reb") %>% select(!metric) %>% mutate(Type = "Last 5")
-ast_reb_five <- test_five %>% filter(metric == "ast_reb") %>% select(!metric) %>% mutate(Type = "Last 5")
-pt_ast_five <- test_five %>% filter(metric == "pts_ast") %>% select(!metric) %>% mutate(Type = "Last 5")
-stl_blk_five <- test_five %>% filter(metric == "stl_blk") %>% select(!metric) %>% mutate(Type = "Last 5")
-fg3m_five <- test_five %>% filter(metric == "fg3m") %>% select(!metric) %>% mutate(Type = "Last 5")
-stl_five <- test_five %>% filter(metric == "stl") %>% select(!metric) %>% mutate(Type = "Last 5")
-blk_five <- test_five %>% filter(metric == "blk") %>% select(!metric) %>% mutate(Type = "Last 5")
-tov_five <- test_five %>% filter(metric == "tov") %>% select(!metric) %>% mutate(Type = "Last 5")
-pts_five <- test_five %>% filter(metric == "pts") %>% select(!metric) %>% mutate(Type = "Last 5")
-ast_five <- test_five %>% filter(metric == "ast") %>% select(!metric) %>% mutate(Type = "Last 5")
-treb_five <- test_five %>% filter(metric == "treb") %>% select(!metric) %>% mutate(Type = "Last 5")
+fg3a_five <- test_five %>% filter(metric == "fg3a")  %>% mutate(Type = "Last 5")
+ftm_five <- test_five %>% filter(metric == "ftm")  %>% mutate(Type = "Last 5")
+fgm_five <- test_five %>% filter(metric == "fgm") %>% mutate(Type = "Last 5")
+ptrebast_five <- test_five %>% filter(metric == "pts_reb_ast")  %>% mutate(Type = "Last 5")
+pt_reb_five <- test_five %>% filter(metric == "pts_reb")  %>% mutate(Type = "Last 5")
+ast_reb_five <- test_five %>% filter(metric == "ast_reb") %>% mutate(Type = "Last 5")
+pt_ast_five <- test_five %>% filter(metric == "pts_ast")  %>% mutate(Type = "Last 5")
+stl_blk_five <- test_five %>% filter(metric == "stl_blk")  %>% mutate(Type = "Last 5")
+fg3m_five <- test_five %>% filter(metric == "fg3m")  %>% mutate(Type = "Last 5")
+stl_five <- test_five %>% filter(metric == "stl")  %>% mutate(Type = "Last 5")
+blk_five <- test_five %>% filter(metric == "blk")  %>% mutate(Type = "Last 5")
+tov_five <- test_five %>% filter(metric == "tov")  %>% mutate(Type = "Last 5")
+pts_five <- test_five %>% filter(metric == "pts")  %>% mutate(Type = "Last 5")
+ast_five <- test_five %>% filter(metric == "ast")  %>% mutate(Type = "Last 5")
+treb_five <- test_five %>% filter(metric == "treb")  %>% mutate(Type = "Last 5")
 
 
 test_ten <- bind_rows(test_ten)
 test_2_ten <- test_ten %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
-fg3a_ten <- test_ten %>% filter(metric == "fg3a") %>% select(!metric) %>% mutate(Type = "Last 10")
-ftm_ten <- test_ten %>% filter(metric == "ftm") %>% select(!metric) %>% mutate(Type = "Last 10")
-fgm_ten <- test_ten %>% filter(metric == "fgm") %>% select(!metric) %>% mutate(Type = "Last 10")
-ptrebast_ten <- test_ten %>% filter(metric == "pts_reb_ast") %>% select(!metric) %>% mutate(Type = "Last 10")
-pt_reb_ten <- test_ten %>% filter(metric == "pts_reb") %>% select(!metric) %>% mutate(Type = "Last 10")
-ast_reb_ten <- test_ten %>% filter(metric == "ast_reb") %>% select(!metric) %>% mutate(Type = "Last 10")
-pt_ast_ten <- test_ten %>% filter(metric == "pts_ast") %>% select(!metric) %>% mutate(Type = "Last 10")
-stl_blk_ten <- test_ten %>% filter(metric == "stl_blk") %>% select(!metric) %>% mutate(Type = "Last 10")
-fg3m_ten <- test_ten %>% filter(metric == "fg3m") %>% select(!metric) %>% mutate(Type = "Last 10")
-stl_ten <- test_ten %>% filter(metric == "stl") %>% select(!metric) %>% mutate(Type = "Last 10")
-blk_ten <- test_ten %>% filter(metric == "blk") %>% select(!metric) %>% mutate(Type = "Last 10")
-tov_ten <- test_ten %>% filter(metric == "tov") %>% select(!metric) %>% mutate(Type = "Last 10")
-pts_ten <- test_ten %>% filter(metric == "pts") %>% select(!metric) %>% mutate(Type = "Last 10")
-ast_ten <- test_ten %>% filter(metric == "ast") %>% select(!metric) %>% mutate(Type = "Last 10")
-treb_ten <- test_ten %>% filter(metric == "treb") %>% select(!metric) %>% mutate(Type = "Last 10")
+fg3a_ten <- test_ten %>% filter(metric == "fg3a")  %>% mutate(Type = "Last 10")
+ftm_ten <- test_ten %>% filter(metric == "ftm") %>% mutate(Type = "Last 10")
+fgm_ten <- test_ten %>% filter(metric == "fgm")  %>% mutate(Type = "Last 10")
+ptrebast_ten <- test_ten %>% filter(metric == "pts_reb_ast")  %>% mutate(Type = "Last 10")
+pt_reb_ten <- test_ten %>% filter(metric == "pts_reb")  %>% mutate(Type = "Last 10")
+ast_reb_ten <- test_ten %>% filter(metric == "ast_reb")  %>% mutate(Type = "Last 10")
+pt_ast_ten <- test_ten %>% filter(metric == "pts_ast") %>% mutate(Type = "Last 10")
+stl_blk_ten <- test_ten %>% filter(metric == "stl_blk")  %>% mutate(Type = "Last 10")
+fg3m_ten <- test_ten %>% filter(metric == "fg3m")  %>% mutate(Type = "Last 10")
+stl_ten <- test_ten %>% filter(metric == "stl")  %>% mutate(Type = "Last 10")
+blk_ten <- test_ten %>% filter(metric == "blk")  %>% mutate(Type = "Last 10")
+tov_ten <- test_ten %>% filter(metric == "tov")  %>% mutate(Type = "Last 10")
+pts_ten <- test_ten %>% filter(metric == "pts")  %>% mutate(Type = "Last 10")
+ast_ten <- test_ten %>% filter(metric == "ast")  %>% mutate(Type = "Last 10")
+treb_ten <- test_ten %>% filter(metric == "treb")  %>% mutate(Type = "Last 10")
 
 
 ptreb_ast_df <- bind_rows(ptrebast,ptrebast_away,ptrebast_home,ptrebast_five,ptrebast_ten)
 
-ptreb_ast_df$namePlayer <- stri_trans_general(str = ptreb_ast_df$namePlayer, id = "Latin-ASCII")
+
 
 pt_reb_df <- bind_rows(pt_reb,pt_reb_away,pt_reb_home,pt_reb_five,pt_reb_ten)
 
-pt_reb_df$namePlayer <- stri_trans_general(str = pt_reb_df$namePlayer, id = "Latin-ASCII")
+
 
 ast_reb_df <- bind_rows(ast_reb,ast_reb_away,ast_reb_home,ast_reb_five,ast_reb_ten)
 
-ast_reb_df$namePlayer <- stri_trans_general(str = ast_reb_df$namePlayer, id = "Latin-ASCII")
+
 
 pt_ast_df <- bind_rows(pt_ast,pt_ast_away,pt_ast_home,pt_ast_five,pt_ast_ten)
 
-pt_ast_df$namePlayer <- stri_trans_general(str = pt_ast_df$namePlayer, id = "Latin-ASCII")
+
 
 stl_blk_df <- bind_rows(stl_blk,stl_blk_away,stl_blk_home,stl_blk_five,stl_blk_ten)
 
-stl_blk_df$namePlayer <- stri_trans_general(str = stl_blk_df$namePlayer, id = "Latin-ASCII")
+
 
 fg3m_df <- bind_rows(fg3m,fg3m_away,fg3m_home,fg3m_five,fg3m_ten)
 
-fg3m_df$namePlayer <- stri_trans_general(str = fg3m_df$namePlayer, id = "Latin-ASCII")
+
 
 stl_df <- bind_rows(stl,stl_away,stl_home,stl_five,stl_ten)
 
-stl_df$namePlayer <- stri_trans_general(str = stl_df$namePlayer, id = "Latin-ASCII")
+
 
 blk_df <- bind_rows(blk,blk_away,blk_home,blk_five,blk_ten)
 
-blk_df$namePlayer <- stri_trans_general(str = blk_df$namePlayer, id = "Latin-ASCII")
+
 
 tov_df <- bind_rows(tov,tov_away,tov_home,tov_five,tov_ten)
 
-tov_df$namePlayer <- stri_trans_general(str = tov_df$namePlayer, id = "Latin-ASCII")
+
 
 pts_df <- bind_rows(pts,pts_away,pts_home,pts_five,pts_ten)
 
-pts_df$namePlayer <- stri_trans_general(str = pts_df$namePlayer, id = "Latin-ASCII")
+
 
 ast_df <- bind_rows(ast,ast_away,ast_home,ast_five,ast_ten)
 
-ast_df$namePlayer <- stri_trans_general(str = ast_df$namePlayer, id = "Latin-ASCII")
+
 
 treb_df <- bind_rows(treb,treb_away,treb_home,treb_five,treb_ten)
 
-treb_df$namePlayer <- stri_trans_general(str = treb_df$namePlayer, id = "Latin-ASCII")
+
 
 ##Minutes Last 10
 
@@ -1294,6 +1434,7 @@ min_ten_all <- bind_rows(min_ten_all)
 
 
 firstqpoints <- lapply(next_team_batch$idPlayer, function(x){
+  
   slug_team <- all_rosters %>% filter(idPlayer == x) %>% pull(slugTeam)
   
   hit_rate <- seq(0.5,10.5,1)
@@ -1328,14 +1469,36 @@ firstqpoints <- lapply(next_team_batch$idPlayer, function(x){
   bind_rows(hit_rate_above)
   
 })
-  output_season
+  
+    
+    firstq_makes_all <- playerdata %>% filter(idPlayer == x, slugSeason == "2024-25") %>% mutate(typeSeason = "All") %>% 
+      group_by(dateGame,locationGame,typeSeason,slugOpponent,slugSeason,namePlayer,idPlayer,slugTeam) %>% summarize(n = n()) %>% 
+      left_join(play_play_makes %>% filter(numberPeriod == 1) %>% group_by(dateGame) %>% summarize(pts = sum(pts)), by = "dateGame") %>% 
+      mutate(pts = replace_na(pts,0))
+    
+    
+    
+    hit_rate_above_all <- lapply(hit_rate, function(x){
+      
+      firstq_makes_all %>% ungroup() %>% mutate(test = mean(pts > x), OU = x) %>% group_by(namePlayer, idPlayer, typeSeason, OU) %>% 
+        summarize(test = min(test), .groups = 'drop') %>% 
+        ungroup() %>% mutate(slugTeam = slug_team)
+      
+    })
+    
+    hit_rate_above_all <- bind_rows(hit_rate_above_all)
+    
+  
+  bind_rows(output_season, hit_rate_above_all)
   
 })
 
 firstqpoints <- bind_rows(firstqpoints) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
 firstqpoints_pivoted <- firstqpoints %>% left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer,typeSeason) %>% 
-                                                     summarize(GP = n()), by = c("idPlayer","typeSeason"))  %>% 
+                                                     summarize(GP = n()), by = c("idPlayer","typeSeason")) %>% 
+  left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
+      summarize(GP_all = n()), by = c("idPlayer")) %>% mutate(GP = ifelse(typeSeason == "All",GP_all,GP)) %>% select(!GP_all)  %>% 
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)   %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
@@ -1375,7 +1538,23 @@ firstqassists <- lapply(next_team_batch$idPlayer, function(x){
   
   })
   
-  bind_rows(output_season)
+  firstq_assists_all <- playerdata %>% filter(idPlayer == x, slugSeason == "2024-25") %>% mutate(typeSeason = "All") %>% 
+    group_by(dateGame,locationGame,typeSeason,slugOpponent,slugSeason, namePlayer,idPlayer,slugTeam) %>% 
+    summarize(n = n()) %>% left_join(play_play_assists %>% filter(numberPeriod == 1) %>% 
+                                       group_by(dateGame,typeSeason,locationGame) %>% summarize(assists = n()), by = "dateGame") %>% 
+    mutate(assists = replace_na(assists,0)) %>% rename(locationGame = locationGame.x, typeSeason = typeSeason.x)
+  
+  hit_rate_above_all <- lapply(hit_rate, function(x){
+    
+    firstq_assists_all %>% ungroup() %>% mutate(test = mean(assists > x), OU = x) %>% group_by(namePlayer, idPlayer, typeSeason, OU) %>% 
+      summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() %>% mutate(slugTeam = slug_team)
+    
+  })
+  
+  hit_rate_above_all <- bind_rows(hit_rate_above_all)
+  
+  bind_rows(output_season, hit_rate_above_all)
   
   
 })
@@ -1383,7 +1562,9 @@ firstqassists <- lapply(next_team_batch$idPlayer, function(x){
 firstqassists <- bind_rows(firstqassists) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
 firstqassists_pivoted <- firstqassists %>% left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer,typeSeason) %>% 
-                                                       summarize(GP = n()), by = c("idPlayer","typeSeason"))  %>% 
+                                                       summarize(GP = n()), by = c("idPlayer","typeSeason")) %>% 
+  left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
+              summarize(GP_all = n()), by = c("idPlayer")) %>% mutate(GP = ifelse(typeSeason == "All",GP_all,GP)) %>% select(!GP_all)  %>% 
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)   %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 
@@ -1422,14 +1603,30 @@ firstqrebounds <- lapply(next_team_batch$idPlayer, function(x){
   
   })
   
-  bind_rows(output_season)
+  firstq_rebounds_all <- playerdata %>% filter(idPlayer == x, slugSeason == "2024-25") %>% mutate(typeSeason = "All")  %>% 
+    group_by(dateGame,locationGame,typeSeason,slugOpponent,slugSeason,namePlayer,idPlayer,slugTeam) %>% summarize(n = n()) %>% 
+    left_join(play_play_rebounds %>% filter(numberPeriod == 1) %>% group_by(dateGame,typeSeason,locationGame) %>% summarize(rebounds = n()), by = "dateGame") %>%
+    mutate(rebounds = replace_na(rebounds,0)) %>% rename(locationGame = locationGame.x, typeSeason = typeSeason.x)
+  
+  hit_rate_above_all <- lapply(hit_rate, function(x){
+    
+    firstq_rebounds_all %>% ungroup() %>% mutate(test = mean(rebounds > x), OU = x) %>% group_by(namePlayer, idPlayer, typeSeason, OU) %>% summarize(test = min(test), .groups = 'drop') %>% 
+      ungroup() %>% mutate(slugTeam = slug_team)
+    
+  })
+  
+  hit_rate_above_all <- bind_rows(hit_rate_above_all)
+  
+  bind_rows(output_season, hit_rate_above_all)
   
 })
 
 firstqrebounds <- bind_rows(firstqrebounds) %>% pivot_wider(names_from = OU, values_from = test)%>% unnest(cols = everything())
 
 firstqrebounds_pivoted <- firstqrebounds %>% left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer,typeSeason) %>% 
-                                                         summarize(GP = n()), by = c("idPlayer","typeSeason"))  %>% 
+                                                         summarize(GP = n()), by = c("idPlayer","typeSeason")) %>% 
+  left_join(playerdata %>% filter(slugSeason == "2024-25") %>% group_by(idPlayer) %>% 
+              summarize(GP_all = n()), by = c("idPlayer")) %>% mutate(GP = ifelse(typeSeason == "All",GP_all,GP)) %>% select(!GP_all)  %>% 
   left_join(teams, by = "slugTeam") %>% rename(Player = namePlayer, Team = slugTeam)   %>% select(!c(idPlayer,Team,Opponent,idTeam,nameTeam)) %>% 
   relocate(urlThumbnailTeam, .after = Player) %>% relocate(GP, .after = urlThumbnailTeam) 
 

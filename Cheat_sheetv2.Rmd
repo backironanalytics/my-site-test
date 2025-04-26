@@ -1,0 +1,90 @@
+---
+title: "Dollar Data Science - Daily Prop Bet Cheat Sheet" 
+output: 
+  flexdashboard::flex_dashboard:
+    theme: simplex
+    orientation: rows
+    logo: logo_simple.png
+    favicon: logo_simple.png
+
+
+---
+
+```{r setup, include=FALSE, echo = FALSE}
+
+
+
+color_set <- viridis::magma(5)
+
+
+
+```
+
+
+```{r output, echo = FALSE, warning = FALSE, message = FALSE}
+reactable(highlight = TRUE, combined_all, columns = list(namePlayer = colDef(name = "Player",
+                                                                                          style = cell_style(font_weight = "bold")),
+                                                                    Bet = colDef(name = "Prop Bet",
+                                                                                 style = cell_style(font_weight = "bold")),
+                                                                      urlThumbnailTeam = colDef(name = "Team",cell = embed_img(height = "25",width="25")),
+                                                                      season_avg = colDef(name = "Season Avg"),
+                                                                      playoff_avg = colDef(name = "Playoff Avg"),
+                                                                      minutes = colDef(name = "Minutes Last 10 GP",cell = function(value,index) {
+                                                                        sparkline(combined_all$minutes[[index]], height = 50)
+                                                                      }),
+                                                                      amount = colDef(name = "Total Last 10 GP",cell = function(value,index) {
+                                                                        sparkline(combined_all$amount[[index]], type = "bar", height = 50)
+                                                                      }),
+                                                                      Under = colDef(name = "Odds"),
+                                                                      OU = colDef(name = "O/U"),
+                                                                      `Away Games` = colDef(cell = data_bars(combined_all, 
+                                                                                                             fill_color = color_set, 
+                                                                                                             min_value = 0, 
+                                                                                                             max_value = 1, 
+                                                                                                             text_position = 'outside-end',
+                                                                                                             number_fmt = scales::percent),
+                                                                                            style = list(borderLeft = "1px solid rgba(0, 0, 0, 0.1)")),
+                                                                      `Home Games` = colDef(cell = data_bars(combined_all, 
+                                                                                                             fill_color = color_set, 
+                                                                                                             min_value = 0, 
+                                                                                                             max_value = 1, 
+                                                                                                             text_position = 'outside-end',
+                                                                                                             number_fmt = scales::percent)),
+                                                                      `Last 10` = colDef(cell = data_bars(combined_all, 
+                                                                                                          fill_color = color_set, 
+                                                                                                          min_value = 0, 
+                                                                                                          max_value = 1, 
+                                                                                                          text_position = 'outside-end',
+                                                                                                          number_fmt = scales::percent)),
+                                                                      `Last 5` = colDef(cell = data_bars(combined_all, 
+                                                                                                         fill_color = color_set, 
+                                                                                                         min_value = 0, 
+                                                                                                         max_value = 1, 
+                                                                                                         text_position = 'outside-end',
+                                                                                                         number_fmt = scales::percent)),
+                                                                      `Regular Season` = colDef(cell = data_bars(combined_all, 
+                                                                                                                 fill_color = color_set, 
+                                                                                                                 min_value = 0, 
+                                                                                                                 max_value = 1, 
+                                                                                                                 text_position = 'outside-end',
+                                                                                                                 number_fmt = scales::percent)),
+                                                                      `Playoffs` = colDef(cell = data_bars(combined_all, 
+                                                                                                                 fill_color = color_set, 
+                                                                                                                 min_value = 0, 
+                                                                                                                 max_value = 1, 
+                                                                                                                 text_position = 'outside-end',
+                                                                                                                 number_fmt = scales::percent)),
+                                                         `Regular Season + Playoffs` = colDef(cell = data_bars(combined_all, 
+                                                                                                                 fill_color = color_set, 
+                                                                                                                 min_value = 0, 
+                                                                                                                 max_value = 1, 
+                                                                                                                 text_position = 'outside-end',
+                                                                                                                 number_fmt = scales::percent),
+                                                                                                style = list(borderRight = "1px solid rgba(0, 0, 0, 0.1)"))
+                                                         
+                                                         ),
+          theme = nytimes(), defaultPageSize = 10, fullWidth = TRUE,defaultColDef = colDef(vAlign = "center"), columnGroups = list(
+            colGroup(name = "UNDER SUCCESS RATES", columns = c("Away Games","Home Games","Last 10", "Last 5","Playoffs","Regular Season","Regular Season + Playoffs"))
+          ), defaultSorted = list("Last 10"= "desc"), searchable = TRUE, language = reactableLang(searchPlaceholder = "SEARCH FOR A PLAYER")) %>% 
+  add_title("Under Success Rates") %>% add_subtitle("2024/25 Regular Season & Playoffs") %>% add_subtitle(paste("O/Us & Odds sourced from Draftkings on ",format(Sys.time(), "%a %b %d %Y %X"))) 
+```

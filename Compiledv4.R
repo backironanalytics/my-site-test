@@ -42,7 +42,7 @@ library(webshot)
 library(webshot2)
 library(foreach)
 
-Sys.sleep(3600)
+Sys.sleep(4200)
 
 
 

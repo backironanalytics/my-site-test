@@ -90,27 +90,6 @@ dk_fg3m <- unnest(dk_fg3m)
 dk_fg3m <- dk_fg3m %>% filter(selections.tags == "MainPointLine") %>% select(seoIdentifier,selections.label,american,selections.points) %>% 
   rename(namePlayer = seoIdentifier,label = selections.label,odds = american,OU = selections.points) %>% pivot_wider(names_from = label, values_from = odds)
 
-# First Quarter Assists
-
-
-json_file <- "https://sportsbook-nash.draftkings.com/api/sportscontent/dkusil/v1/leagues/42648/categories/1217/subcategories/16552"
-json_data <- fromJSON(txt=json_file)
-
-dk_firstqast <- json_data[5]
-
-dk_firstqast <- as.data.frame(dk_firstqast)
-
-dk_firstqast <- unnest(dk_firstqast)
-
-dk_firstqast <- dk_firstqast %>% filter(selections.tags == "SGP") %>% select(seoIdentifier,selections.label,american) %>% 
-  rename(namePlayer = seoIdentifier,label = selections.label,odds = american) 
-
-dk_firstqast <- dk_firstqast %>% 
-  mutate(label = ifelse(label == "3+",2.5,ifelse(label == "4+",3.5,ifelse(label == "5+",4.5,
-                                                                          ifelse(label == "6+",5.5,ifelse(label == "7+",6.5,
-                                                                                                          ifelse(label == "8+",7.5,ifelse(label == "9+",8.5,ifelse(label == "9+",8.5,ifelse(label == "10+",9.5,ifelse(label == "2+",1.5,label))))))))))) %>%
-  mutate(odds = as.numeric(str_replace(odds,"−","-")))
-
 
 
 
